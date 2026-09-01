@@ -1,0 +1,22 @@
+{
+  "milestone": "P-02",
+  "status": "PASS_STATIC",
+  "checks": {
+    "export:getItem": true,
+    "export:getIncomingRelations": true,
+    "export:getOutgoingRelations": true,
+    "export:getAcceptedConclusion": true,
+    "export:getDownstreamDependencies": true,
+    "export:getUpstreamDependencies": true,
+    "export:getDownstreamAcceptedIds": true,
+    "export:hasDirectRelationToAcceptedConclusion": true,
+    "cycle_safe": true,
+    "bounded_max_nodes": true,
+    "bounded_max_depth": true,
+    "supercedes_not_default": true,
+    "contract_schema_untouched_truth_score": true,
+    "tests_added": true,
+    "no_triage_implementation": true
+  },
+  "overall": "PASS"
+}
