@@ -1,0 +1,21 @@
+{
+  "milestone": "P-04",
+  "artifact_status": "PASS_STATIC",
+  "runtime_status": "PENDING_LOCAL_RUN",
+  "expected_total_tests": 44,
+  "contract_change": false,
+  "schema_change_request_required": false,
+  "checks": {
+    "agent_proposal_is_proposed": true,
+    "human_guard": true,
+    "human_approval_error": true,
+    "superseded_preserved": true,
+    "replacement_accepted": true,
+    "supersedes_link": true,
+    "accepted_conclusion_moves": true,
+    "no_delete_api": true,
+    "revision_tests_added": true,
+    "security_test_added": true
+  },
+  "overall": "PASS"
+}

@@ -198,10 +198,23 @@ export const RevisionSchema = z
     reviewed_at: z.string().nullable().optional(),
   })
   .superRefine((value, ctx) => {
-    if (value.created_by === "AGENT" && value.state !== "PROPOSED") {
+    if (value.state === "PROPOSED") {
+      if (value.reviewed_by != null || value.reviewed_at != null) {
+        ctx.addIssue({
+          code: "custom",
+          message:
+            "PROPOSED revisions must not contain review provenance before a human review occurs.",
+        });
+      }
+
+      return;
+    }
+
+    if (value.reviewed_by !== "HUMAN" || !value.reviewed_at) {
       ctx.addIssue({
         code: "custom",
-        message: "Agent-created revisions must begin in PROPOSED state.",
+        message:
+          "A revision may leave PROPOSED only with explicit HUMAN review provenance.",
       });
     }
   });

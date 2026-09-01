@@ -31,4 +31,38 @@ describe("human authority contract", () => {
 
     expect(result.success).toBe(true);
   });
+  it("allows an agent-created revision to become ACCEPTED after explicit HUMAN review", () => {
+    const result = RevisionSchema.safeParse({
+      revision_id: "REV-TEST-003",
+      target_item_id: "CONC-001",
+      proposed_text: "A human-approved revised conclusion.",
+      state: "ACCEPTED",
+      reason_codes: ["OVERGENERALIZATION"],
+      affected_item_ids: ["CONC-001"],
+      created_by: "AGENT",
+      created_at: "2026-09-02T00:00:00+07:00",
+      reviewed_by: "HUMAN",
+      reviewed_at: "2026-09-02T00:05:00+07:00",
+    });
+
+    expect(result.success).toBe(true);
+  });
+
+  it("rejects a reviewed state that lacks HUMAN review provenance", () => {
+    const result = RevisionSchema.safeParse({
+      revision_id: "REV-TEST-004",
+      target_item_id: "CONC-001",
+      proposed_text: "An improperly transitioned revision.",
+      state: "REJECTED",
+      reason_codes: [],
+      affected_item_ids: ["CONC-001"],
+      created_by: "AGENT",
+      created_at: "2026-09-02T00:00:00+07:00",
+      reviewed_by: null,
+      reviewed_at: null,
+    });
+
+    expect(result.success).toBe(false);
+  });
+
 });

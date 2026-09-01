@@ -1,0 +1,17 @@
+{
+  "milestone": "P-04 revision transition fix",
+  "artifact_status": "PASS_STATIC",
+  "contract_change": false,
+  "schema_change_request_required": false,
+  "active_schema_version": "1.1.0",
+  "expected_total_tests": 46,
+  "checks": {
+    "proposed_has_no_review_provenance": true,
+    "reviewed_states_require_human": true,
+    "reviewed_states_require_timestamp": true,
+    "original_creator_not_rewritten": true,
+    "regression_test_human_review": true,
+    "regression_test_missing_review_rejected": true
+  },
+  "overall": "PASS"
+}
