@@ -6,7 +6,7 @@ Groundline is a WebMCP-native human-agent reasoning workspace for mapping claims
 
 ## Current status
 
-**P-00 and P-02 complete; P-01 schema bootstrap remains contract-aligned.**
+**P-00, P-02, and P-03 complete in the artifact; local runtime verification for P-03 is the next gate.**
 
 The scaffold already includes:
 - React + TypeScript + Vite;
@@ -18,8 +18,6 @@ The scaffold already includes:
 - active preproduction contracts copied into `docs/preproduction`.
 
 Not implemented yet:
-- deterministic evaluation engine;
-- triage engine;
 - revision transition engine;
 - reasoning graph UI;
 - actual WebMCP tool registration/execution.
@@ -65,13 +63,11 @@ Core invariant:
 
 ## Production order
 
-Next:
-1. P-03 deterministic triage engine
-2. TRIAGE-001…008
-3. P-04 revision authority
-4. P-05 Integration 001 runtime pass
-5. P-06 minimal graph UI
-6. P-07/P-08 WebMCP vertical slice
+Next after P-03 runtime verification:
+1. P-04 revision authority
+2. P-05 Integration 001 runtime pass
+3. P-06 minimal graph UI
+4. P-07/P-08 WebMCP vertical slice
 
 See `docs/preproduction/handoff/PRODUCTION_TASK_ORDER_v1.0_DRAFT.md`.
 

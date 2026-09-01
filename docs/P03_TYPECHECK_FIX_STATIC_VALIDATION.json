@@ -1,0 +1,11 @@
+{
+  "milestone": "P-03-typecheck-fix",
+  "status": "PASS_STATIC",
+  "contract_change": false,
+  "schema_change_request_required": false,
+  "checks": {
+    "raw_components_explicit_number_nullable_array": true,
+    "non_null_type_predicate_preserved": true,
+    "priority_formula_unchanged": true
+  }
+}

@@ -1,0 +1,18 @@
+{
+  "milestone": "P-03",
+  "artifact_status": "PASS_STATIC",
+  "runtime_status": "PENDING_LOCAL_RUN",
+  "expected_total_tests": 33,
+  "checks": {
+    "priority_formula_present": true,
+    "direct_critical_present": true,
+    "partial_review_present": true,
+    "unassessed_present": true,
+    "no_truth_score_schema": true,
+    "no_semantic_text_oracle": true,
+    "eight_fixture_tests": true,
+    "fixture_003_forbids_contradicted": true,
+    "artifact_gitignore_build_outputs": true
+  },
+  "overall": "PASS"
+}
