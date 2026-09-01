@@ -1,0 +1,22 @@
+{
+  "milestone": "P-05",
+  "artifact_status": "PASS_STATIC",
+  "runtime_status": "PENDING_LOCAL_RUN",
+  "expected_total_tests": 61,
+  "contract_change": false,
+  "schema_change_request_required": false,
+  "relation_rewiring_decision": "NO_AUTOMATIC_SEMANTIC_REWIRING",
+  "checks": {
+    "workspace_analysis_exists": true,
+    "stable_tie_rule": true,
+    "primary_target_a001": true,
+    "trace_expected_path": true,
+    "proposal_before_accept": true,
+    "human_accept_changes_conclusion": true,
+    "no_semantic_rewiring_test": true,
+    "nist_external_content": true,
+    "truth_score_absent_test": true,
+    "new_test_count_15": true
+  },
+  "overall": "PASS"
+}
