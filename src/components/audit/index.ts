@@ -1,1 +1,1 @@
-export const AUDIT_UI_IMPLEMENTATION_STATUS = "PENDING_P06" as const;
+export { AuditTrail } from "./AuditTrail";

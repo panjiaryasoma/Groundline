@@ -1,0 +1,20 @@
+{
+  "milestone": "P-06",
+  "artifact_status": "PASS_STATIC",
+  "runtime_status": "PENDING_LOCAL_RUN",
+  "expected_total_tests": 74,
+  "contract_change": false,
+  "schema_change_request_required": false,
+  "checks": {
+    "canonical_graph_types": true,
+    "focus_ephemeral": true,
+    "analysis_uses_domain_engine": true,
+    "proposal_uses_domain_authority": true,
+    "accept_uses_domain_authority": true,
+    "human_controls": true,
+    "webmcp_not_registered_in_p06": true,
+    "truth_language_absent": true,
+    "new_test_count_13": true
+  },
+  "overall": "PASS"
+}

@@ -6,7 +6,7 @@ Groundline is a WebMCP-native human-agent reasoning workspace for mapping claims
 
 ## Current status
 
-**P-00 through P-04 are locally verified; P-05 Integration 001 is implemented in the artifact and awaits local runtime verification.**
+**P-00 through P-05 are locally verified; P-06 Minimal Graph UI is implemented in the artifact and awaits local runtime/browser verification.**
 
 The scaffold already includes:
 - React + TypeScript + Vite;
@@ -63,9 +63,9 @@ Core invariant:
 
 ## Production order
 
-Next after P-05 runtime verification:
-1. P-06 minimal graph UI
-2. P-07/P-08 WebMCP vertical slice
+Next after P-06 runtime/browser verification:
+1. P-07 WebMCP bootstrap
+2. P-08 WebMCP vertical slice
 
 See `docs/preproduction/handoff/PRODUCTION_TASK_ORDER_v1.0_DRAFT.md`.
 

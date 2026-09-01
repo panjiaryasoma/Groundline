@@ -1,1 +1,1 @@
-export const REVISION_UI_IMPLEMENTATION_STATUS = "PENDING_P06" as const;
+export { RevisionPanel } from "./RevisionPanel";

@@ -1,1 +1,1 @@
-export const INSPECTOR_IMPLEMENTATION_STATUS = "PENDING_P06" as const;
+export { InspectorPanel } from "./InspectorPanel";

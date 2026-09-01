@@ -1,23 +1,39 @@
 :root {
-  font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont,
-    "Segoe UI", sans-serif;
-  color: #22211f;
-  background: #f2efe7;
+  font-family:
+    Inter, ui-sans-serif, system-ui, -apple-system,
+    BlinkMacSystemFont, "Segoe UI", sans-serif;
+  color: #24211d;
+  background: #f1eee5;
   font-synthesis: none;
 
-  --paper: #f2efe7;
-  --ink: #22211f;
-  --muted: #716d64;
-  --rule: #c9c1b1;
-  --clay: #a56f57;
-  --sand: #c8b388;
-  --olive: #8e9271;
-  --slate: #697075;
-  --stone: #b9b0a0;
+  --paper: #f1eee5;
+  --paper-deep: #e8e2d3;
+  --ink: #24211d;
+  --muted: #746d61;
+  --rule: #c7bfaf;
+  --rule-strong: #8e877b;
+
+  --sand: #d8c7a0;
+  --stone: #c9c3b6;
+  --clay: #cfad9c;
+  --olive: #a9aa8f;
+  --slate: #aeb2b0;
+  --fault: #7d3f32;
+
+  --critical: #7d3f32;
+  --review: #8a6c2f;
+  --stable: #55634e;
+  --unassessed: #736f69;
+
+  color-scheme: light;
 }
 
 * {
   box-sizing: border-box;
+}
+
+html {
+  background: var(--paper);
 }
 
 body {
@@ -32,4 +48,11 @@ input,
 textarea,
 select {
   font: inherit;
+}
+
+button:focus-visible,
+textarea:focus-visible,
+a:focus-visible {
+  outline: 2px solid var(--ink);
+  outline-offset: 3px;
 }

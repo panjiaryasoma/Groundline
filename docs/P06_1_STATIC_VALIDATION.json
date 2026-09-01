@@ -1,0 +1,15 @@
+{
+  "milestone": "P-06.1",
+  "status": "PASS_STATIC",
+  "expected_total_tests": 76,
+  "contract_change": false,
+  "checks": {
+    "cycle_complete_guard": true,
+    "analysis_freshness_guard": true,
+    "duplicate_proposal_guard": true,
+    "post_review_analysis_guard": true,
+    "minimap_removed": true,
+    "regression_duplicate_test": true,
+    "regression_stale_test": true
+  }
+}
