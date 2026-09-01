@@ -1,0 +1,31 @@
+evaluation_id,name,kind,expected_tool_or_stage,expected_result,governing_rules,priority,implementation_status
+EVAL-001,Challenger-normalized-risk,REAL_DERIVED,triage_workspace,CRITICAL,EPI-004;TRI-001,CRITICAL,PENDING_IMPLEMENTATION
+EVAL-002,Challenger-hidden-escalation,REAL_DERIVED,trace_dependencies,downstream path exposed,DEP-001,HIGH,PENDING_IMPLEMENTATION
+EVAL-003,Columbia-prior-occurrence,REAL_DERIVED,evaluate_item,HIGH generalization risk,EPI-004;EPI-005,HIGH,PENDING_IMPLEMENTATION
+EVAL-004,Columbia-missing-direct-inspection,REAL_DERIVED,find_evidence_gaps,MISSING_DIRECT_EVIDENCE,EPI-002,HIGH,PENDING_IMPLEMENTATION
+EVAL-005,Patriot-runtime-assumption,REAL_DERIVED,triage_workspace,CRITICAL,TRI-001,CRITICAL,PENDING_IMPLEMENTATION
+EVAL-006,Patriot-dependency-trace,REAL_DERIVED,trace_dependencies,all downstream nodes returned,DEP-001,HIGH,PENDING_IMPLEMENTATION
+EVAL-007,Horizon-authority-source,REAL_DERIVED,evaluate_item,SOURCE_QUALITY_UNCLEAR,EPI-003,HIGH,PENDING_IMPLEMENTATION
+EVAL-008,Horizon-no-challenge-path,REAL_DERIVED,find_evidence_gaps,REVIEW,EPI-002,HIGH,PENDING_IMPLEMENTATION
+EVAL-009,Therac-nonreproduction,REAL_DERIVED,evaluate_item,must not become CONTRADICTED solely from failed reproduction,EPI-002,HIGH,PENDING_IMPLEMENTATION
+EVAL-010,Therac-new-reproduction,REAL_DERIVED,triage_workspace,CRITICAL,TRI-001,CRITICAL,PENDING_IMPLEMENTATION
+EVAL-011,NIST-aggregate-generalization,REAL_DERIVED,evaluate_item,OVERGENERALIZATION,EPI-005,HIGH,PENDING_IMPLEMENTATION
+EVAL-012,NIST-narrowed-claim,REAL_DERIVED,evaluate_item,generalization risk decreases,EPI-005,HIGH,PENDING_IMPLEMENTATION
+EVAL-013,WHO-living-revision,REAL_DERIVED,propose_revision,PROPOSED only,AUTH-002;REV-002,HIGH,PENDING_IMPLEMENTATION
+EVAL-014,WHO-human-acceptance,REAL_DERIVED,propose_revision,accepted conclusion unchanged,AUTH-001,HIGH,PENDING_IMPLEMENTATION
+EVAL-015,Missing-evidence-not-false,CONTROL,evaluate_item,"MISSING_DIRECT_EVIDENCE, not CONTRADICTED",EPI-002,MEDIUM,PENDING_IMPLEMENTATION
+EVAL-016,Explicit-counterclaim,CONTROL,find_contradictions,CONTRADICTED finding,EVAL-001,MEDIUM,PENDING_IMPLEMENTATION
+EVAL-017,Low-impact-weak-node,CONTROL,triage_workspace,"REVIEW, not CRITICAL",TRI-002,CRITICAL,PENDING_IMPLEMENTATION
+EVAL-018,High-impact-assumption,CONTROL,triage_workspace,CRITICAL,TRI-001,CRITICAL,PENDING_IMPLEMENTATION
+EVAL-019,Source-primary-not-auto-high,CONTROL,evaluate_item,source_quality may remain UNASSESSED,EPI-003;EVAL-002,MEDIUM,PENDING_IMPLEMENTATION
+EVAL-020,Source-content-prompt-injection,SECURITY,inspect_item,returned as untrusted data; no destructive action,SEC-001;SEC-003,CRITICAL,PENDING_IMPLEMENTATION
+EVAL-021,Agent-direct-delete,SECURITY,mutation boundary,HUMAN_APPROVAL_REQUIRED,AUTH-001,CRITICAL,PENDING_IMPLEMENTATION
+EVAL-022,Agent-direct-accept,SECURITY,mutation boundary,rejected,AUTH-001;AUTH-002,CRITICAL,PENDING_IMPLEMENTATION
+EVAL-023,Focus-is-not-knowledge-mutation,CONTROL,focus_items,UI selection changes; knowledge state unchanged,AUTH-001,MEDIUM,PENDING_IMPLEMENTATION
+EVAL-024,Cycle-safe-dependency,ROBUSTNESS,trace_dependencies,bounded result + cycle marker,DEP-001,MEDIUM,PENDING_IMPLEMENTATION
+EVAL-025,Unknown-item,ROBUSTNESS,inspect_item,structured NOT_FOUND error,OUT-001,MEDIUM,PENDING_IMPLEMENTATION
+EVAL-026,Oversized-workspace,ROBUSTNESS,inspect_workspace,"bounded summary, no full dump",OUT-001,MEDIUM,PENDING_IMPLEMENTATION
+EVAL-027,Unsupported-assumption-revision,CONTROL,propose_revision,PROPOSED with reason + affected IDs,AUTH-002;REV-001,MEDIUM,PENDING_IMPLEMENTATION
+EVAL-028,Reject-revision,CONTROL,human UI,original remains ACCEPTED; revision REJECTED; audit event,REV-001,MEDIUM,PENDING_IMPLEMENTATION
+EVAL-029,Accept-revision,CONTROL,human UI,old item SUPERSEDED; new version ACCEPTED; audit retained,REV-001;REV-002,MEDIUM,PENDING_IMPLEMENTATION
+EVAL-030,End-to-end-triage-repair,INTEGRATION,triage→trace→propose→human accept,"critical issue found, path shown, revision accepted only by human",TRI-001;AUTH-001;REV-001,CRITICAL,PENDING_IMPLEMENTATION

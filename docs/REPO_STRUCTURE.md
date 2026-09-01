@@ -1,0 +1,94 @@
+# Groundline Repository Structure
+
+```text
+Groundline/
+└── .env.example
+└── .gitignore
+└── .nvmrc
+└── LICENSE
+└── README.md
+└── docs/
+    └── SCAFFOLD_CONTRACT_EVALUATION.md
+    └── SCAFFOLD_VALIDATION.json
+    └── preproduction/
+        └── README.md
+        └── active-contracts/
+            └── BASELINE_CONTRACT.md
+            └── FEATURE_SCHEMA_FINAL.yaml
+            └── SCHEMA_FINALIZATION_DECISION.md
+            └── TOOLCHAIN_DECISION.md
+        └── handoff/
+            └── PRODUCTION_START_GATE_v1.0_READY.md
+            └── PRODUCTION_TASK_ORDER_v1.0_DRAFT.md
+        └── integration-001/
+            └── EXPECTED_GATE_RESULTS.yaml
+            └── EXPECTED_SCORES.yaml
+            └── EXPECTED_TRIAGE_OUTPUT.yaml
+            └── POLICY_FIXTURE.yaml
+        └── triage-acceptance/
+            └── TRIAGE_EVALUATION_SUITE.md
+            └── fixtures/
+└── index.html
+└── package.json
+└── public/
+    └── .gitkeep
+└── src/
+    └── app/
+        └── App.tsx
+    └── components/
+        └── audit/
+            └── index.ts
+        └── graph/
+            └── index.ts
+        └── inspector/
+            └── index.ts
+        └── revision/
+            └── index.ts
+    └── domain/
+        └── dependencies.ts
+        └── errors.ts
+        └── evaluation.ts
+        └── revisions.ts
+        └── schema.ts
+        └── triage.ts
+    └── fixtures/
+        └── integration001.ts
+    └── main.tsx
+    └── state/
+        └── workspaceStore.ts
+    └── styles/
+        └── app.css
+        └── tokens.css
+    └── webmcp/
+        └── modelContext.ts
+        └── registerTools.ts
+        └── toolSchemas.ts
+        └── tools/
+            └── evaluateItem.ts
+            └── findContradictions.ts
+            └── findEvidenceGaps.ts
+            └── focusItems.ts
+            └── inspectItem.ts
+            └── inspectWorkspace.ts
+            └── proposeRevision.ts
+            └── traceDependencies.ts
+            └── triageWorkspace.ts
+└── tests/
+    └── contract/
+        └── authority.test.ts
+        └── schema.test.ts
+        └── webmcp-surface.test.ts
+    └── integration/
+        └── README.md
+    └── security/
+        └── README.md
+    └── setup.ts
+    └── triage/
+        └── README.md
+    └── webmcp/
+        └── README.md
+└── tsconfig.app.json
+└── tsconfig.json
+└── tsconfig.node.json
+└── vite.config.ts
+```

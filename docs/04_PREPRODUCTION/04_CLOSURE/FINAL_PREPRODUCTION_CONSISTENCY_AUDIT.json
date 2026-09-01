@@ -1,0 +1,155 @@
+{
+  "audit_id": "GL-FINAL-PREPRODUCTION-AUDIT-001",
+  "version": "1.1",
+  "generated_at": "2026-09-02T00:00:00+07:00",
+  "overall_status": "PASS",
+  "baseline_contract": "GL-BASELINE-1.1",
+  "active_schema": "FEATURE_SCHEMA_FINAL.yaml",
+  "active_schema_version": "1.1.0",
+  "checks": [
+    {
+      "id": "YAML-POLICY_FIXTURE.yaml",
+      "status": "PASS",
+      "detail": "parses"
+    },
+    {
+      "id": "YAML-EXPECTED_TRIAGE_OUTPUT.yaml",
+      "status": "PASS",
+      "detail": "parses"
+    },
+    {
+      "id": "YAML-EXPECTED_SCORES.yaml",
+      "status": "PASS",
+      "detail": "parses"
+    },
+    {
+      "id": "YAML-EXPECTED_GATE_RESULTS.yaml",
+      "status": "PASS",
+      "detail": "parses"
+    },
+    {
+      "id": "YAML-FEATURE_SCHEMA_FINAL.yaml",
+      "status": "PASS",
+      "detail": "parses"
+    },
+    {
+      "id": "TRIAGE-FIXTURE-COUNT",
+      "status": "PASS",
+      "detail": "8 fixtures"
+    },
+    {
+      "id": "TRIAGE-STATE-COVERAGE",
+      "status": "PASS",
+      "detail": [
+        "CRITICAL",
+        "REVIEW",
+        "STABLE",
+        "UNASSESSED"
+      ]
+    },
+    {
+      "id": "NO-TRUTH-SCORE",
+      "status": "PASS",
+      "detail": "no truth_score field"
+    },
+    {
+      "id": "REVISION-NOT-KNOWLEDGE",
+      "status": "PASS",
+      "detail": "revision absent from knowledge enum"
+    },
+    {
+      "id": "TRIAGE-NOT-KNOWLEDGE",
+      "status": "PASS",
+      "detail": "triage absent from knowledge enum"
+    },
+    {
+      "id": "NINE-WEBMCP-TOOLS",
+      "status": "PASS",
+      "detail": 9
+    },
+    {
+      "id": "INTEGRATION-RELATIONS",
+      "status": "PASS",
+      "detail": "all relation endpoints exist"
+    },
+    {
+      "id": "INTEGRATION-SCORE-IDS",
+      "status": "PASS",
+      "detail": "expected score IDs exist"
+    },
+    {
+      "id": "INTEGRATION-TRIAGE-IDS",
+      "status": "PASS",
+      "detail": "triage IDs exist"
+    },
+    {
+      "id": "INTEGRATION-PRIMARY",
+      "status": "PASS",
+      "detail": "A-001"
+    },
+    {
+      "id": "CONTRACT-BASELINE_CONTRACT.md",
+      "status": "PASS",
+      "detail": "present"
+    },
+    {
+      "id": "CONTRACT-FEATURE_SCHEMA_FINAL.yaml",
+      "status": "PASS",
+      "detail": "present"
+    },
+    {
+      "id": "CONTRACT-SCHEMA_CHANGE_REQUEST_001.md",
+      "status": "PASS",
+      "detail": "present"
+    },
+    {
+      "id": "CONTRACT-README_PREPRODUCTION_CONTRACTS.md",
+      "status": "PASS",
+      "detail": "present"
+    },
+    {
+      "id": "CONTRACT-SCHEMA_FINALIZATION_DECISION.md",
+      "status": "PASS",
+      "detail": "present"
+    },
+    {
+      "id": "CONTRACT-SCHEMA_SUPERSESSION_NOTICE.md",
+      "status": "PASS",
+      "detail": "present"
+    },
+    {
+      "id": "CONTRACT-TOOLCHAIN_DECISION.md",
+      "status": "PASS",
+      "detail": "present"
+    },
+    {
+      "id": "PREVIOUS-BASELINE-PRESERVED",
+      "status": "PASS",
+      "detail": "13 files"
+    }
+  ],
+  "active_contract_sha256": {
+    "BASELINE_CONTRACT.md": "b9c05b06960f4f967ee04c95a0db67a4a93e7fd0362e168c03bb3f2f8a014eee",
+    "FEATURE_SCHEMA_FINAL.yaml": "e59303486f1a4a4ae8ca64ee59f5f55d2ccc2f65dfce66f7accc9a8b40d4a335",
+    "README_PREPRODUCTION_CONTRACTS.md": "ac10649c3aaef0b764a5bad5d079e8bf0c5b7073440d8fc5ab81cb32e8bb17e0",
+    "SCHEMA_CHANGE_REQUEST_001.md": "dc21fb02c775394c401375942260be9f659ff38664ec1e4d5d47b96acb501857",
+    "SCHEMA_FINALIZATION_DECISION.md": "07c332c0e4a2e7adc11aefac4b2c828a046b5e843e1dd1a7384fd483a7ffd3d0",
+    "SCHEMA_SUPERSESSION_NOTICE.md": "c8b572c096e0bc90bd40d455a2a95f3c78128d473394c52379145ebcc68f2580",
+    "TOOLCHAIN_DECISION.md": "c8feab212d7cce6a6d44733360622ad066f8523c65c573acaeb6261a6de62057"
+  },
+  "known_non_blocking_debt": [
+    "Runtime WebMCP tool selection has not yet been measured; preproduction only freezes expected behavior.",
+    "UI usability has not yet been user-tested.",
+    "Natural-language contradiction discovery remains intentionally bounded to represented relationships/rules in P0.",
+    "No claim is made that Groundline would have prevented the real incidents used in discovery.",
+    "Integration fixture contains synthetic internal benchmark content and must remain labeled synthetic."
+  ],
+  "next_gate": "IMPLEMENTATION_SCAFFOLD_AND_VERTICAL_SLICE",
+  "final_inventory": {
+    "new_file_count": 26,
+    "expected_new_file_count": 26,
+    "file_count_status": "PASS",
+    "missing_requested_files": [],
+    "dll_placeholder_directory_present": true
+  }
+}

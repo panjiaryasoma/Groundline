@@ -1,0 +1,39 @@
+{
+  "required_root_files": [
+    "package.json",
+    "README.md",
+    "LICENSE",
+    "index.html",
+    "vite.config.ts",
+    "tsconfig.json",
+    "tsconfig.app.json",
+    "tsconfig.node.json",
+    ".gitignore"
+  ],
+  "checks": {
+    "exists:package.json": true,
+    "exists:README.md": true,
+    "exists:LICENSE": true,
+    "exists:index.html": true,
+    "exists:vite.config.ts": true,
+    "exists:tsconfig.json": true,
+    "exists:tsconfig.app.json": true,
+    "exists:tsconfig.node.json": true,
+    "exists:.gitignore": true,
+    "stack:react": true,
+    "stack:xyflow": true,
+    "stack:zod": true,
+    "stack:zustand": true,
+    "tests:vitest": true,
+    "schema:no-truth-score": true,
+    "schema:no-revision-node": true,
+    "schema:no-triage-node": true,
+    "webmcp:nine-tools": true,
+    "yaml:POLICY_FIXTURE.yaml": true,
+    "yaml:EXPECTED_TRIAGE_OUTPUT.yaml": true,
+    "yaml:EXPECTED_SCORES.yaml": true,
+    "yaml:EXPECTED_GATE_RESULTS.yaml": true,
+    "yaml:FEATURE_SCHEMA_FINAL.yaml": true
+  },
+  "overall": "PASS"
+}

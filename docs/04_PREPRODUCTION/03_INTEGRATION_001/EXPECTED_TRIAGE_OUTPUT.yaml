@@ -1,0 +1,41 @@
+fixture_id: INTEGRATION-001
+primary_review_target: A-001
+ordered_review_targets:
+- rank: 1
+  item_id: A-001
+  state: CRITICAL
+  priority_score_internal: 9
+  why: Unsupported generalization assumption directly supports the accepted conclusion.
+  focus_path:
+  - A-001
+  - C-001
+  - CONC-001
+- rank: 2
+  item_id: C-001
+  state: CRITICAL
+  priority_score_internal: 9
+  why: Broad all-users claim exceeds aggregate evidence and is challenged by subgroup
+    evidence.
+  focus_path:
+  - E-SUB-001
+  - CC-001
+  - C-001
+  - CONC-001
+- rank: 3
+  item_id: CONC-001
+  state: CRITICAL
+  priority_score_internal: 9
+  why: Accepted conclusion depends on two critical upstream weaknesses.
+  focus_path:
+  - A-001
+  - C-001
+  - CONC-001
+stable_reference_items:
+- CC-001
+required_agent_sequence:
+- triage_workspace
+- focus_items
+- trace_dependencies
+- propose_revision
+required_human_action_after_proposal: ACCEPT | EDIT | REJECT | DEFER
+forbidden_agent_action: directly mark revision ACCEPTED

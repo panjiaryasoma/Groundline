@@ -1,0 +1,15 @@
+feature_id,feature,prd_requirement,discovery_basis,evaluation_coverage,schema_anchor
+F-001,Structured reasoning graph,FR-01,"FM-01,FM-02,FM-05","EVAL-001,EVAL-005,EVAL-011",workspace/items/relations
+F-002,Explicit assumptions,"FR-01,FR-06",FM-02,"EVAL-005,EVAL-018",ASSUMPTION
+F-003,Source provenance,"FR-07,FR-11",FM-03,"EVAL-007,EVAL-019,EVAL-020",SOURCE/source_metadata
+F-004,Evaluation dimensions,FR-04,"FM-01,FM-04,FM-05","EVAL-003,EVAL-009,EVAL-011,EVAL-015",evaluation_record
+F-005,Triage,FR-05,cross-case,"EVAL-001,EVAL-005,EVAL-017,EVAL-018,EVAL-030",triage_record
+F-006,Dependency tracing,FR-06,FM-07,"EVAL-006,EVAL-024,EVAL-030",relations
+F-007,Evidence-gap detection,FR-07,FM-04,"EVAL-004,EVAL-008,EVAL-015",finding
+F-008,Revision proposal,FR-08,FM-06,"EVAL-013,EVAL-027,EVAL-030",revision
+F-009,Human approval boundary,FR-09,governance,"EVAL-014,EVAL-021,EVAL-022,EVAL-028,EVAL-029",revision.state
+F-010,Audit history,FR-10,FM-06,"EVAL-028,EVAL-029",audit_event
+F-011,Untrusted source handling,FR-11,security,EVAL-020,WebMCP annotations
+F-012,Bounded tool outputs,FR-12,WebMCP robustness,"EVAL-024,EVAL-025,EVAL-026",tool contracts
+F-013,Contradiction finding,FR-09,FM-01,EVAL-016,relation/evaluation
+F-014,UI focus,FR-03,demo usability,"EVAL-023,EVAL-030",ephemeral UI state

@@ -1,0 +1,116 @@
+version: '1.0'
+workspace:
+  required:
+  - workspace_id
+  - title
+  - question_id
+  - accepted_conclusion_id
+  - items
+  - relations
+  - audit_events
+  properties:
+    workspace_id: string
+    title: string
+    question_id: string
+    accepted_conclusion_id: string|null
+    items: array<knowledge_item>
+    relations: array<relation>
+    evaluations: array<evaluation_record>
+    triage: array<triage_record>
+    revisions: array<revision>
+    audit_events: array<audit_event>
+knowledge_item:
+  types:
+  - QUESTION
+  - CLAIM
+  - COUNTERCLAIM
+  - EVIDENCE
+  - ASSUMPTION
+  - SOURCE
+  - CONCLUSION
+  states:
+  - DRAFT
+  - ACCEPTED
+  - SUPERSEDED
+  required:
+  - id
+  - type
+  - text
+  - state
+  - created_at
+  - created_by
+  optional:
+  - source_metadata
+  - scope
+  - tags
+  - supersedes_id
+relation:
+  types:
+  - SUPPORTS
+  - CHALLENGES
+  - DEPENDS_ON
+  - SOURCED_FROM
+  - QUALIFIES
+  - SUPERSEDES
+  required:
+  - id
+  - from_id
+  - to_id
+  - type
+evaluation_record:
+  required:
+  - evaluation_id
+  - item_id
+  - dimensions
+  - reason_codes
+  - referenced_item_ids
+  - created_at
+  dimensions:
+  - evidence_strength
+  - source_quality
+  - contradiction
+  - assumption_burden
+  - generalization_risk
+  - downstream_impact
+triage_record:
+  states:
+  - CRITICAL
+  - REVIEW
+  - STABLE
+  - UNASSESSED
+  required:
+  - item_id
+  - state
+  - reason_codes
+  - downstream_accepted_ids
+revision:
+  states:
+  - PROPOSED
+  - ACCEPTED
+  - REJECTED
+  - EDITED_AND_ACCEPTED
+  - DEFERRED
+  required:
+  - revision_id
+  - target_item_id
+  - proposed_text
+  - state
+  - reason_codes
+  - affected_item_ids
+  - created_by
+audit_event:
+  types:
+  - CREATE
+  - EDIT
+  - PROPOSE_REVISION
+  - ACCEPT_REVISION
+  - REJECT_REVISION
+  - SUPERSEDE
+  - EVALUATE
+  - TRIAGE
+  required:
+  - event_id
+  - event_type
+  - timestamp
+  - actor_type
+  - entity_ids

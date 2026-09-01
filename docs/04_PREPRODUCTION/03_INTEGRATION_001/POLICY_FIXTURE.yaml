@@ -1,0 +1,107 @@
+fixture_id: INTEGRATION-001
+title: High-stakes face recognition deployment reasoning board
+schema_version: 1.1.0
+purpose: Exercise graph evaluation, triage, dependency tracing, source handling, revision
+  proposal, and human approval boundary in one deterministic workspace.
+policy:
+  triage_formula: priority_score_internal = weakness_score_internal * impact_score_internal
+  critical: priority 7..9 OR weakness=3 with direct accepted-conclusion dependency
+  review: priority 3..6 OR material unassessed dimension requiring review
+  stable: priority 0..2 and no material unresolved issue
+  unassessed: insufficient information
+  truth_score_forbidden: true
+  agent_direct_accept_forbidden: true
+workspace:
+  workspace_id: WS-INT-001
+  title: Face Recognition Deployment Decision
+  question_id: Q-001
+  accepted_conclusion_id: CONC-001
+  items:
+  - id: Q-001
+    type: QUESTION
+    state: ACCEPTED
+    text: Should the organization deploy face recognition as the sole access-control
+      mechanism for a high-stakes process?
+  - id: SRC-INT-001
+    type: SOURCE
+    state: ACCEPTED
+    text: Internal aggregate validation report
+    source_metadata:
+      source_class: PRIMARY
+      title: Internal aggregate validation report
+      publisher: Example Organization
+      external_content: true
+      locator: synthetic fixture document
+  - id: SRC-NIST-001
+    type: SOURCE
+    state: ACCEPTED
+    text: NIST demographic effects evaluation
+    source_metadata:
+      source_class: PRIMARY
+      title: 'Face Recognition Vendor Test Part 3: Demographic Effects'
+      publisher: NIST
+      url: https://www.nist.gov/publications/face-recognition-vendor-test-part-3-demographic-effects
+      external_content: true
+  - id: E-AGG-001
+    type: EVIDENCE
+    state: ACCEPTED
+    text: The internal aggregate benchmark reports high overall accuracy under the
+      tested conditions.
+  - id: E-SUB-001
+    type: EVIDENCE
+    state: ACCEPTED
+    text: NIST reports demographic differentials across many evaluated face-recognition
+      algorithms and notes dependence on algorithm, application, data, and image quality.
+  - id: A-001
+    type: ASSUMPTION
+    state: ACCEPTED
+    text: Aggregate accuracy generalizes across demographic groups, capture conditions,
+      and the intended high-stakes deployment context.
+  - id: C-001
+    type: CLAIM
+    state: ACCEPTED
+    text: The system is sufficiently accurate for all enrolled users in the intended
+      deployment.
+  - id: CC-001
+    type: COUNTERCLAIM
+    state: ACCEPTED
+    text: Aggregate performance does not establish equal error behavior across demographic
+      groups or capture conditions.
+  - id: CONC-001
+    type: CONCLUSION
+    state: ACCEPTED
+    text: Deploy face recognition as the sole access-control mechanism for the high-stakes
+      process.
+  relations:
+  - id: R-001
+    from_id: E-AGG-001
+    to_id: C-001
+    type: SUPPORTS
+  - id: R-002
+    from_id: SRC-INT-001
+    to_id: E-AGG-001
+    type: SOURCED_FROM
+  - id: R-003
+    from_id: A-001
+    to_id: C-001
+    type: SUPPORTS
+  - id: R-004
+    from_id: C-001
+    to_id: CONC-001
+    type: SUPPORTS
+  - id: R-005
+    from_id: SRC-NIST-001
+    to_id: E-SUB-001
+    type: SOURCED_FROM
+  - id: R-006
+    from_id: E-SUB-001
+    to_id: CC-001
+    type: SUPPORTS
+  - id: R-007
+    from_id: CC-001
+    to_id: C-001
+    type: CHALLENGES
+  - id: R-008
+    from_id: A-001
+    to_id: CONC-001
+    type: DEPENDS_ON

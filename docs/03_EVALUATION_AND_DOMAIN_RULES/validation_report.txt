@@ -1,0 +1,38 @@
+GROUNDLINE PREPRODUCTION VALIDATION REPORT
+Version: 1.0
+Generated: 2026-09-02
+
+OVERALL STATUS: PASS
+
+CHECKS
+[PASS] yaml_domain_rules
+[PASS] yaml_evaluation_spec
+[PASS] yaml_feature_schema
+[PASS] evaluation_matrix_30
+[PASS] traceability_nonempty
+[PASS] source_suite_all_ids
+[PASS] no_truth_score_schema
+[PASS] human_authority_rule
+[PASS] prompt_injection_case
+
+REVIEW FINDINGS RESOLVED DURING BUILD
+1. Evaluation and triage were removed from node taxonomy and modeled as analysis records.
+2. Revision was separated from accepted knowledge; agent revisions begin PROPOSED.
+3. Source class was separated from source-quality evaluation.
+4. Missing evidence was separated from contradiction.
+5. Historical incidents are marked failure-mode evidence; real-derived evals are controlled fixtures, not prevention claims.
+6. Human authority was formalized through AUTH-001/AUTH-002 and negative security evals.
+7. Prompt injection through evidence/source content was added as a first-class WebMCP security case.
+8. Cyclic and oversized graph cases were added.
+9. WebMCP tool-selection/parameter quality targets were added.
+10. Hackathon delivery constraints were added to the release gate.
+
+OPEN IMPLEMENTATION DEBT
+- Natural-language contradiction discovery is intentionally bounded.
+- Evaluation heuristics still need implementation and runtime calibration.
+- WebMCP tool-selection targets need repeated post-implementation runs.
+- UX has not yet been user-tested.
+- Groundline real-world effectiveness is unvalidated and must not be claimed.
+
+FINAL GATE
+PASS TO IMPLEMENTATION SCAFFOLD + FIRST VERTICAL SLICE.

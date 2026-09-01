@@ -1,0 +1,155 @@
+.app-shell {
+  width: min(1200px, calc(100% - 48px));
+  margin: 0 auto;
+  padding: 42px 0 64px;
+}
+
+.masthead {
+  display: flex;
+  justify-content: space-between;
+  gap: 32px;
+  align-items: flex-start;
+  border-bottom: 1px solid var(--ink);
+  padding-bottom: 24px;
+}
+
+.eyebrow,
+.section-label {
+  margin: 0 0 8px;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  font-size: 0.72rem;
+  color: var(--muted);
+}
+
+h1 {
+  margin: 0;
+  font-family: Georgia, "Times New Roman", serif;
+  font-weight: 500;
+  font-size: clamp(3rem, 8vw, 6.8rem);
+  line-height: 0.9;
+  letter-spacing: -0.05em;
+}
+
+.tagline {
+  margin: 14px 0 0;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 1.15rem;
+}
+
+.status-block {
+  display: grid;
+  gap: 7px;
+  min-width: 180px;
+  padding-top: 8px;
+  text-align: right;
+  font-size: 0.72rem;
+  letter-spacing: 0.1em;
+  color: var(--muted);
+}
+
+.ground-section {
+  position: relative;
+  padding-top: 54px;
+}
+
+.ground-section h2 {
+  max-width: 760px;
+  margin: 0;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: clamp(1.8rem, 4vw, 3.3rem);
+  font-weight: 500;
+}
+
+.question {
+  max-width: 780px;
+  color: var(--muted);
+  line-height: 1.6;
+}
+
+.strata {
+  position: relative;
+  overflow: hidden;
+  margin-top: 48px;
+  border-top: 2px solid var(--ink);
+  border-bottom: 1px solid var(--ink);
+}
+
+.stratum {
+  display: flex;
+  align-items: center;
+  height: 66px;
+  padding: 0 20px;
+  border-top: 1px solid rgba(34, 33, 31, 0.28);
+  font-size: 0.7rem;
+  letter-spacing: 0.14em;
+}
+
+.stratum-claim { background: color-mix(in srgb, var(--sand) 58%, var(--paper)); }
+.stratum-evidence { background: color-mix(in srgb, var(--stone) 72%, var(--paper)); }
+.stratum-assumption { background: color-mix(in srgb, var(--clay) 38%, var(--paper)); }
+.stratum-source { background: color-mix(in srgb, var(--slate) 34%, var(--paper)); }
+
+.fault-line {
+  position: absolute;
+  top: -12px;
+  left: 66%;
+  width: 3px;
+  height: 310px;
+  background: var(--ink);
+  transform: rotate(16deg);
+  transform-origin: top;
+}
+
+.scaffold-note {
+  display: flex;
+  justify-content: space-between;
+  gap: 28px;
+  margin-top: 30px;
+  padding-top: 24px;
+  border-top: 1px solid var(--rule);
+}
+
+.scaffold-note h3 {
+  margin: 0 0 8px;
+  font-family: Georgia, "Times New Roman", serif;
+  font-weight: 500;
+  font-size: 1.5rem;
+}
+
+.scaffold-note p {
+  max-width: 700px;
+  line-height: 1.55;
+  color: var(--muted);
+}
+
+button {
+  align-self: flex-start;
+  border: 1px solid var(--ink);
+  border-radius: 0;
+  background: transparent;
+  color: var(--ink);
+  padding: 12px 16px;
+  cursor: pointer;
+}
+
+button:hover {
+  background: var(--ink);
+  color: var(--paper);
+}
+
+@media (max-width: 720px) {
+  .app-shell {
+    width: min(100% - 28px, 1200px);
+    padding-top: 24px;
+  }
+
+  .masthead,
+  .scaffold-note {
+    flex-direction: column;
+  }
+
+  .status-block {
+    text-align: left;
+  }
+}

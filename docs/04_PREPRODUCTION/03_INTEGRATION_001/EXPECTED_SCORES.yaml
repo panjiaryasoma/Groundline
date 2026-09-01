@@ -1,0 +1,64 @@
+fixture_id: INTEGRATION-001
+note: All numeric values are operational triage priority mechanics, not truth/confidence
+  scores.
+subjects:
+  A-001:
+    dimensions:
+      evidence_strength: LOW
+      source_quality: UNASSESSED
+      contradiction: MODERATE
+      assumption_burden: HIGH
+      generalization_risk: HIGH
+      downstream_impact: HIGH
+    weakness_score_internal: 3
+    impact_score_internal: 3
+    priority_score_internal: 9
+    expected_triage: CRITICAL
+    reason_codes:
+    - UNSUPPORTED_ASSUMPTION
+    - OVERGENERALIZATION
+  C-001:
+    dimensions:
+      evidence_strength: MODERATE
+      source_quality: MODERATE
+      contradiction: HIGH
+      assumption_burden: HIGH
+      generalization_risk: HIGH
+      downstream_impact: HIGH
+    weakness_score_internal: 3
+    impact_score_internal: 3
+    priority_score_internal: 9
+    expected_triage: CRITICAL
+    reason_codes:
+    - CONTRADICTED
+    - OVERGENERALIZATION
+    - SCOPE_MISMATCH
+  CC-001:
+    dimensions:
+      evidence_strength: HIGH
+      source_quality: HIGH
+      contradiction: LOW
+      assumption_burden: LOW
+      generalization_risk: LOW
+      downstream_impact: MODERATE
+    weakness_score_internal: 0
+    impact_score_internal: 2
+    priority_score_internal: 0
+    expected_triage: STABLE
+    reason_codes: []
+  CONC-001:
+    dimensions:
+      evidence_strength: LOW
+      source_quality: MODERATE
+      contradiction: HIGH
+      assumption_burden: HIGH
+      generalization_risk: HIGH
+      downstream_impact: HIGH
+    weakness_score_internal: 3
+    impact_score_internal: 3
+    priority_score_internal: 9
+    expected_triage: CRITICAL
+    reason_codes:
+    - DEPENDENCY_ON_UNASSESSED_NODE
+    - CONTRADICTED
+    - OVERGENERALIZATION

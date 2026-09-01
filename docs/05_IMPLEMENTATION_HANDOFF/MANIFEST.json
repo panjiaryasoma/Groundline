@@ -1,0 +1,83 @@
+{
+  "manifest_version": "1.0",
+  "product": "Groundline",
+  "package_version": "preproduction-v1.2",
+  "generated_at": "2026-09-02T01:45:00+07:00",
+  "phase": "IMPLEMENTATION_HANDOFF",
+  "status": "READY_TO_START_PRODUCTION",
+  "official_submission_deadline": {
+    "pacific": "2026-09-03T13:00:00-07:00",
+    "jakarta": "2026-09-04T03:00:00+07:00"
+  },
+  "active_contract": {
+    "id": "GL-BASELINE-1.1",
+    "schema": "04_PREPRODUCTION/01_CONTRACTS_ACTIVE/FEATURE_SCHEMA_FINAL.yaml",
+    "schema_version": "1.1.0"
+  },
+  "implementation_stack": [
+    "React",
+    "TypeScript",
+    "Vite",
+    "@xyflow/react",
+    "Zod",
+    "Zustand-preferred",
+    "CSS",
+    "Vitest",
+    "React Testing Library",
+    "Vercel",
+    "WebMCP"
+  ],
+  "custom_training_dataset_required": false,
+  "custom_ml_model_required": false,
+  "p0_webmcp_tools": [
+    "inspect_workspace",
+    "inspect_item",
+    "evaluate_item",
+    "triage_workspace",
+    "trace_dependencies",
+    "find_contradictions",
+    "find_evidence_gaps",
+    "focus_items",
+    "propose_revision"
+  ],
+  "acceptance_assets": {
+    "broad_evaluation_cases": 30,
+    "triage_acceptance_cases": 8,
+    "integration_cases": 1
+  },
+  "handoff_files": [
+    "DEADLINE_AND_CUT_SCOPE_PLAN_v1.0_DRAFT.md",
+    "HANDOFF_DECISION_SUMMARY.md",
+    "IMPLEMENTATION_HANDOFF_PLAN_v1.0_DRAFT.md",
+    "IMPLEMENTATION_HANDOFF_REVIEW_v1.0.md",
+    "MANIFEST.json",
+    "PRODUCTION_START_GATE_v1.0_READY.md",
+    "PRODUCTION_TASK_ORDER_v1.0_DRAFT.md",
+    "README_IMPLEMENTATION_HANDOFF.md",
+    "REPO_EXECUTION_PLAN_v1.0_DRAFT.md",
+    "SALVAGE_AUDIT_v1.0_FINAL.md",
+    "TESTING_AND_EVALUATION_PLAN_v1.0_DRAFT.md"
+  ],
+  "required_submission_artifacts": [
+    "public_live_url",
+    "public_repo",
+    "open_source_license",
+    "english_project_description",
+    "youtube_demo_under_3_minutes_with_audio",
+    "webmcp_browser_test"
+  ],
+  "production_authorized": true,
+  "production_complete": false,
+  "sha256": {
+    "DEADLINE_AND_CUT_SCOPE_PLAN_v1.0_DRAFT.md": "896b42915c26edd2fd351531b7ec07036ca0224a7818e5fab08724d926719037",
+    "HANDOFF_DECISION_SUMMARY.md": "c751815dd24cc1c4b42df620cd2e4b0026a7882b551868809d88f9283f3a9aa6",
+    "IMPLEMENTATION_HANDOFF_PLAN_v1.0_DRAFT.md": "b8bc69838eb43622c43c041fa572e9e9f8c07568f48623c716d2238442059622",
+    "IMPLEMENTATION_HANDOFF_REVIEW_v1.0.md": "1c65bedd1b28e70035681bda9988f46fc983f5deb2e2389fbae2634ee894ca29",
+    "PRODUCTION_START_GATE_v1.0_READY.md": "ac12a3e10bd5bc5e328049de89009de8d99dff81ac2dc71f354cf517fe3b1ad1",
+    "PRODUCTION_TASK_ORDER_v1.0_DRAFT.md": "1251a099234955bd002d676d3f27a40d580d560c7377c485f277286dde21f959",
+    "README_IMPLEMENTATION_HANDOFF.md": "57138e979844e26aa5bd510b1a4f33b1e142ca5584b1e3a5687c0de93c4f2126",
+    "REPO_EXECUTION_PLAN_v1.0_DRAFT.md": "f43977cd77b649ec4d64f61aeb424ca6b72595d5dd46ec7036009368e9c6c6a2",
+    "SALVAGE_AUDIT_v1.0_FINAL.md": "5bdd4d04ddef64d3da423571d7546e7335edbca67eac7e0b3d208f1094fc615a",
+    "TESTING_AND_EVALUATION_PLAN_v1.0_DRAFT.md": "ec34ca8dd98a522dd4aec126d7ba50daed0d00552239db50b609316bfc4b0905"
+  }
+}

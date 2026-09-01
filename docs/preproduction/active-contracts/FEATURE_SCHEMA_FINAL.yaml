@@ -1,0 +1,276 @@
+schema_version: 1.1.0
+product: Groundline
+status: FINAL_PREPRODUCTION_ACTIVE
+supersedes: 3 EVALUATION_AND_DOMAIN_RULES/feature_schema_v1.0.yaml
+enums:
+  knowledge_type:
+  - QUESTION
+  - CLAIM
+  - COUNTERCLAIM
+  - EVIDENCE
+  - ASSUMPTION
+  - SOURCE
+  - CONCLUSION
+  knowledge_state:
+  - DRAFT
+  - ACCEPTED
+  - SUPERSEDED
+  relation_type:
+  - SUPPORTS
+  - CHALLENGES
+  - DEPENDS_ON
+  - SOURCED_FROM
+  - QUALIFIES
+  - SUPERSEDES
+  revision_state:
+  - PROPOSED
+  - ACCEPTED
+  - REJECTED
+  - EDITED_AND_ACCEPTED
+  - DEFERRED
+  triage_state:
+  - CRITICAL
+  - REVIEW
+  - STABLE
+  - UNASSESSED
+  dimension_rating:
+  - LOW
+  - MODERATE
+  - HIGH
+  - UNASSESSED
+  actor_type:
+  - HUMAN
+  - AGENT
+  - SYSTEM
+  source_class:
+  - PRIMARY
+  - SECONDARY
+  - TERTIARY
+  - UNKNOWN
+workspace:
+  required:
+  - schema_version
+  - workspace_id
+  - title
+  - question_id
+  - accepted_conclusion_id
+  - items
+  - relations
+  - evaluations
+  - triage_records
+  - revisions
+  - audit_events
+  properties:
+    schema_version: string
+    workspace_id: string
+    title: string
+    question_id: string
+    accepted_conclusion_id: string|null
+    items: array<knowledge_item>
+    relations: array<relation>
+    evaluations: array<evaluation_record>
+    triage_records: array<triage_record>
+    revisions: array<revision>
+    audit_events: array<audit_event>
+  ephemeral_ui_state_not_part_of_accepted_knowledge:
+    focused_item_ids: array<string>
+    selected_item_id: string|null
+knowledge_item:
+  required:
+  - id
+  - type
+  - text
+  - state
+  - created_at
+  - created_by
+  - updated_at
+  properties:
+    id: string
+    type: knowledge_type
+    text: string
+    state: knowledge_state
+    created_at: iso8601
+    created_by: actor_type
+    updated_at: iso8601
+    scope:
+      population: string|null
+      context: string|null
+      timeframe: string|null
+    tags: array<string>
+    supersedes_id: string|null
+    source_metadata: source_metadata|null
+  constraints:
+  - source_metadata is allowed only when type=SOURCE
+  - agent-created accepted knowledge is forbidden; agent output begins DRAFT or PROPOSED
+    through revision
+source_metadata:
+  required:
+  - source_class
+  - title
+  - external_content
+  properties:
+    source_class: source_class
+    title: string
+    publisher: string|null
+    author: string|null
+    published_at: string|null
+    url: string|null
+    locator: string|null
+    accessed_at: string|null
+    content_hash: string|null
+    external_content: boolean
+  constraints:
+  - 'at least one provenance locator must exist: url, locator, content_hash, or explicit
+    UNKNOWN representation'
+  - source_class is provenance category and MUST NOT be treated as source_quality
+relation:
+  required:
+  - id
+  - from_id
+  - to_id
+  - type
+  properties:
+    id: string
+    from_id: string
+    to_id: string
+    type: relation_type
+    created_at: iso8601|null
+    created_by: actor_type|null
+  constraints:
+  - from_id and to_id must reference existing knowledge items
+  - self-relation forbidden
+  - dependency traversal must be cycle-safe even if malformed fixtures contain cycles
+dimension_result:
+  required:
+  - rating
+  - reason_codes
+  - referenced_item_ids
+  properties:
+    rating: dimension_rating
+    reason_codes: array<string>
+    referenced_item_ids: array<string>
+evaluation_record:
+  required:
+  - evaluation_id
+  - item_id
+  - status
+  - dimensions
+  - reason_codes
+  - referenced_item_ids
+  - created_at
+  - generated_by
+  properties:
+    evaluation_id: string
+    item_id: string
+    status: COMPLETE|PARTIAL|UNASSESSED
+    dimensions:
+      evidence_strength: dimension_result
+      source_quality: dimension_result
+      contradiction: dimension_result
+      assumption_burden: dimension_result
+      generalization_risk: dimension_result
+      downstream_impact: dimension_result
+    reason_codes: array<string>
+    referenced_item_ids: array<string>
+    created_at: iso8601
+    generated_by: SYSTEM|AGENT
+triage_record:
+  required:
+  - item_id
+  - state
+  - weakness_score_internal
+  - impact_score_internal
+  - priority_score_internal
+  - reason_codes
+  - downstream_accepted_ids
+  properties:
+    item_id: string
+    state: triage_state
+    weakness_score_internal: integer|null[0..3]
+    impact_score_internal: integer|null[1..3]
+    priority_score_internal: integer|null[0..9]
+    reason_codes: array<string>
+    downstream_accepted_ids: array<string>
+    direct_to_accepted_conclusion: boolean
+  constraints:
+  - internal scores are operational prioritization values, NOT truth/confidence scores
+  - CRITICAL requires material weakness plus high downstream impact or direct accepted-conclusion
+    dependency
+  - UNASSESSED is used when material inputs are insufficient
+revision:
+  required:
+  - revision_id
+  - target_item_id
+  - proposed_text
+  - state
+  - reason_codes
+  - affected_item_ids
+  - created_by
+  - created_at
+  properties:
+    revision_id: string
+    target_item_id: string
+    proposed_text: string
+    state: revision_state
+    reason_codes: array<string>
+    affected_item_ids: array<string>
+    created_by: actor_type
+    created_at: iso8601
+    reviewed_by: actor_type|null
+    reviewed_at: iso8601|null
+  constraints:
+  - AGENT-created revision MUST start PROPOSED
+  - only explicit HUMAN action may transition a proposed revision into an accepted
+    state
+audit_event:
+  required:
+  - event_id
+  - event_type
+  - timestamp
+  - actor_type
+  - entity_ids
+  properties:
+    event_id: string
+    event_type: CREATE|EDIT|PROPOSE_REVISION|ACCEPT_REVISION|REJECT_REVISION|SUPERSEDE|EVALUATE|TRIAGE|FOCUS
+    timestamp: iso8601
+    actor_type: actor_type
+    entity_ids: array<string>
+    metadata: object|null
+webmcp_tool_surface:
+  inspect_workspace:
+    knowledge_mutation: false
+    read_only_hint: true
+    returns_untrusted_content: true
+  inspect_item:
+    knowledge_mutation: false
+    read_only_hint: true
+    returns_untrusted_content: true
+  evaluate_item:
+    knowledge_mutation: false
+    read_only_hint: false
+    returns_untrusted_content: true
+  triage_workspace:
+    knowledge_mutation: false
+    read_only_hint: false
+    returns_untrusted_content: true
+  trace_dependencies:
+    knowledge_mutation: false
+    read_only_hint: true
+    returns_untrusted_content: false
+  find_contradictions:
+    knowledge_mutation: false
+    read_only_hint: false
+    returns_untrusted_content: true
+  find_evidence_gaps:
+    knowledge_mutation: false
+    read_only_hint: false
+    returns_untrusted_content: true
+  focus_items:
+    knowledge_mutation: false
+    read_only_hint: false
+    returns_untrusted_content: false
+  propose_revision:
+    knowledge_mutation: false
+    creates_proposed_state: true
+    read_only_hint: false
+    returns_untrusted_content: true

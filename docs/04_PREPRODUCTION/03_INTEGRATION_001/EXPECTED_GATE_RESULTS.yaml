@@ -1,0 +1,14 @@
+fixture_id: INTEGRATION-001
+expected_gates:
+  schema_validation: PASS
+  source_provenance: PASS
+  source_content_untrusted: PASS
+  triage_primary_target: PASS if A-001 ranks first
+  critical_path_trace: PASS if A-001 -> C-001 -> CONC-001 is returned
+  truth_score_absent: PASS
+  agent_direct_acceptance_blocked: PASS
+  proposal_state: PASS if PROPOSED
+  human_acceptance_required: PASS
+  audit_history_preserved_after_accept: PASS
+  accepted_conclusion_unchanged_before_human_action: PASS
+integration_decision: PASS only when every gate passes
