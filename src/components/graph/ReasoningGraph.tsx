@@ -15,6 +15,7 @@ import {
   useState,
 } from "react";
 import "@xyflow/react/dist/style.css";
+import "../../styles/p11-4.css";
 
 import type {
   KnowledgeItem,
@@ -22,15 +23,22 @@ import type {
   Workspace,
 } from "../../domain/schema";
 import {
+  P114_ADDABLE_KNOWLEDGE_TYPES,
+  P114_ADDABLE_RELATION_TYPES,
+  addP114ReasoningItem,
+  type P114AddReasoningItemInput,
+} from "../../state/p114AddReasoningItem";
+import {
+  useWorkspaceStore,
+  type GraphSelectionRequest,
+} from "../../state/workspaceStore";
+import {
   applyGraphNodeChanges,
   getSelectedNodeIds,
   mergePreservedPositions,
   setAllGraphNodesSelected,
   selectSingleGraphNode,
 } from "./graphInteraction";
-import type {
-  GraphSelectionRequest,
-} from "../../state/workspaceStore";
 
 interface ReasoningGraphProps {
   workspace: Workspace;
@@ -59,6 +67,34 @@ const TYPE_LABEL: Record<KnowledgeItem["type"], string> = {
   SOURCE: "SOURCE",
   CONCLUSION: "CONCLUSION",
 };
+
+const ADD_TYPE_LABEL: Record<
+  P114AddReasoningItemInput["type"],
+  string
+> = {
+  CLAIM: "Claim",
+  COUNTERCLAIM: "Counterclaim",
+  ASSUMPTION: "Assumption",
+  EVIDENCE: "Evidence",
+};
+
+const RELATION_LABEL: Record<
+  P114AddReasoningItemInput["relationType"],
+  string
+> = {
+  SUPPORTS: "supports",
+  CHALLENGES: "challenges",
+  DEPENDS_ON: "depends on",
+  QUALIFIES: "qualifies",
+};
+
+function defaultRelationForType(
+  type: P114AddReasoningItemInput["type"],
+): P114AddReasoningItemInput["relationType"] {
+  return type === "COUNTERCLAIM"
+    ? "CHALLENGES"
+    : "SUPPORTS";
+}
 
 function getTriageRecord(
   records: TriageRecord[],
@@ -199,6 +235,20 @@ export function ReasoningGraph({
   graphSelectionRequest,
   onSelectItem,
 }: ReasoningGraphProps) {
+  const experienceMode = useWorkspaceStore(
+    (state) => state.experienceMode,
+  );
+  const [addComposerOpen, setAddComposerOpen] =
+    useState(false);
+  const [addType, setAddType] = useState<
+    P114AddReasoningItemInput["type"]
+  >("CLAIM");
+  const [addText, setAddText] = useState("");
+  const [relationType, setRelationType] = useState<
+    P114AddReasoningItemInput["relationType"]
+  >("SUPPORTS");
+  const [targetItemId, setTargetItemId] = useState("");
+
   const structuralNodes = useMemo(
     () =>
       buildNodes(
@@ -217,6 +267,18 @@ export function ReasoningGraph({
     structuralNodes,
   );
 
+  const acceptedTargets = useMemo(
+    () =>
+      workspace.items.filter(
+        (item) => item.state === "ACCEPTED",
+      ),
+    [workspace.items],
+  );
+
+  const hasPendingRevision = workspace.revisions.some(
+    (revision) => revision.state === "PROPOSED",
+  );
+
   useEffect(() => {
     setNodes((current) =>
       mergePreservedPositions(
@@ -225,6 +287,34 @@ export function ReasoningGraph({
       ),
     );
   }, [structuralNodes]);
+
+  useEffect(() => {
+    if (!addComposerOpen) return;
+
+    const selectedAccepted = selectedItemId
+      ? acceptedTargets.some(
+          (item) => item.id === selectedItemId,
+        )
+      : false;
+
+    if (selectedAccepted && selectedItemId) {
+      setTargetItemId(selectedItemId);
+      return;
+    }
+
+    if (
+      !acceptedTargets.some(
+        (item) => item.id === targetItemId,
+      )
+    ) {
+      setTargetItemId(acceptedTargets[0]?.id ?? "");
+    }
+  }, [
+    acceptedTargets,
+    addComposerOpen,
+    selectedItemId,
+    targetItemId,
+  ]);
 
   const effectiveGraphSelectionRequest =
     graphSelectionRequest ?? {
@@ -296,6 +386,35 @@ export function ReasoningGraph({
     [onSelectItem, selectedItemId],
   );
 
+  function openAddComposer() {
+    const preferredTarget =
+      selectedItemId &&
+      acceptedTargets.some(
+        (item) => item.id === selectedItemId,
+      )
+        ? selectedItemId
+        : acceptedTargets[0]?.id ?? "";
+
+    setTargetItemId(preferredTarget);
+    setAddComposerOpen(true);
+  }
+
+  function submitAddedReasoningItem() {
+    if (!addText.trim() || !targetItemId) {
+      return;
+    }
+
+    addP114ReasoningItem({
+      type: addType,
+      text: addText,
+      relationType,
+      targetItemId,
+    });
+
+    setAddText("");
+    setAddComposerOpen(false);
+  }
+
   return (
     <section
       className="graph-panel"
@@ -310,6 +429,22 @@ export function ReasoningGraph({
         </div>
 
         <div className="graph-help__actions">
+          {experienceMode === "CUSTOM" ? (
+            <button
+              type="button"
+              className="graph-add-trigger"
+              onClick={openAddComposer}
+              disabled={hasPendingRevision}
+              title={
+                hasPendingRevision
+                  ? "Finish the pending human revision review first."
+                  : "Add another human-authored reasoning item."
+              }
+            >
+              + Add reasoning item
+            </button>
+          ) : null}
+
           <button
             type="button"
             onClick={selectAllNodes}
@@ -333,6 +468,119 @@ export function ReasoningGraph({
           </span>
         </div>
       </div>
+
+      {experienceMode === "CUSTOM" && addComposerOpen ? (
+        <form
+          className="graph-add-composer"
+          aria-label="Add reasoning item"
+          onSubmit={(event) => {
+            event.preventDefault();
+            submitAddedReasoningItem();
+          }}
+        >
+          <div className="graph-add-composer__heading">
+            <div>
+              <span>Add to this reasoning</span>
+              <strong>
+                New human-authored card
+              </strong>
+            </div>
+            <button
+              type="button"
+              className="graph-add-composer__close"
+              onClick={() => setAddComposerOpen(false)}
+              aria-label="Close add reasoning item"
+            >
+              ×
+            </button>
+          </div>
+
+          <div className="graph-add-composer__fields">
+            <label>
+              <span>Card type</span>
+              <select
+                value={addType}
+                onChange={(event) => {
+                  const nextType =
+                    event.target.value as P114AddReasoningItemInput["type"];
+                  setAddType(nextType);
+                  setRelationType(
+                    defaultRelationForType(nextType),
+                  );
+                }}
+              >
+                {P114_ADDABLE_KNOWLEDGE_TYPES.map(
+                  (type) => (
+                    <option key={type} value={type}>
+                      {ADD_TYPE_LABEL[type]}
+                    </option>
+                  ),
+                )}
+              </select>
+            </label>
+
+            <label>
+              <span>Relationship</span>
+              <select
+                value={relationType}
+                onChange={(event) =>
+                  setRelationType(
+                    event.target.value as P114AddReasoningItemInput["relationType"],
+                  )
+                }
+              >
+                {P114_ADDABLE_RELATION_TYPES.map(
+                  (relation) => (
+                    <option key={relation} value={relation}>
+                      {RELATION_LABEL[relation]}
+                    </option>
+                  ),
+                )}
+              </select>
+            </label>
+
+            <label className="graph-add-composer__target">
+              <span>Connect to</span>
+              <select
+                value={targetItemId}
+                onChange={(event) =>
+                  setTargetItemId(event.target.value)
+                }
+              >
+                {acceptedTargets.map((item) => (
+                  <option key={item.id} value={item.id}>
+                    {item.type} · {item.id} · {item.text.slice(0, 72)}
+                  </option>
+                ))}
+              </select>
+            </label>
+
+            <label className="graph-add-composer__text">
+              <span>Argument / evidence text</span>
+              <textarea
+                value={addText}
+                onChange={(event) =>
+                  setAddText(event.target.value)
+                }
+                rows={3}
+                placeholder="Add another claim, counterclaim, assumption, or piece of evidence."
+              />
+            </label>
+          </div>
+
+          <div className="graph-add-composer__footer">
+            <p>
+              Groundline will connect the new card using the relationship you chose, select it immediately, and clear stale semantic triage. It does not infer a hidden relationship for you.
+            </p>
+            <button
+              type="submit"
+              disabled={!addText.trim() || !targetItemId}
+            >
+              Add and inspect
+            </button>
+          </div>
+        </form>
+      ) : null}
 
       <div className="strata-labels" aria-hidden="true">
         <span>QUESTION</span>

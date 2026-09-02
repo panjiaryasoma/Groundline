@@ -1,0 +1,114 @@
+.graph-add-trigger {
+  white-space: nowrap;
+}
+
+.graph-add-composer {
+  position: relative;
+  z-index: 6;
+  margin: 0 1.25rem 1rem;
+  padding: 1rem;
+  border: 1px solid var(--border-strong);
+  background: rgba(244, 240, 229, 0.98);
+}
+
+.graph-add-composer__heading,
+.graph-add-composer__footer {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.graph-add-composer__heading span,
+.graph-add-composer label > span {
+  display: block;
+  margin-bottom: 0.35rem;
+  font-size: 0.72rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+}
+
+.graph-add-composer__heading strong {
+  display: block;
+  font-family: var(--font-serif);
+  font-size: 1.2rem;
+  font-weight: 500;
+}
+
+.graph-add-composer__close {
+  min-width: 2.25rem;
+  padding: 0.25rem 0.5rem;
+  font-size: 1.15rem;
+}
+
+.graph-add-composer__fields {
+  display: grid;
+  grid-template-columns: minmax(0, 0.8fr) minmax(0, 0.8fr) minmax(0, 1.4fr);
+  gap: 0.8rem;
+  margin-top: 1rem;
+}
+
+.graph-add-composer label {
+  min-width: 0;
+}
+
+.graph-add-composer select,
+.graph-add-composer textarea {
+  width: 100%;
+  border: 1px solid var(--border-strong);
+  border-radius: 0;
+  background: transparent;
+  color: var(--ink);
+  font: inherit;
+}
+
+.graph-add-composer select {
+  min-height: 2.6rem;
+  padding: 0.55rem 0.65rem;
+}
+
+.graph-add-composer textarea {
+  resize: vertical;
+  min-height: 5.7rem;
+  padding: 0.7rem;
+  line-height: 1.45;
+}
+
+.graph-add-composer__text {
+  grid-column: 1 / -1;
+}
+
+.graph-add-composer__footer {
+  align-items: center;
+  margin-top: 0.85rem;
+  padding-top: 0.85rem;
+  border-top: 1px solid var(--border);
+}
+
+.graph-add-composer__footer p {
+  max-width: 48rem;
+  margin: 0;
+  color: var(--ink-soft);
+  font-size: 0.86rem;
+  line-height: 1.45;
+}
+
+.graph-add-composer__footer button {
+  flex: 0 0 auto;
+}
+
+@media (max-width: 860px) {
+  .graph-add-composer__fields {
+    grid-template-columns: 1fr;
+  }
+
+  .graph-add-composer__text {
+    grid-column: auto;
+  }
+
+  .graph-add-composer__footer {
+    align-items: stretch;
+    flex-direction: column;
+  }
+}
