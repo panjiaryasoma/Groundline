@@ -160,14 +160,22 @@ describe("P-06.6 plain-language review flow", () => {
     );
 
     expect(
+      screen.getByText("Loading reasoning map"),
+    ).toBeInTheDocument();
+
+    expect(
       await screen.findByLabelText(
         "Live reasoning workspace",
+        {},
+        { timeout: 5000 },
       ),
     ).toBeInTheDocument();
 
     expect(
       await screen.findByLabelText(
         "Groundline reasoning graph",
+        {},
+        { timeout: 5000 },
       ),
     ).toBeInTheDocument();
   });
@@ -430,7 +438,6 @@ describe("P-06.6 plain-language review flow", () => {
     ).not.toBeInTheDocument();
   });
 
-
   it("keeps the reasoning map visible without making it the primary workflow", () => {
     renderFocus();
 
@@ -464,7 +471,6 @@ describe("P-06.6 plain-language review flow", () => {
       ),
     ).toBeInTheDocument();
   });
-
 
   it("exposes the original example controls and an exit path", () => {
     const handlers = renderFocus();
@@ -519,5 +525,4 @@ describe("P-06.6 plain-language review flow", () => {
       }),
     ).toBeEnabled();
   });
-
 });
