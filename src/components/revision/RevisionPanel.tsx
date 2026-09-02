@@ -33,14 +33,77 @@ export function RevisionPanel({
   }, [revision?.revision_id, revision?.proposed_text]);
 
   if (!revision) {
+    const repairRequest =
+      [...workspace.audit_events]
+        .reverse()
+        .find(
+          (event) =>
+            event.event_type === "FOCUS" &&
+            event.metadata
+              ?.requested_action ===
+              "PROPOSE_REPAIR",
+        );
+
+    const primaryRiskId =
+      typeof repairRequest?.metadata
+        ?.primary_risk_id === "string"
+        ? repairRequest.metadata
+            .primary_risk_id
+        : null;
+
+    const repairTargetId =
+      typeof repairRequest?.metadata
+        ?.repair_target_id === "string"
+        ? repairRequest.metadata
+            .repair_target_id
+        : null;
+
     return (
       <section className="revision-panel">
-        <p className="eyebrow">Revision proposal</p>
-        <h2>No pending proposal</h2>
-        <p className="muted-copy">
-          The agent may propose a repair. Accepted knowledge
-          does not change until a human reviews it.
+        <p className="eyebrow">
+          Revision proposal
         </p>
+
+        {repairRequest ? (
+          <>
+            <h2>
+              Waiting for agent proposal
+            </h2>
+            <p className="muted-copy">
+              Groundline prepared the repair
+              target. This panel will update
+              automatically when the connected
+              WebMCP agent calls{" "}
+              <code>propose_revision</code>.
+            </p>
+
+            <dl className="revision-waiting-meta">
+              <div>
+                <dt>Primary risk</dt>
+                <dd>
+                  {primaryRiskId ??
+                    "Not recorded"}
+                </dd>
+              </div>
+              <div>
+                <dt>Repair target</dt>
+                <dd>
+                  {repairTargetId ??
+                    "Not recorded"}
+                </dd>
+              </div>
+            </dl>
+          </>
+        ) : (
+          <>
+            <h2>No pending proposal</h2>
+            <p className="muted-copy">
+              The agent may propose a repair.
+              Accepted knowledge does not change
+              until a human reviews it.
+            </p>
+          </>
+        )}
       </section>
     );
   }

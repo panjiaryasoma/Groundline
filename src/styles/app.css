@@ -3110,3 +3110,55 @@ h1 {
     min-height: 560px;
   }
 }
+
+
+.revision-waiting-meta {
+  display: grid;
+  grid-template-columns:
+    repeat(2, minmax(0, 1fr));
+  gap: 0;
+  margin: 22px 0 0;
+  border-top: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+}
+
+.revision-waiting-meta > div {
+  padding: 14px 0;
+}
+
+.revision-waiting-meta > div + div {
+  padding-left: 18px;
+  border-left: 1px solid var(--border);
+}
+
+.revision-waiting-meta dt {
+  margin-bottom: 6px;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  font-size: 0.62rem;
+  color: var(--muted);
+}
+
+.revision-waiting-meta dd {
+  margin: 0;
+  font-family:
+    ui-monospace,
+    SFMono-Regular,
+    Menlo,
+    Monaco,
+    Consolas,
+    monospace;
+  font-size: 0.78rem;
+}
+
+@media (max-width: 700px) {
+  .revision-waiting-meta {
+    grid-template-columns: 1fr;
+  }
+
+  .revision-waiting-meta > div + div {
+    padding-left: 0;
+    border-left: 0;
+    border-top: 1px solid var(--border);
+  }
+}

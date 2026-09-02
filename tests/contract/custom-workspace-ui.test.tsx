@@ -37,14 +37,14 @@ describe("P-06.7 custom workspace next-step UX", () => {
             "C-USER-001",
             "CONC-USER-001",
           ],
-          basis: "STRUCTURAL_FALLBACK",
+          basis: "STRUCTURAL_FALLBACK" as const,
         }))}
         onPrepareRepairTarget={vi.fn(() => ({
           targetId: "CONC-USER-001",
           focusedItemIds: [
             "CONC-USER-001",
           ],
-          basis: "STRUCTURAL_FALLBACK",
+          basis: "STRUCTURAL_FALLBACK" as const,
         }))}
         onAccept={vi.fn()}
         onEditAndAccept={vi.fn()}
@@ -96,14 +96,14 @@ describe("P-06.7 custom workspace next-step UX", () => {
             "C-USER-001",
             "CONC-USER-001",
           ],
-          basis: "STRUCTURAL_FALLBACK",
+          basis: "STRUCTURAL_FALLBACK" as const,
         }))}
         onPrepareRepairTarget={vi.fn(() => ({
           targetId: "CONC-USER-001",
           focusedItemIds: [
             "CONC-USER-001",
           ],
-          basis: "STRUCTURAL_FALLBACK",
+          basis: "STRUCTURAL_FALLBACK" as const,
         }))}
         onAccept={vi.fn()}
         onEditAndAccept={vi.fn()}
@@ -173,14 +173,14 @@ describe("P-06.7 custom workspace next-step UX", () => {
             "C-USER-001",
             "CONC-USER-001",
           ],
-          basis: "STRUCTURAL_FALLBACK",
+          basis: "STRUCTURAL_FALLBACK" as const,
         }))}
         onPrepareRepairTarget={vi.fn(() => ({
           targetId: "CONC-USER-001",
           focusedItemIds: [
             "CONC-USER-001",
           ],
-          basis: "STRUCTURAL_FALLBACK",
+          basis: "STRUCTURAL_FALLBACK" as const,
         }))}
         onAccept={vi.fn()}
         onEditAndAccept={vi.fn()}
@@ -212,7 +212,7 @@ describe("P-06.7 custom workspace next-step UX", () => {
     ).toBeInTheDocument();
   });
 
-  it("shows the reasoning map as a visible secondary action", () => {
+  it("does not show a redundant Open map action and opens the live workspace from Run analysis", () => {
     const workspace = buildCustomWorkspace({
       question:
         "Should we change our release process?",
@@ -234,14 +234,17 @@ describe("P-06.7 custom workspace next-step UX", () => {
             "C-USER-001",
             "CONC-USER-001",
           ],
-          basis: "STRUCTURAL_FALLBACK",
+          basis:
+            "STRUCTURAL_FALLBACK" as const,
         }))}
         onPrepareRepairTarget={vi.fn(() => ({
           targetId: "CONC-USER-001",
           focusedItemIds: [
+            "C-USER-001",
             "CONC-USER-001",
           ],
-          basis: "STRUCTURAL_FALLBACK",
+          basis:
+            "STRUCTURAL_FALLBACK" as const,
         }))}
         onAccept={vi.fn()}
         onEditAndAccept={vi.fn()}
@@ -253,13 +256,21 @@ describe("P-06.7 custom workspace next-step UX", () => {
     );
 
     expect(
-      screen.getByText("Reasoning map"),
-    ).toBeInTheDocument();
-
-    expect(
-      screen.getByRole("button", {
+      screen.queryByRole("button", {
         name: "Open map",
       }),
+    ).not.toBeInTheDocument();
+
+    fireEvent.click(
+      screen.getByRole("button", {
+        name: /Run analysis/i,
+      }),
+    );
+
+    expect(
+      screen.getByLabelText(
+        "Live reasoning workspace",
+      ),
     ).toBeInTheDocument();
   });
 
@@ -292,14 +303,14 @@ describe("P-06.7 custom workspace next-step UX", () => {
             "C-USER-001",
             "CONC-USER-001",
           ],
-          basis: "STRUCTURAL_FALLBACK",
+          basis: "STRUCTURAL_FALLBACK" as const,
         }))}
         onPrepareRepairTarget={vi.fn(() => ({
           targetId: "CONC-USER-001",
           focusedItemIds: [
             "CONC-USER-001",
           ],
-          basis: "STRUCTURAL_FALLBACK",
+          basis: "STRUCTURAL_FALLBACK" as const,
         }))}
         onAccept={vi.fn()}
         onEditAndAccept={vi.fn()}
@@ -352,14 +363,14 @@ describe("P-06.7 custom workspace next-step UX", () => {
             "C-USER-001",
             "CONC-USER-001",
           ],
-          basis: "STRUCTURAL_FALLBACK",
+          basis: "STRUCTURAL_FALLBACK" as const,
         }))}
         onPrepareRepairTarget={vi.fn(() => ({
           targetId: "CONC-USER-001",
           focusedItemIds: [
             "CONC-USER-001",
           ],
-          basis: "STRUCTURAL_FALLBACK",
+          basis: "STRUCTURAL_FALLBACK" as const,
         }))}
         onAccept={vi.fn()}
         onEditAndAccept={vi.fn()}
@@ -418,14 +429,14 @@ describe("P-06.7 custom workspace next-step UX", () => {
             "C-USER-001",
             "CONC-USER-001",
           ],
-          basis: "STRUCTURAL_FALLBACK",
+          basis: "STRUCTURAL_FALLBACK" as const,
         }))}
         onPrepareRepairTarget={vi.fn(() => ({
           targetId: "CONC-USER-001",
           focusedItemIds: [
             "CONC-USER-001",
           ],
-          basis: "STRUCTURAL_FALLBACK",
+          basis: "STRUCTURAL_FALLBACK" as const,
         }))}
         onAccept={vi.fn()}
         onEditAndAccept={vi.fn()}
@@ -483,14 +494,14 @@ describe("P-06.7 custom workspace next-step UX", () => {
             "C-USER-001",
             "CONC-USER-001",
           ],
-          basis: "STRUCTURAL_FALLBACK",
+          basis: "STRUCTURAL_FALLBACK" as const,
         }))}
         onPrepareRepairTarget={vi.fn(() => ({
           targetId: "CONC-USER-001",
           focusedItemIds: [
             "CONC-USER-001",
           ],
-          basis: "STRUCTURAL_FALLBACK",
+          basis: "STRUCTURAL_FALLBACK" as const,
         }))}
         onAccept={vi.fn()}
         onEditAndAccept={vi.fn()}
@@ -560,14 +571,14 @@ describe("P-06.7 custom workspace next-step UX", () => {
             "C-USER-001",
             "CONC-USER-001",
           ],
-          basis: "STRUCTURAL_FALLBACK",
+          basis: "STRUCTURAL_FALLBACK" as const,
         }))}
         onPrepareRepairTarget={vi.fn(() => ({
           targetId: "CONC-USER-001",
           focusedItemIds: [
             "CONC-USER-001",
           ],
-          basis: "STRUCTURAL_FALLBACK",
+          basis: "STRUCTURAL_FALLBACK" as const,
         }))}
         onAccept={vi.fn()}
         onEditAndAccept={vi.fn()}

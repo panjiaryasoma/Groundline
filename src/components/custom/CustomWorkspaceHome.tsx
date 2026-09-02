@@ -142,7 +142,7 @@ export function CustomWorkspaceHome({
         item.code !== "READY_FOR_AGENT_REVIEW",
     );
 
-  const proposedRevision: Revision | undefined =
+  const proposedRevision =
     [...workspace.revisions]
       .reverse()
       .find(
@@ -226,17 +226,17 @@ export function CustomWorkspaceHome({
         )
       : false;
 
-  const lastTriageIndex =
-    workspace.audit_events.findLastIndex(
-      (event) =>
-        event.event_type === "TRIAGE",
+  const eventTypes =
+    workspace.audit_events.map(
+      (event) => event.event_type,
     );
 
+  const lastTriageIndex =
+    eventTypes.lastIndexOf("TRIAGE");
+
   const lastAcceptedRevisionIndex =
-    workspace.audit_events.findLastIndex(
-      (event) =>
-        event.event_type ===
-        "ACCEPT_REVISION",
+    eventTypes.lastIndexOf(
+      "ACCEPT_REVISION",
     );
 
   const semanticAnalysisStale =
@@ -251,7 +251,12 @@ export function CustomWorkspaceHome({
     // if semantic triage exists this selects its
     // highest-priority unresolved item; otherwise
     // the explicitly non-semantic structural fallback.
-    onFocusPrimaryRisk();
+    const result =
+      onFocusPrimaryRisk();
+
+    setAgentActionNotice(
+      result ? "FOCUS" : null,
+    );
 
     setMapOpen(true);
 
@@ -597,23 +602,6 @@ export function CustomWorkspaceHome({
             </section>
           </div>
         ) : null}
-
-        <aside className="advanced-map-callout">
-          <div>
-            <span>Reasoning map</span>
-            <p>
-              See exactly how Groundline connected
-              your question, answer, reason,
-              assumption, evidence, and source.
-            </p>
-          </div>
-          <button
-            type="button"
-            onClick={() => setMapOpen(true)}
-          >
-            Open map
-          </button>
-        </aside>
       </section>
 
       {mapOpen || proposedRevision ? (

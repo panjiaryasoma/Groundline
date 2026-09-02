@@ -242,17 +242,17 @@ function reviewedTargetIds(
 function semanticAnalysisIsStale(
   workspace: Workspace,
 ): boolean {
-  const lastTriageIndex =
-    workspace.audit_events.findLastIndex(
-      (event) =>
-        event.event_type === "TRIAGE",
+  const eventTypes =
+    workspace.audit_events.map(
+      (event) => event.event_type,
     );
 
+  const lastTriageIndex =
+    eventTypes.lastIndexOf("TRIAGE");
+
   const lastAcceptedRevisionIndex =
-    workspace.audit_events.findLastIndex(
-      (event) =>
-        event.event_type ===
-        "ACCEPT_REVISION",
+    eventTypes.lastIndexOf(
+      "ACCEPT_REVISION",
     );
 
   return (
@@ -468,6 +468,65 @@ export const useWorkspaceStore = create<WorkspaceState>((set, get) => ({
     // resolved by the human before Groundline advances.
     if (getLatestProposedRevision(current)) {
       return null;
+    }
+
+    const existingPrimaryRiskId =
+      latestPrimaryRiskFocus(current);
+
+    if (
+      existingPrimaryRiskId &&
+      !reviewedTargetIds(current).has(
+        existingPrimaryRiskId,
+      )
+    ) {
+      const existingItem =
+        current.items.find(
+          (item) =>
+            item.id ===
+            existingPrimaryRiskId &&
+            item.state === "ACCEPTED",
+        );
+
+      if (existingItem) {
+        const trace =
+          getDownstreamDependencies(
+            current,
+            existingPrimaryRiskId,
+          );
+
+        const focusedItemIds = [
+          existingPrimaryRiskId,
+          ...trace.node_ids,
+        ].filter(
+          (id, index, values) =>
+            values.indexOf(id) === index,
+        );
+
+        // Reassert UI selection only. Do not write another
+        // identical FOCUS event just because the user clicked
+        // another card and then returned to the primary risk.
+        set({
+          ui: {
+            selectedItemId:
+              existingPrimaryRiskId,
+            focusedItemIds,
+          },
+        });
+
+        return {
+          targetId:
+            existingPrimaryRiskId,
+          focusedItemIds,
+          basis:
+            current.triage_records.some(
+              (record) =>
+                record.item_id ===
+                existingPrimaryRiskId,
+            )
+              ? "SEMANTIC_TRIAGE"
+              : "STRUCTURAL_FALLBACK",
+        };
+      }
     }
 
     const semanticTarget =

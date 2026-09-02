@@ -111,4 +111,56 @@ describe("P-06 revision panel", () => {
       "Human-edited accepted conclusion.",
     );
   });
+
+  it("shows a waiting state after repair is prepared but before the agent proposal exists", () => {
+    const workspace = structuredClone(
+      integration001,
+    );
+
+    workspace.audit_events.push({
+      event_id: "AUD-REPAIR-WAIT",
+      event_type: "FOCUS",
+      timestamp:
+        "2026-09-02T00:01:00+07:00",
+      actor_type: "HUMAN",
+      entity_ids: [
+        "A-001",
+        "C-001",
+        "CONC-001",
+      ],
+      metadata: {
+        requested_action:
+          "PROPOSE_REPAIR",
+        primary_risk_id: "A-001",
+        repair_target_id: "CONC-001",
+        proposal_state:
+          "AWAITING_AGENT",
+      },
+    });
+
+    render(
+      <RevisionPanel
+        workspace={workspace}
+        onAccept={vi.fn()}
+        onEditAndAccept={vi.fn()}
+        onReject={vi.fn()}
+        onDefer={vi.fn()}
+      />,
+    );
+
+    expect(
+      screen.getByText(
+        "Waiting for agent proposal",
+      ),
+    ).toBeInTheDocument();
+
+    expect(
+      screen.getByText("A-001"),
+    ).toBeInTheDocument();
+
+    expect(
+      screen.getByText("CONC-001"),
+    ).toBeInTheDocument();
+  });
+
 });

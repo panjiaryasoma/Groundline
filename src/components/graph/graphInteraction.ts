@@ -23,23 +23,30 @@ export function mergePreservedPositions(
   currentNodes: Node[],
   nextNodes: Node[],
 ): Node[] {
-  const currentPositions = new Map<string, XYPosition>(
+  const currentState = new Map(
     currentNodes.map((node) => [
       node.id,
       {
-        x: node.position.x,
-        y: node.position.y,
+        position: {
+          x: node.position.x,
+          y: node.position.y,
+        } satisfies XYPosition,
+        selected: Boolean(node.selected),
       },
     ]),
   );
 
   return nextNodes.map((node) => {
-    const preserved = currentPositions.get(node.id);
+    const preserved =
+      currentState.get(node.id);
 
     return preserved
       ? {
           ...node,
-          position: preserved,
+          position: preserved.position,
+          selected:
+            node.selected ??
+            preserved.selected,
         }
       : node;
   });

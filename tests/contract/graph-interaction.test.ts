@@ -146,4 +146,36 @@ describe("P-06.2 graph interaction semantics", () => {
     ).toBe(false);
   });
 
+
+  it("preserves selection state when positions are merged", () => {
+    const current = [
+      {
+        id: "A",
+        position: { x: 10, y: 20 },
+        data: {},
+        selected: true,
+      },
+    ];
+
+    const next = [
+      {
+        id: "A",
+        position: { x: 999, y: 999 },
+        data: {},
+      },
+    ];
+
+    const merged =
+      mergePreservedPositions(
+        current,
+        next,
+      );
+
+    expect(merged[0].selected).toBe(true);
+    expect(merged[0].position).toEqual({
+      x: 10,
+      y: 20,
+    });
+  });
+
 });

@@ -211,9 +211,37 @@ export function ReasoningGraph({
 
   useEffect(() => {
     setNodes((current) =>
-      mergePreservedPositions(current, structuralNodes),
+      mergePreservedPositions(
+        current,
+        structuralNodes,
+      ),
     );
   }, [structuralNodes]);
+
+  useEffect(() => {
+    if (!selectedItemId) {
+      return;
+    }
+
+    setNodes((current) => {
+      const selectedAlready =
+        current.some(
+          (node) =>
+            node.id === selectedItemId &&
+            node.selected,
+        );
+
+      if (selectedAlready) {
+        return current;
+      }
+
+      return current.map((node) => ({
+        ...node,
+        selected:
+          node.id === selectedItemId,
+      }));
+    });
+  }, [selectedItemId]);
 
   const edges = useMemo(
     () => buildEdges(workspace),

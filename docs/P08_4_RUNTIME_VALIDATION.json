@@ -1,0 +1,20 @@
+{
+  "milestone": "P-08.4",
+  "commands": [
+    "npm run typecheck",
+    "npm run build",
+    "npm test",
+    "npm run dev"
+  ],
+  "expected_test_cases": 143,
+  "smoke": [
+    "No Open map button is visible.",
+    "Run analysis opens the live workspace automatically.",
+    "Programmatic focus immediately appears in Inspector.",
+    "Click another card -> Inspector follows it.",
+    "Focus primary risk -> Inspector returns to the same primary risk without duplicate FOCUS audit spam.",
+    "Propose repair -> Inspector selects the accepted conclusion.",
+    "Revision panel says Waiting for agent proposal until a real WebMCP propose_revision call arrives.",
+    "When a real proposal arrives, Accepted now / Proposed revision / editable draft / Accept proposal / Accept edited / Reject / Defer appear."
+  ]
+}

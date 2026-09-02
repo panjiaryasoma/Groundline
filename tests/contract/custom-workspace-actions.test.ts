@@ -36,11 +36,11 @@ describe("P-07/08 custom workspace actions", () => {
 
     expect(
       state.ui.selectedItemId,
-    ).toBe(result.targetId);
+    ).toBe(result?.targetId);
 
     expect(
       state.ui.focusedItemIds,
-    ).toContain(result.targetId);
+    ).toContain(result?.targetId);
 
     expect(
       state.workspace.audit_events.at(-1),
@@ -53,12 +53,16 @@ describe("P-07/08 custom workspace actions", () => {
   });
 
   it("prepares the accepted conclusion as repair target and records focus", () => {
+    useWorkspaceStore
+      .getState()
+      .focusCustomPrimaryRisk();
+
     const result =
       useWorkspaceStore
         .getState()
         .prepareCustomRepairTarget();
 
-    expect(result.targetId).toBe(
+    expect(result?.targetId).toBe(
       "CONC-USER-001",
     );
 
@@ -157,12 +161,20 @@ describe("P-07/08 custom workspace actions", () => {
 
     useWorkspaceStore
       .getState()
+      .prepareCustomRepairTarget();
+
+    useWorkspaceStore
+      .getState()
       .proposeAgentRevision({
-        targetItemId: "C-USER-001",
+        targetItemId:
+          "CONC-USER-001",
         proposedText:
-          "Limit the claim to the failures actually observed.",
+          "Limit the conclusion to the failures actually observed.",
         reasonCodes: ["OVERGENERALIZATION"],
-        affectedItemIds: ["C-USER-001"],
+        affectedItemIds: [
+          "C-USER-001",
+          "CONC-USER-001",
+        ],
       });
 
     useWorkspaceStore
@@ -177,7 +189,7 @@ describe("P-07/08 custom workspace actions", () => {
     expect(second?.targetId).toBe("E-USER-001");
   });
 
-  it("repairs the risk that was actually focused instead of always targeting the conclusion", () => {
+  it("repairs the accepted conclusion while preserving the focused risk as context", () => {
     const current =
       useWorkspaceStore.getState().workspace;
 
@@ -208,7 +220,9 @@ describe("P-07/08 custom workspace actions", () => {
         .getState()
         .prepareCustomRepairTarget();
 
-    expect(repair?.targetId).toBe("E-USER-001");
+    expect(repair?.targetId).toBe(
+      "CONC-USER-001",
+    );
 
     expect(
       useWorkspaceStore
@@ -216,8 +230,12 @@ describe("P-07/08 custom workspace actions", () => {
         .workspace.audit_events.at(-1)?.metadata,
     ).toEqual(
       expect.objectContaining({
-        requested_action: "PROPOSE_REPAIR",
-        repair_target_id: "E-USER-001",
+        requested_action:
+          "PROPOSE_REPAIR",
+        primary_risk_id:
+          "E-USER-001",
+        repair_target_id:
+          "CONC-USER-001",
       }),
     );
   });
@@ -260,12 +278,20 @@ describe("P-07/08 custom workspace actions", () => {
 
     useWorkspaceStore
       .getState()
+      .prepareCustomRepairTarget();
+
+    useWorkspaceStore
+      .getState()
       .proposeAgentRevision({
-        targetItemId: "C-USER-001",
+        targetItemId:
+          "CONC-USER-001",
         proposedText:
-          "Limit the claim to the failures actually observed.",
+          "Limit the conclusion to the failures actually observed.",
         reasonCodes: ["OVERGENERALIZATION"],
-        affectedItemIds: ["C-USER-001"],
+        affectedItemIds: [
+          "C-USER-001",
+          "CONC-USER-001",
+        ],
       });
 
     expect(
@@ -358,12 +384,20 @@ describe("P-07/08 custom workspace actions", () => {
 
     useWorkspaceStore
       .getState()
+      .prepareCustomRepairTarget();
+
+    useWorkspaceStore
+      .getState()
       .proposeAgentRevision({
-        targetItemId: "C-USER-001",
+        targetItemId:
+          "CONC-USER-001",
         proposedText:
-          "Limit the claim to the failures actually observed.",
+          "Limit the conclusion to the failures actually observed.",
         reasonCodes: ["OVERGENERALIZATION"],
-        affectedItemIds: ["C-USER-001"],
+        affectedItemIds: [
+          "C-USER-001",
+          "CONC-USER-001",
+        ],
       });
 
     useWorkspaceStore
@@ -483,10 +517,11 @@ describe("P-07/08 custom workspace actions", () => {
       });
 
     const event =
-      useWorkspaceStore
+      [...useWorkspaceStore
         .getState()
-        .workspace.audit_events
-        .findLast(
+        .workspace.audit_events]
+        .reverse()
+        .find(
           (candidate) =>
             candidate.event_type ===
             "PROPOSE_REVISION",
