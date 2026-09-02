@@ -1,15 +1,17 @@
-import { CustomWorkspaceHome } from "../components/custom";
+import { P112CustomWorkspaceHome } from "../components/custom/P112CustomWorkspaceHome";
 import { DecisionIntake } from "../components/intake";
 import { P111FocusWorkspace } from "../components/focus";
 import { StartScreen } from "../components/start";
 import { hasWebMCP } from "../webmcp/modelContext";
 import { useGroundlineWebMCP } from "../webmcp/useGroundlineWebMCP";
 import { installP111RepairLifecycle } from "../state/p111RepairLifecycle";
+import { installP112CustomSemanticGate } from "../state/p112CustomSemanticGate";
 import { useWorkspaceStore } from "../state/workspaceStore";
 import "../styles/app.css";
 import "../styles/p11.css";
 
 installP111RepairLifecycle();
+installP112CustomSemanticGate();
 
 export function App() {
   useGroundlineWebMCP();
@@ -43,8 +45,7 @@ export function App() {
     );
   const createCustomWorkspace =
     useWorkspaceStore(
-      (state) =>
-        state.createCustomWorkspace,
+      (state) => state.createCustomWorkspace,
     );
 
   const resetDemo = useWorkspaceStore(
@@ -71,8 +72,7 @@ export function App() {
     );
   const editAndAcceptLatestRevision =
     useWorkspaceStore(
-      (state) =>
-        state.editAndAcceptLatestRevision,
+      (state) => state.editAndAcceptLatestRevision,
     );
   const rejectLatestRevision =
     useWorkspaceStore(
@@ -84,13 +84,11 @@ export function App() {
     );
   const focusCustomPrimaryRisk =
     useWorkspaceStore(
-      (state) =>
-        state.focusCustomPrimaryRisk,
+      (state) => state.focusCustomPrimaryRisk,
     );
   const proposeCustomRepair =
     useWorkspaceStore(
-      (state) =>
-        state.proposeCustomRepair,
+      (state) => state.proposeCustomRepair,
     );
 
   return (
@@ -164,7 +162,7 @@ export function App() {
       ) : null}
 
       {experienceMode === "CUSTOM" ? (
-        <CustomWorkspaceHome
+        <P112CustomWorkspaceHome
           workspace={workspace}
           selectedItemId={ui.selectedItemId}
           focusedItemIds={ui.focusedItemIds}
