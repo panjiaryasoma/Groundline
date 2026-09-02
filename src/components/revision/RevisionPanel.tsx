@@ -128,6 +128,26 @@ export function RevisionPanel({
     (item) => item.id === revision.target_item_id,
   );
 
+  const proposalEvent =
+    [...workspace.audit_events]
+      .reverse()
+      .find(
+        (event) =>
+          event.event_type ===
+            "PROPOSE_REVISION" &&
+          event.entity_ids.includes(
+            revision.revision_id,
+          ),
+      );
+
+  const proposalSource =
+    proposalEvent?.metadata
+      ?.proposal_source;
+
+  const localDeterministic =
+    proposalSource ===
+    "LOCAL_DETERMINISTIC_REPAIR_AGENT";
+
   return (
     <section
       className="revision-panel"
@@ -135,7 +155,12 @@ export function RevisionPanel({
     >
       <div className="revision-heading">
         <div>
-          <p className="eyebrow">Agent proposal</p>
+          <p className="eyebrow">
+            Agent proposal
+            {localDeterministic
+              ? " · local deterministic"
+              : ""}
+          </p>
           <h2>{revision.revision_id}</h2>
         </div>
         <span className="triage-badge triage-badge--review">
@@ -186,6 +211,9 @@ export function RevisionPanel({
       </div>
 
       <p className="authority-note">
+        {localDeterministic
+          ? "This draft came from Groundline's deterministic local repair agent. It is not an LLM judgment. "
+          : ""}
         Agent proposes. Human decides what becomes accepted
         knowledge.
       </p>

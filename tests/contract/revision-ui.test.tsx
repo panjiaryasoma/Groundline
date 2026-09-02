@@ -163,4 +163,74 @@ describe("P-06 revision panel", () => {
     ).toBeGreaterThan(0);
   });
 
+
+  it("labels the immediate custom draft as a local deterministic agent proposal", () => {
+    const base = structuredClone(
+      integration001,
+    );
+
+    const workspace =
+      proposeRevision({
+        workspace: base,
+        revisionId:
+          "REV-LOCAL-001",
+        targetItemId:
+          "CONC-001",
+        proposedText:
+          "Keep the conclusion provisional until the focused reasoning issue is resolved.",
+        reasonCodes: [
+          "STRUCTURAL_REVIEW_TARGET",
+        ],
+        affectedItemIds: [
+          "A-001",
+          "CONC-001",
+        ],
+        createdBy: "AGENT",
+        createdAt:
+          "2026-09-02T12:00:00+07:00",
+        auditEventId:
+          "AUD-LOCAL-001",
+      });
+
+    const event =
+      workspace.audit_events.at(-1);
+
+    if (event) {
+      event.metadata = {
+        ...(event.metadata ?? {}),
+        proposal_source:
+          "LOCAL_DETERMINISTIC_REPAIR_AGENT",
+      };
+    }
+
+    render(
+      <RevisionPanel
+        workspace={workspace}
+        onAccept={vi.fn()}
+        onEditAndAccept={vi.fn()}
+        onReject={vi.fn()}
+        onDefer={vi.fn()}
+      />,
+    );
+
+    expect(
+      screen.getByText(
+        /Agent proposal · local deterministic/i,
+      ),
+    ).toBeInTheDocument();
+
+    for (const name of [
+      "Accept proposal",
+      "Accept edited",
+      "Reject",
+      "Defer",
+    ]) {
+      expect(
+        screen.getByRole("button", {
+          name,
+        }),
+      ).toBeEnabled();
+    }
+  });
+
 });

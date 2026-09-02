@@ -72,6 +72,7 @@ interface WorkspaceState {
   ) => void;
   focusCustomPrimaryRisk: () => FocusResult | null;
   prepareCustomRepairTarget: () => FocusResult | null;
+  proposeCustomRepair: () => FocusResult | null;
   applyAgentEvaluations: (
     evaluations: EvaluationRecord[],
   ) => void;
@@ -169,6 +170,120 @@ function uniqueExistingIds(
   }
 
   return unique;
+}
+
+
+function deterministicRepairText(
+  workspace: Workspace,
+  primaryRiskId: string,
+  repairTargetId: string,
+): string {
+  const risk = workspace.items.find(
+    (item) => item.id === primaryRiskId,
+  );
+  const target = workspace.items.find(
+    (item) => item.id === repairTargetId,
+  );
+  const triage = workspace.triage_records.find(
+    (record) =>
+      record.item_id === primaryRiskId,
+  );
+
+  const reasonCodes =
+    triage?.reason_codes ?? [];
+
+  if (
+    reasonCodes.includes(
+      "OVERGENERALIZATION",
+    )
+  ) {
+    return (
+      "Narrow the current conclusion to the scope directly supported by the represented evidence. " +
+      "Treat any broader claim as provisional until the focused reasoning risk is resolved."
+    );
+  }
+
+  if (
+    reasonCodes.includes(
+      "UNSUPPORTED_ASSUMPTION",
+    )
+  ) {
+    return (
+      "Keep the current conclusion provisional until the focused assumption is directly supported in the intended context. " +
+      "Do not treat the present reasoning as sufficient for a broader or irreversible commitment."
+    );
+  }
+
+  if (
+    reasonCodes.includes("CONTRADICTED")
+  ) {
+    return (
+      "Do not treat the current conclusion as settled until the represented contradiction is resolved. " +
+      "Use a limited, reversible decision while the conflicting reasoning remains material."
+    );
+  }
+
+  if (
+    reasonCodes.includes("SCOPE_MISMATCH")
+  ) {
+    return (
+      "Limit the current conclusion to the scope actually represented by the available reasoning. " +
+      "Reassess before extending it to a broader population, condition, or decision context."
+    );
+  }
+
+  const type = risk?.type ?? "CLAIM";
+
+  const conditionByType: Record<
+    string,
+    string
+  > = {
+    ASSUMPTION:
+      "the focused assumption is validated",
+    EVIDENCE:
+      "the focused evidence is verified and, when possible, sourced",
+    CLAIM:
+      "the focused claim is better supported",
+    COUNTERCLAIM:
+      "the focused counterclaim is addressed",
+    SOURCE:
+      "the focused source is checked for quality and relevance",
+    QUESTION:
+      "the decision scope is clarified",
+    CONCLUSION:
+      "the conclusion is re-evaluated",
+  };
+
+  const condition =
+    conditionByType[type] ??
+    "the focused reasoning issue is resolved";
+
+  const targetText =
+    target?.text?.trim();
+
+  return (
+    `Keep this conclusion provisional until ${condition}. ` +
+    `Reassess it before making a broader or irreversible commitment.` +
+    (targetText
+      ? ` Current position under review: ${targetText}`
+      : "")
+  );
+}
+
+function deterministicRepairReasonCodes(
+  workspace: Workspace,
+  primaryRiskId: string,
+): string[] {
+  const triage = workspace.triage_records.find(
+    (record) =>
+      record.item_id === primaryRiskId,
+  );
+
+  if (triage?.reason_codes.length) {
+    return [...triage.reason_codes];
+  }
+
+  return ["STRUCTURAL_REVIEW_TARGET"];
 }
 
 function structuralFallbackTarget(
@@ -667,6 +782,162 @@ export const useWorkspaceStore = create<WorkspaceState>((set, get) => ({
           "AWAITING_AGENT",
       },
     );
+
+    return {
+      targetId: repairTargetId,
+      focusedItemIds,
+      basis:
+        current.triage_records.some(
+          (record) =>
+            record.item_id ===
+            primaryRiskId,
+        )
+          ? "SEMANTIC_TRIAGE"
+          : "STRUCTURAL_FALLBACK",
+    };
+  },
+
+
+  proposeCustomRepair: () => {
+    let current = get().workspace;
+
+    if (getLatestProposedRevision(current)) {
+      return null;
+    }
+
+    let primaryRiskId =
+      latestPrimaryRiskFocus(current);
+
+    if (!primaryRiskId) {
+      const focused =
+        get().focusCustomPrimaryRisk();
+
+      if (!focused) {
+        return null;
+      }
+
+      primaryRiskId =
+        focused.targetId;
+      current = get().workspace;
+    }
+
+    const repairTargetId =
+      current.accepted_conclusion_id;
+
+    if (!repairTargetId) {
+      return null;
+    }
+
+    const primaryRisk =
+      current.items.find(
+        (item) =>
+          item.id === primaryRiskId,
+      );
+
+    const repairTarget =
+      current.items.find(
+        (item) =>
+          item.id === repairTargetId,
+      );
+
+    if (
+      !primaryRisk ||
+      primaryRisk.state !== "ACCEPTED" ||
+      !repairTarget ||
+      repairTarget.state !== "ACCEPTED" ||
+      reviewedTargetIds(current).has(
+        primaryRiskId,
+      )
+    ) {
+      return null;
+    }
+
+    const trace =
+      getDownstreamDependencies(
+        current,
+        primaryRiskId,
+      );
+
+    const focusedItemIds = [
+      primaryRiskId,
+      ...trace.node_ids,
+      repairTargetId,
+    ].filter(
+      (id, index, values) =>
+        values.indexOf(id) === index,
+    );
+
+    const createdAt = nowIso();
+    const revisionId =
+      nextId("REV-LOCAL", current);
+    const auditEventId =
+      nextId("AUD-PROP", current);
+
+    const next = proposeRevision({
+      workspace: current,
+      revisionId,
+      targetItemId: repairTargetId,
+      proposedText:
+        deterministicRepairText(
+          current,
+          primaryRiskId,
+          repairTargetId,
+        ),
+      reasonCodes:
+        deterministicRepairReasonCodes(
+          current,
+          primaryRiskId,
+        ),
+      affectedItemIds:
+        focusedItemIds,
+      createdBy: "AGENT",
+      createdAt,
+      auditEventId,
+    });
+
+    const proposalEvent =
+      [...next.audit_events]
+        .reverse()
+        .find(
+          (event) =>
+            event.event_type ===
+              "PROPOSE_REVISION" &&
+            event.entity_ids.includes(
+              revisionId,
+            ),
+        );
+
+    if (proposalEvent) {
+      proposalEvent.metadata = {
+        ...(proposalEvent.metadata ?? {}),
+        primary_risk_id:
+          primaryRiskId,
+        repair_target_id:
+          repairTargetId,
+        proposal_source:
+          "LOCAL_DETERMINISTIC_REPAIR_AGENT",
+        semantic_inference:
+          current.triage_records.some(
+            (record) =>
+              record.item_id ===
+              primaryRiskId,
+          )
+            ? "AGENT_TRIAGE_CONTEXT"
+            : "STRUCTURAL_FALLBACK_ONLY",
+      };
+    }
+
+    const validated =
+      validateWorkspaceState(next);
+
+    set({
+      workspace: validated,
+      ui: {
+        selectedItemId:
+          repairTargetId,
+        focusedItemIds,
+      },
+    });
 
     return {
       targetId: repairTargetId,

@@ -625,4 +625,174 @@ describe("P-07/08 custom workspace actions", () => {
     ).toBe("CONC-USER-001");
   });
 
+
+  it("creates an immediate P-06-style proposal for custom input", () => {
+    const focus =
+      useWorkspaceStore
+        .getState()
+        .focusCustomPrimaryRisk();
+
+    expect(focus?.targetId).toBe(
+      "E-USER-001",
+    );
+
+    const repair =
+      useWorkspaceStore
+        .getState()
+        .proposeCustomRepair();
+
+    const state =
+      useWorkspaceStore.getState();
+    const proposal =
+      state.workspace.revisions.at(-1);
+
+    expect(repair?.targetId).toBe(
+      "CONC-USER-001",
+    );
+
+    expect(
+      state.ui.selectedItemId,
+    ).toBe("CONC-USER-001");
+
+    expect(proposal).toEqual(
+      expect.objectContaining({
+        target_item_id:
+          "CONC-USER-001",
+        state: "PROPOSED",
+        created_by: "AGENT",
+      }),
+    );
+
+    const proposalEvent =
+      [...state.workspace.audit_events]
+        .reverse()
+        .find(
+          (event) =>
+            event.event_type ===
+            "PROPOSE_REVISION",
+        );
+
+    expect(
+      proposalEvent?.metadata,
+    ).toEqual(
+      expect.objectContaining({
+        primary_risk_id:
+          "E-USER-001",
+        repair_target_id:
+          "CONC-USER-001",
+        proposal_source:
+          "LOCAL_DETERMINISTIC_REPAIR_AGENT",
+      }),
+    );
+  });
+
+  it("accepting the custom repair creates a new accepted card and supersedes the old conclusion", () => {
+    useWorkspaceStore
+      .getState()
+      .focusCustomPrimaryRisk();
+
+    useWorkspaceStore
+      .getState()
+      .proposeCustomRepair();
+
+    useWorkspaceStore
+      .getState()
+      .acceptLatestRevision();
+
+    const state =
+      useWorkspaceStore.getState();
+
+    const oldConclusion =
+      state.workspace.items.find(
+        (item) =>
+          item.id ===
+          "CONC-USER-001",
+      );
+
+    const replacement =
+      state.workspace.items.find(
+        (item) =>
+          item.supersedes_id ===
+          "CONC-USER-001",
+      );
+
+    expect(
+      oldConclusion?.state,
+    ).toBe("SUPERSEDED");
+
+    expect(
+      replacement?.state,
+    ).toBe("ACCEPTED");
+
+    expect(
+      state.workspace
+        .accepted_conclusion_id,
+    ).toBe(replacement?.id);
+
+    expect(
+      state.ui.selectedItemId,
+    ).toBe(replacement?.id);
+
+    expect(
+      state.workspace.relations.some(
+        (relation) =>
+          relation.type ===
+            "SUPERSEDES" &&
+          relation.from_id ===
+            replacement?.id &&
+          relation.to_id ===
+            "CONC-USER-001",
+      ),
+    ).toBe(true);
+
+    expect(
+      state.workspace.triage_records.some(
+        (record) =>
+          record.item_id ===
+          replacement?.id,
+      ),
+    ).toBe(false);
+  });
+
+  it("accept edited uses the human-edited proposal text for the replacement card", () => {
+    useWorkspaceStore
+      .getState()
+      .focusCustomPrimaryRisk();
+
+    useWorkspaceStore
+      .getState()
+      .proposeCustomRepair();
+
+    const edited =
+      "Run a limited four-day-workweek pilot and review productivity, overtime, and burnout before broader adoption.";
+
+    useWorkspaceStore
+      .getState()
+      .editAndAcceptLatestRevision(
+        edited,
+      );
+
+    const state =
+      useWorkspaceStore.getState();
+
+    const replacement =
+      state.workspace.items.find(
+        (item) =>
+          item.id ===
+          state.workspace
+            .accepted_conclusion_id,
+      );
+
+    expect(
+      replacement?.text,
+    ).toBe(edited);
+
+    expect(
+      state.workspace.revisions.at(-1)
+        ?.state,
+    ).toBe(
+      "EDITED_AND_ACCEPTED",
+    );
+  });
+
 });

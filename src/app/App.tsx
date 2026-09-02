@@ -83,10 +83,10 @@ export function App() {
       (state) =>
         state.focusCustomPrimaryRisk,
     );
-  const prepareCustomRepairTarget =
+  const proposeCustomRepair =
     useWorkspaceStore(
       (state) =>
-        state.prepareCustomRepairTarget,
+        state.proposeCustomRepair,
     );
 
   return (
@@ -168,8 +168,8 @@ export function App() {
           onFocusPrimaryRisk={
             focusCustomPrimaryRisk
           }
-          onPrepareRepairTarget={
-            prepareCustomRepairTarget
+          onProposeRepair={
+            proposeCustomRepair
           }
           onAccept={acceptLatestRevision}
           onEditAndAccept={

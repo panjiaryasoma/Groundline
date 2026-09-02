@@ -50,7 +50,7 @@ interface CustomWorkspaceHomeProps {
     focusedItemIds: string[];
     basis: "SEMANTIC_TRIAGE" | "STRUCTURAL_FALLBACK";
   } | null;
-  onPrepareRepairTarget: () => {
+  onProposeRepair: () => {
     targetId: string;
     focusedItemIds: string[];
     basis: "SEMANTIC_TRIAGE" | "STRUCTURAL_FALLBACK";
@@ -67,8 +67,19 @@ function tagged(
   workspace: Workspace,
   tag: string,
 ): KnowledgeItem | undefined {
-  return workspace.items.find((item) =>
-    item.tags?.includes(tag),
+  return (
+    [...workspace.items]
+      .reverse()
+      .find(
+        (item) =>
+          item.state === "ACCEPTED" &&
+          item.tags?.includes(tag),
+      ) ??
+    [...workspace.items]
+      .reverse()
+      .find((item) =>
+        item.tags?.includes(tag),
+      )
   );
 }
 
@@ -98,7 +109,7 @@ export function CustomWorkspaceHome({
   focusedItemIds,
   onSelectItem,
   onFocusPrimaryRisk,
-  onPrepareRepairTarget,
+  onProposeRepair,
   onAccept,
   onEditAndAccept,
   onReject,
@@ -227,19 +238,6 @@ export function CustomWorkspaceHome({
       ? undefined
       : latestPrimaryRisk;
 
-  const repairRequestedForActiveRisk =
-    activePrimaryRisk
-      ? workspace.audit_events.some(
-          (event) =>
-            event.event_type === "FOCUS" &&
-            event.metadata
-              ?.requested_action ===
-              "PROPOSE_REPAIR" &&
-            event.metadata
-              ?.primary_risk_id ===
-              activePrimaryRisk.id,
-        )
-      : false;
 
   const eventTypes =
     workspace.audit_events.map(
@@ -315,9 +313,9 @@ export function CustomWorkspaceHome({
     return result;
   }
 
-  function prepareRepair() {
+  function proposeRepair() {
     const result =
-      onPrepareRepairTarget();
+      onProposeRepair();
 
     if (!result) {
       return null;
@@ -325,6 +323,18 @@ export function CustomWorkspaceHome({
 
     setAgentActionNotice("REPAIR");
     setMapOpen(true);
+
+    window.requestAnimationFrame(() => {
+      safeScrollIntoView(
+        document.querySelector(
+          '[aria-label="Revision proposal"]',
+        ),
+        {
+          behavior: "smooth",
+          block: "center",
+        },
+      );
+    });
 
     return result;
   }
@@ -515,10 +525,13 @@ export function CustomWorkspaceHome({
                   what is missing.
                 </h5>
                 <p>
-                  These actions belong to the WebMCP
-                  agent stage. Groundline will not
-                  fabricate semantic risk or repair
-                  text locally.
+                  Focus selects the review target.
+                  Repair creates a conservative draft
+                  immediately so you can inspect, edit,
+                  accept, reject, or defer it. A WebMCP
+                  agent can still provide richer semantic
+                  triage and proposals through the same
+                  workspace tools.
                 </p>
               </div>
 
@@ -545,17 +558,13 @@ export function CustomWorkspaceHome({
 
                 <button
                   type="button"
-                  onClick={prepareRepair}
+                  onClick={proposeRepair}
                   disabled={
                     !activePrimaryRisk ||
-                    repairRequestedForActiveRisk ||
                     Boolean(proposedRevision)
                   }
                 >
-                  {repairRequestedForActiveRisk &&
-                  !proposedRevision
-                    ? "Repair target ready"
-                    : "Propose repair"}
+                  Propose repair
                 </button>
               </div>
 
@@ -606,8 +615,8 @@ export function CustomWorkspaceHome({
                   </span>
                   <strong>
                     {agentActionNotice === "REPAIR"
-                      ? "Agent action is required."
-                      : "Ready for WebMCP agent review."}
+                      ? "Repair proposal created."
+                      : "Review target selected."}
                   </strong>
                   <p>
                     {agentActionNotice === "FOCUS"
@@ -615,9 +624,9 @@ export function CustomWorkspaceHome({
                         ? "Groundline selected one highest-priority unresolved risk. Repair this item before moving to the next risk."
                         : "No semantic triage exists yet, so Groundline focused one structural fallback item. The map and inspector show exactly what is selected."
                       : proposedRevision
-                        ? "The WebMCP agent created a real proposal for the accepted conclusion. The focused risk remains the reason for the repair."
+                        ? "Groundline created a real PROPOSED revision for the accepted conclusion. The focused risk remains the reason for the repair, and the human decision controls are active below."
                         : activePrimaryRisk
-                          ? `Groundline prepared the accepted conclusion as the repair target. WebMCP tools are registered, but no agent runs in the background. Ask a WebMCP-aware agent to inspect this workspace, triage the reasoning, focus the highest-priority unresolved risk, and call propose_revision.`
+                          ? "The focused item is the reason for review. Propose repair will revise the accepted conclusion, not silently rewrite the focused evidence or assumption."
                           : "Focus one risk before requesting a repair."}
                   </p>
                 </aside>

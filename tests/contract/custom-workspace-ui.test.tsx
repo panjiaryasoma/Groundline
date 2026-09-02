@@ -39,7 +39,7 @@ describe("P-06.7 custom workspace next-step UX", () => {
           ],
           basis: "STRUCTURAL_FALLBACK" as const,
         }))}
-        onPrepareRepairTarget={vi.fn(() => ({
+        onProposeRepair={vi.fn(() => ({
           targetId: "CONC-USER-001",
           focusedItemIds: [
             "CONC-USER-001",
@@ -98,7 +98,7 @@ describe("P-06.7 custom workspace next-step UX", () => {
           ],
           basis: "STRUCTURAL_FALLBACK" as const,
         }))}
-        onPrepareRepairTarget={vi.fn(() => ({
+        onProposeRepair={vi.fn(() => ({
           targetId: "CONC-USER-001",
           focusedItemIds: [
             "CONC-USER-001",
@@ -175,7 +175,7 @@ describe("P-06.7 custom workspace next-step UX", () => {
           ],
           basis: "STRUCTURAL_FALLBACK" as const,
         }))}
-        onPrepareRepairTarget={vi.fn(() => ({
+        onProposeRepair={vi.fn(() => ({
           targetId: "CONC-USER-001",
           focusedItemIds: [
             "CONC-USER-001",
@@ -237,7 +237,7 @@ describe("P-06.7 custom workspace next-step UX", () => {
           basis:
             "STRUCTURAL_FALLBACK" as const,
         }))}
-        onPrepareRepairTarget={vi.fn(() => ({
+        onProposeRepair={vi.fn(() => ({
           targetId: "CONC-USER-001",
           focusedItemIds: [
             "C-USER-001",
@@ -305,7 +305,7 @@ describe("P-06.7 custom workspace next-step UX", () => {
           ],
           basis: "STRUCTURAL_FALLBACK" as const,
         }))}
-        onPrepareRepairTarget={vi.fn(() => ({
+        onProposeRepair={vi.fn(() => ({
           targetId: "CONC-USER-001",
           focusedItemIds: [
             "CONC-USER-001",
@@ -335,7 +335,7 @@ describe("P-06.7 custom workspace next-step UX", () => {
 
     expect(
       screen.getByText(
-        "Ready for agent review",
+        "Review target selected.",
       ),
     ).toBeInTheDocument();
   });
@@ -365,7 +365,7 @@ describe("P-06.7 custom workspace next-step UX", () => {
           ],
           basis: "STRUCTURAL_FALLBACK" as const,
         }))}
-        onPrepareRepairTarget={vi.fn(() => ({
+        onProposeRepair={vi.fn(() => ({
           targetId: "CONC-USER-001",
           focusedItemIds: [
             "CONC-USER-001",
@@ -395,7 +395,7 @@ describe("P-06.7 custom workspace next-step UX", () => {
 
     expect(
       screen.getByText(
-        "Semantic agent review is required.",
+        "Review target selected.",
       ),
     ).toBeInTheDocument();
 
@@ -407,7 +407,7 @@ describe("P-06.7 custom workspace next-step UX", () => {
   });
 
 
-  it("waits for a real proposal instead of showing unusable human controls", () => {
+  it("requests an immediate repair proposal instead of entering a waiting-only state", () => {
     const workspace = buildCustomWorkspace({
       question:
         "Should we change our release process?",
@@ -417,27 +417,42 @@ describe("P-06.7 custom workspace next-step UX", () => {
         "Releases fail too often.",
     });
 
+    const onProposeRepair =
+      vi.fn(() => ({
+        targetId:
+          "CONC-USER-001",
+        focusedItemIds: [
+          "C-USER-001",
+          "CONC-USER-001",
+        ],
+        basis:
+          "STRUCTURAL_FALLBACK" as const,
+      }));
+
     render(
       <CustomWorkspaceHome
         workspace={workspace}
-        selectedItemId={null}
-        focusedItemIds={[]}
+        selectedItemId={
+          "C-USER-001"
+        }
+        focusedItemIds={[
+          "C-USER-001",
+          "CONC-USER-001",
+        ]}
         onSelectItem={vi.fn()}
         onFocusPrimaryRisk={vi.fn(() => ({
-          targetId: "C-USER-001",
+          targetId:
+            "C-USER-001",
           focusedItemIds: [
             "C-USER-001",
             "CONC-USER-001",
           ],
-          basis: "STRUCTURAL_FALLBACK" as const,
+          basis:
+            "STRUCTURAL_FALLBACK" as const,
         }))}
-        onPrepareRepairTarget={vi.fn(() => ({
-          targetId: "CONC-USER-001",
-          focusedItemIds: [
-            "CONC-USER-001",
-          ],
-          basis: "STRUCTURAL_FALLBACK" as const,
-        }))}
+        onProposeRepair={
+          onProposeRepair
+        }
         onAccept={vi.fn()}
         onEditAndAccept={vi.fn()}
         onReject={vi.fn()}
@@ -460,10 +475,8 @@ describe("P-06.7 custom workspace next-step UX", () => {
     );
 
     expect(
-      screen.queryByRole("button", {
-        name: "Accept proposal",
-      }),
-    ).not.toBeInTheDocument();
+      onProposeRepair,
+    ).toHaveBeenCalledTimes(1);
   });
 
   it("does not expose acceptance controls before the repair stage is requested", () => {
@@ -490,7 +503,7 @@ describe("P-06.7 custom workspace next-step UX", () => {
           ],
           basis: "STRUCTURAL_FALLBACK" as const,
         }))}
-        onPrepareRepairTarget={vi.fn(() => ({
+        onProposeRepair={vi.fn(() => ({
           targetId: "CONC-USER-001",
           focusedItemIds: [
             "CONC-USER-001",
@@ -567,7 +580,7 @@ describe("P-06.7 custom workspace next-step UX", () => {
           ],
           basis: "STRUCTURAL_FALLBACK" as const,
         }))}
-        onPrepareRepairTarget={vi.fn(() => ({
+        onProposeRepair={vi.fn(() => ({
           targetId: "CONC-USER-001",
           focusedItemIds: [
             "CONC-USER-001",
@@ -630,7 +643,7 @@ describe("P-06.7 custom workspace next-step UX", () => {
         focusedItemIds={[]}
         onSelectItem={vi.fn()}
         onFocusPrimaryRisk={onFocusPrimaryRisk}
-        onPrepareRepairTarget={vi.fn(() => ({
+        onProposeRepair={vi.fn(() => ({
           targetId: "C-USER-001",
           focusedItemIds: ["C-USER-001"],
           basis: "STRUCTURAL_FALLBACK" as const,
@@ -697,7 +710,7 @@ describe("P-06.7 custom workspace next-step UX", () => {
         ]}
         onSelectItem={vi.fn()}
         onFocusPrimaryRisk={vi.fn(() => null)}
-        onPrepareRepairTarget={vi.fn(() => null)}
+        onProposeRepair={vi.fn(() => null)}
         onAccept={vi.fn()}
         onEditAndAccept={vi.fn()}
         onReject={vi.fn()}
@@ -763,7 +776,7 @@ describe("P-06.7 custom workspace next-step UX", () => {
         onFocusPrimaryRisk={
           onFocusPrimaryRisk
         }
-        onPrepareRepairTarget={vi.fn(() => ({
+        onProposeRepair={vi.fn(() => ({
           targetId:
             "CONC-USER-001",
           focusedItemIds: [
