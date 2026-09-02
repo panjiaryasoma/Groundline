@@ -1,0 +1,71 @@
+/* P11 Geological UI pass
+ * Visual consolidation only. No domain, authority, or WebMCP behavior changes.
+ */
+
+/* Critical reasoning points read as local geological faults instead of a
+ * decorative page-spanning fault line. This keeps the metaphor attached to
+ * the actual reasoning object that needs review. */
+.react-flow__node-default.reasoning-node--faulted {
+  border-left: 4px solid var(--fault);
+}
+
+/* Keep long reasoning text physically inside its card. */
+.reasoning-node__text,
+.reasoning-node__meta,
+.reasoning-node__footer {
+  min-width: 0;
+}
+
+.reasoning-node__text {
+  overflow-wrap: anywhere;
+  word-break: normal;
+  hyphens: auto;
+}
+
+.reasoning-node__meta > span,
+.reasoning-node__footer > span {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+/* Focus remains distinct from severity. A focused critical node therefore
+ * shows both the rust fault edge and the existing focus halo. */
+.react-flow__node-default.reasoning-node--faulted.reasoning-node--focused {
+  box-shadow:
+    0 0 0 5px rgba(125, 63, 50, 0.16),
+    inset 1px 0 0 color-mix(in srgb, var(--fault) 35%, transparent);
+}
+
+/* Superseded knowledge stays traceable but visually recedes. */
+.react-flow__node-default.reasoning-node--superseded.reasoning-node--faulted {
+  border-left-color: color-mix(in srgb, var(--fault) 45%, var(--rule));
+}
+
+/* Scientific annotation is deliberately compact. The existing strata labels
+ * describe object role; this annotation explains the two fault conventions. */
+.graph-help__copy {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 12px;
+  min-width: 0;
+}
+
+.graph-help__copy span:last-child {
+  color: var(--fault);
+}
+
+/* Preserve card and relation readability when the graph becomes dense. */
+.react-flow__edge-text {
+  font-size: 0.58rem;
+  letter-spacing: 0.08em;
+}
+
+.react-flow__edge-textbg {
+  fill-opacity: 0.94;
+}
+
+@media (max-width: 900px) {
+  .graph-help__copy span:last-child {
+    flex-basis: 100%;
+  }
+}
