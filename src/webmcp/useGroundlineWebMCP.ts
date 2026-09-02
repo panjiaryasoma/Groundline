@@ -1,6 +1,13 @@
 import { useEffect } from "react";
 import { registerGroundlineTools } from "./registerTools";
 
+function isAbortError(error: unknown): boolean {
+  return (
+    error instanceof DOMException &&
+    error.name === "AbortError"
+  );
+}
+
 export function useGroundlineWebMCP(): void {
   useEffect(() => {
     let disposed = false;
@@ -10,28 +17,63 @@ export function useGroundlineWebMCP(): void {
     const controller =
       new AbortController();
 
+    const scheduleRetry = (
+      attempt: number,
+    ) => {
+      if (
+        disposed ||
+        controller.signal.aborted ||
+        attempt >= 20
+      ) {
+        return;
+      }
+
+      retryTimer =
+        window.setTimeout(
+          () =>
+            void tryRegister(
+              attempt + 1,
+            ),
+          250,
+        );
+    };
+
     const tryRegister = async (
       attempt = 0,
     ) => {
-      if (disposed) return;
+      if (
+        disposed ||
+        controller.signal.aborted
+      ) {
+        return;
+      }
 
-      const result =
-        await registerGroundlineTools(
-          controller.signal,
+      try {
+        const result =
+          await registerGroundlineTools(
+            controller.signal,
+          );
+
+        if (
+          !result.webmcpAvailable
+        ) {
+          scheduleRetry(attempt);
+        }
+      } catch (error) {
+        if (
+          disposed ||
+          controller.signal.aborted ||
+          isAbortError(error)
+        ) {
+          return;
+        }
+
+        console.error(
+          "[Groundline WebMCP] tool registration failed",
+          error,
         );
 
-      if (
-        !result.webmcpAvailable &&
-        attempt < 20
-      ) {
-        retryTimer =
-          window.setTimeout(
-            () =>
-              void tryRegister(
-                attempt + 1,
-              ),
-            250,
-          );
+        scheduleRetry(attempt);
       }
     };
 
