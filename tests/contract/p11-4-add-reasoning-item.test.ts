@@ -13,22 +13,18 @@ import {
 import { installP111RepairLifecycle } from "../../src/state/p111RepairLifecycle";
 import { installP112CustomSemanticGate } from "../../src/state/p112CustomSemanticGate";
 import {
-  P114_ADDABLE_RELATION_TYPES,
   addP114ReasoningItem,
+  getP114UnlinkedReasoningItemIds,
+  isP114ReasoningItemUnlinked,
 } from "../../src/state/p114AddReasoningItem";
 import { useWorkspaceStore } from "../../src/state/workspaceStore";
 
 const input = {
-  question:
-    "Should our team fully replace tier-1 support with an autonomous agent?",
-  conclusion:
-    "Yes, replace tier-1 support next quarter.",
-  reason:
-    "The pilot resolved most common tickets quickly.",
-  assumption:
-    "The pilot reflects production edge cases.",
-  evidence:
-    "A 30-day pilot covered 5,000 interactions.",
+  question: "Should the team expand the pilot next quarter?",
+  conclusion: "Yes, expand the pilot next quarter.",
+  reason: "The initial pilot produced promising results.",
+  assumption: "The initial conditions reflect the next phase.",
+  evidence: "The pilot recorded five thousand interactions.",
 };
 
 function evaluation(
@@ -36,7 +32,7 @@ function evaluation(
   reasonCodes: ReasonCode[],
 ) {
   return buildEvaluationRecord({
-    evaluationId: `EVAL-P114-${itemId}`,
+    evaluationId: `EVAL-P115-${itemId}`,
     itemId,
     ratings: {
       evidence_strength: "LOW",
@@ -53,24 +49,23 @@ function evaluation(
   });
 }
 
-describe("P11.4 add reasoning item", () => {
+describe("P11.5 add unlinked reasoning items", () => {
   beforeAll(() => {
     installP111RepairLifecycle();
     installP112CustomSemanticGate();
   });
 
   beforeEach(() => {
-    useWorkspaceStore
-      .getState()
-      .createCustomWorkspace(input);
+    useWorkspaceStore.getState().createCustomWorkspace(input);
   });
 
-  it("adds a human-authored card, explicit relation, audit event, and immediate inspector selection", () => {
+  it("adds a human-authored card without inventing a semantic relation and selects it", () => {
+    const beforeRelationCount =
+      useWorkspaceStore.getState().workspace.relations.length;
+
     const itemId = addP114ReasoningItem({
       type: "COUNTERCLAIM",
-      text: "The pilot excluded escalations and complex recovery cases, so its headline resolution rate may not transfer to live support.",
-      relationType: "CHALLENGES",
-      targetItemId: "C-USER-001",
+      text: "The pilot excluded several complex cases, so its headline result may not transfer to the next phase.",
     });
 
     expect(itemId).toBe("CC-USER-001");
@@ -78,9 +73,6 @@ describe("P11.4 add reasoning item", () => {
     const state = useWorkspaceStore.getState();
     const item = state.workspace.items.find(
       (candidate) => candidate.id === itemId,
-    );
-    const relation = state.workspace.relations.find(
-      (candidate) => candidate.from_id === itemId,
     );
     const createEvent = [...state.workspace.audit_events]
       .reverse()
@@ -96,21 +88,21 @@ describe("P11.4 add reasoning item", () => {
         type: "COUNTERCLAIM",
         state: "ACCEPTED",
         created_by: "HUMAN",
+        tags: expect.arrayContaining(["user-added", "unlinked"]),
       }),
     );
-    expect(relation).toEqual(
-      expect.objectContaining({
-        from_id: itemId,
-        to_id: "C-USER-001",
-        type: "CHALLENGES",
-        created_by: "HUMAN",
-      }),
+    expect(state.workspace.relations).toHaveLength(
+      beforeRelationCount,
     );
+    expect(
+      isP114ReasoningItemUnlinked(state.workspace, itemId),
+    ).toBe(true);
     expect(createEvent).toEqual(
       expect.objectContaining({
         actor_type: "HUMAN",
         metadata: expect.objectContaining({
           requested_action: "ADD_REASONING_ITEM",
+          connection_state: "UNLINKED",
           semantic_inference_performed: false,
         }),
       }),
@@ -120,25 +112,34 @@ describe("P11.4 add reasoning item", () => {
     expect(state.ui.focusedItemIds).toEqual([]);
   });
 
-  it("does not expose SUPERSEDES as a manual add relation", () => {
-    expect(P114_ADDABLE_RELATION_TYPES).not.toContain(
-      "SUPERSEDES",
-    );
+  it("allows several cards to be mapped before semantic review", () => {
+    const claimId = addP114ReasoningItem({
+      type: "CLAIM",
+      text: "The pilot workload was dominated by simple cases.",
+    });
+    const evidenceId = addP114ReasoningItem({
+      type: "EVIDENCE",
+      text: "Only a small fraction of the pilot involved complex cases.",
+    });
+    const assumptionId = addP114ReasoningItem({
+      type: "ASSUMPTION",
+      text: "The next phase will have a similar case mix.",
+    });
+
+    expect(
+      getP114UnlinkedReasoningItemIds(
+        useWorkspaceStore.getState().workspace,
+      ),
+    ).toEqual([claimId, evidenceId, assumptionId]);
   });
 
-  it("invalidates semantic evaluation and triage when accepted reasoning changes", () => {
-    useWorkspaceStore
-      .getState()
-      .applyAgentEvaluations([
-        evaluation(
-          "C-USER-001",
-          ["OVERGENERALIZATION"],
-        ),
-        evaluation(
-          "CONC-USER-001",
-          ["DEPENDENCY_ON_UNASSESSED_NODE"],
-        ),
-      ]);
+  it("invalidates semantic evaluation and triage when accepted reasoning expands", () => {
+    useWorkspaceStore.getState().applyAgentEvaluations([
+      evaluation("C-USER-001", ["OVERGENERALIZATION"]),
+      evaluation("CONC-USER-001", [
+        "DEPENDENCY_ON_UNASSESSED_NODE",
+      ]),
+    ]);
 
     expect(
       useWorkspaceStore.getState().workspace.triage_records.length,
@@ -146,9 +147,7 @@ describe("P11.4 add reasoning item", () => {
 
     addP114ReasoningItem({
       type: "EVIDENCE",
-      text: "Escalation outcomes from the live queue should be reviewed before full replacement.",
-      relationType: "SUPPORTS",
-      targetItemId: "C-USER-001",
+      text: "Additional outcomes from the next phase should be reviewed before expansion.",
     });
 
     const state = useWorkspaceStore.getState();
@@ -160,28 +159,17 @@ describe("P11.4 add reasoning item", () => {
   });
 
   it("blocks graph expansion while a human revision decision is pending", () => {
-    useWorkspaceStore
-      .getState()
-      .applyAgentEvaluations([
-        evaluation(
-          "C-USER-001",
-          ["OVERGENERALIZATION"],
-        ),
-      ]);
+    useWorkspaceStore.getState().applyAgentEvaluations([
+      evaluation("C-USER-001", ["OVERGENERALIZATION"]),
+    ]);
 
-    useWorkspaceStore
-      .getState()
-      .focusCustomPrimaryRisk();
-    useWorkspaceStore
-      .getState()
-      .proposeCustomRepair();
+    useWorkspaceStore.getState().focusCustomPrimaryRisk();
+    useWorkspaceStore.getState().proposeCustomRepair();
 
     expect(() =>
       addP114ReasoningItem({
         type: "ASSUMPTION",
-        text: "The unresolved pilot limitations do not materially change the deployment decision.",
-        relationType: "SUPPORTS",
-        targetItemId: "CONC-USER-001",
+        text: "The unresolved limitations do not materially change the decision.",
       }),
     ).toThrow(
       "Finish the current revision review before adding another reasoning item.",

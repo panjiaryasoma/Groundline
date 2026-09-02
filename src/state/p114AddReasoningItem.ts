@@ -1,7 +1,6 @@
 import {
   WorkspaceSchema,
   type KnowledgeItem,
-  type Relation,
   type Workspace,
 } from "../domain/schema";
 import { useWorkspaceStore } from "./workspaceStore";
@@ -13,24 +12,12 @@ export const P114_ADDABLE_KNOWLEDGE_TYPES = [
   "EVIDENCE",
 ] as const;
 
-export const P114_ADDABLE_RELATION_TYPES = [
-  "SUPPORTS",
-  "CHALLENGES",
-  "DEPENDS_ON",
-  "QUALIFIES",
-] as const;
-
 export type P114AddableKnowledgeType =
   (typeof P114_ADDABLE_KNOWLEDGE_TYPES)[number];
-
-export type P114AddableRelationType =
-  (typeof P114_ADDABLE_RELATION_TYPES)[number];
 
 export interface P114AddReasoningItemInput {
   type: P114AddableKnowledgeType;
   text: string;
-  relationType: P114AddableRelationType;
-  targetItemId: string;
 }
 
 function nowIso(): string {
@@ -74,11 +61,44 @@ function validateWorkspace(workspace: Workspace): Workspace {
 
   if (!parsed.success) {
     throw new Error(
-      "P11.4 add reasoning item produced an invalid workspace.",
+      "P11.5 add reasoning item produced an invalid workspace.",
     );
   }
 
   return parsed.data;
+}
+
+export function isP114ReasoningItemUnlinked(
+  workspace: Workspace,
+  itemId: string,
+): boolean {
+  const item = workspace.items.find(
+    (candidate) => candidate.id === itemId,
+  );
+
+  if (
+    !item ||
+    item.state !== "ACCEPTED" ||
+    !item.tags?.includes("user-added")
+  ) {
+    return false;
+  }
+
+  return !workspace.relations.some(
+    (relation) =>
+      relation.from_id === itemId ||
+      relation.to_id === itemId,
+  );
+}
+
+export function getP114UnlinkedReasoningItemIds(
+  workspace: Workspace,
+): string[] {
+  return workspace.items
+    .filter((item) =>
+      isP114ReasoningItemUnlinked(workspace, item.id),
+    )
+    .map((item) => item.id);
 }
 
 export function addP114ReasoningItem(
@@ -88,7 +108,7 @@ export function addP114ReasoningItem(
 
   if (state.experienceMode !== "CUSTOM") {
     throw new Error(
-      "P11.4 reasoning items may only be added in a custom workspace.",
+      "P11.5 reasoning items may only be added in a custom workspace.",
     );
   }
 
@@ -109,26 +129,10 @@ export function addP114ReasoningItem(
   }
 
   if (!P114_ADDABLE_KNOWLEDGE_TYPES.includes(input.type)) {
-    throw new Error("Unsupported P11.4 knowledge type.");
-  }
-
-  if (!P114_ADDABLE_RELATION_TYPES.includes(input.relationType)) {
-    throw new Error("Unsupported P11.4 relation type.");
+    throw new Error("Unsupported P11.5 knowledge type.");
   }
 
   const current = state.workspace;
-  const target = current.items.find(
-    (item) =>
-      item.id === input.targetItemId &&
-      item.state === "ACCEPTED",
-  );
-
-  if (!target) {
-    throw new Error(
-      `Connection target "${input.targetItemId}" is not an ACCEPTED knowledge item.`,
-    );
-  }
-
   const existingIds = new Set([
     ...current.items.map((item) => item.id),
     ...current.relations.map((relation) => relation.id),
@@ -139,8 +143,6 @@ export function addP114ReasoningItem(
     existingIds,
   );
   existingIds.add(itemId);
-  const relationId = nextUniqueId("R-USER", existingIds);
-  existingIds.add(relationId);
   const auditEventId = nextUniqueId(
     "AUD-CREATE-USER",
     existingIds,
@@ -155,25 +157,16 @@ export function addP114ReasoningItem(
     created_at: timestamp,
     created_by: "HUMAN",
     updated_at: timestamp,
-    tags: ["user-added"],
-  };
-
-  const relation: Relation = {
-    id: relationId,
-    from_id: itemId,
-    to_id: target.id,
-    type: input.relationType,
-    created_at: timestamp,
-    created_by: "HUMAN",
+    tags: ["user-added", "unlinked"],
   };
 
   const next = structuredClone(current);
   next.items.push(item);
-  next.relations.push(relation);
 
-  // Human accepted knowledge changed. Existing semantic evaluation and triage
-  // are no longer current for the workspace, so the next agent pass must
-  // evaluate the new structure instead of inheriting stale risk labels.
+  // The human added accepted knowledge, but no semantic relation has been
+  // asserted yet. Existing evaluation and triage therefore cannot remain
+  // current. The next WebMCP review must inspect the expanded workspace and
+  // propose/establish semantic structure explicitly rather than inheriting it.
   next.evaluations = [];
   next.triage_records = [];
 
@@ -182,15 +175,14 @@ export function addP114ReasoningItem(
     event_type: "CREATE",
     timestamp,
     actor_type: "HUMAN",
-    entity_ids: [itemId, relationId],
+    entity_ids: [itemId],
     metadata: {
       requested_action: "ADD_REASONING_ITEM",
-      target_item_id: target.id,
-      relation_type: input.relationType,
       knowledge_type: input.type,
+      connection_state: "UNLINKED",
       semantic_analysis_invalidated: true,
       semantic_inference_performed: false,
-      p11_4_add_reasoning_item: true,
+      p11_5_unlinked_reasoning: true,
     },
   });
 
