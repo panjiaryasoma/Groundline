@@ -76,12 +76,20 @@ export function createInspectItemTool(): WebMCPToolDefinition {
         },
       );
 
-      const sourceIds = outgoing
+      // Frozen fixture/schema direction is SOURCE -> EVIDENCE for SOURCED_FROM.
+      const sourceIds = incoming
         .filter(
           (relation) =>
             relation.type === "SOURCED_FROM",
         )
-        .map((relation) => relation.to_id);
+        .map((relation) => relation.from_id)
+        .filter((id) =>
+          workspace.items.some(
+            (candidate) =>
+              candidate.id === id &&
+              candidate.type === "SOURCE",
+          ),
+        );
 
       const sourceItems = sourceIds
         .map((id) =>
