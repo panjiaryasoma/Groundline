@@ -112,6 +112,7 @@ function buildNodes(
     );
 
     const focused = focusedItemIds.includes(item.id);
+    const faulted = triage?.state === "CRITICAL";
 
     return {
       id: item.id,
@@ -154,6 +155,7 @@ function buildNodes(
       className: [
         "reasoning-node",
         `reasoning-node--${item.type.toLowerCase()}`,
+        faulted ? "reasoning-node--faulted" : "",
         focused ? "reasoning-node--focused" : "",
         item.id === selectedItemId
           ? "reasoning-node--app-selected"
@@ -304,6 +306,7 @@ export function ReasoningGraph({
           <span>Drag one card to move only that card.</span>
           <span>Ctrl/Shift-click selects multiple.</span>
           <span>Drag any selected card to move the group.</span>
+          <span>Rust mark = critical review fault; dashed rust = challenge.</span>
         </div>
 
         <div className="graph-help__actions">
