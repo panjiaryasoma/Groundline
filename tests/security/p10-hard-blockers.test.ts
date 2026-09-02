@@ -165,7 +165,7 @@ describe("P-10 security / robustness hard blockers", () => {
         affected_item_ids: [],
       }),
     ).toThrow(
-      'Repair target "NO-SUCH-ITEM" is not an ACCEPTED knowledge item.',
+      'Knowledge item "NO-SUCH-ITEM" was not found.',
     );
 
     expect(
