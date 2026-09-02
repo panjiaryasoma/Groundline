@@ -753,6 +753,44 @@ export const useWorkspaceStore = create<WorkspaceState>((set, get) => ({
       preparedRepairEvent
         ?.metadata?.primary_risk_id;
 
+    const preparedRepairIndex =
+      preparedRepairEvent
+        ? current.audit_events.findIndex(
+            (event) =>
+              event.event_id ===
+              preparedRepairEvent.event_id,
+          )
+        : -1;
+
+    const laterAgentFocus =
+      preparedRepairIndex >= 0
+        ? current.audit_events
+            .slice(preparedRepairIndex + 1)
+            .filter(
+              (event) =>
+                event.event_type === "FOCUS" &&
+                event.actor_type === "AGENT",
+            )
+            .at(-1)
+        : undefined;
+
+    const agentFocusedPrimary =
+      laterAgentFocus?.entity_ids.find(
+        (id) =>
+          id !== preparedRepairTarget &&
+          current.items.some(
+            (item) =>
+              item.id === id &&
+              item.state === "ACCEPTED",
+          ),
+      );
+
+    const effectivePrimaryRisk =
+      agentFocusedPrimary ??
+      (typeof preparedPrimaryRisk === "string"
+        ? preparedPrimaryRisk
+        : undefined);
+
     if (
       typeof preparedRepairTarget === "string" &&
       preparedRepairTarget !==
@@ -776,9 +814,9 @@ export const useWorkspaceStore = create<WorkspaceState>((set, get) => ({
       proposedText: input.proposedText,
       reasonCodes: input.reasonCodes,
       affectedItemIds: [
-        ...(typeof preparedPrimaryRisk ===
+        ...(typeof effectivePrimaryRisk ===
         "string"
-          ? [preparedPrimaryRisk]
+          ? [effectivePrimaryRisk]
           : []),
         ...input.affectedItemIds,
       ].filter(
@@ -806,9 +844,9 @@ export const useWorkspaceStore = create<WorkspaceState>((set, get) => ({
       proposalAudit.metadata = {
         ...(proposalAudit.metadata ?? {}),
         primary_risk_id:
-          typeof preparedPrimaryRisk ===
+          typeof effectivePrimaryRisk ===
           "string"
-            ? preparedPrimaryRisk
+            ? effectivePrimaryRisk
             : null,
         repair_target_id:
           input.targetItemId,
@@ -824,9 +862,9 @@ export const useWorkspaceStore = create<WorkspaceState>((set, get) => ({
         selectedItemId:
           input.targetItemId,
         focusedItemIds: [
-          ...(typeof preparedPrimaryRisk ===
+          ...(typeof effectivePrimaryRisk ===
           "string"
-            ? [preparedPrimaryRisk]
+            ? [effectivePrimaryRisk]
             : []),
           input.targetItemId,
           ...input.affectedItemIds,

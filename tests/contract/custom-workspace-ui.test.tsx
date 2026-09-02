@@ -584,10 +584,10 @@ describe("P-06.7 custom workspace next-step UX", () => {
     );
 
     expect(
-      screen.getByText(
+      screen.getAllByText(
         "Pilot the new release process before replacing the current one.",
-      ),
-    ).toBeInTheDocument();
+      ).length,
+    ).toBeGreaterThan(0);
 
     for (const name of [
       "Accept proposal",

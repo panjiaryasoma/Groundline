@@ -160,8 +160,8 @@ describe("P-06.6 plain-language review flow", () => {
     );
 
     expect(
-      await screen.findByText(
-        "Advanced reasoning map",
+      await screen.findByLabelText(
+        "Live reasoning workspace",
       ),
     ).toBeInTheDocument();
 
@@ -445,7 +445,7 @@ describe("P-06.6 plain-language review flow", () => {
     ).toBeInTheDocument();
   });
 
-  it("does not require map interaction to complete check-review-decide", () => {
+  it("opens the live reasoning workspace automatically after the check action", async () => {
     const handlers = renderFocus();
 
     fireEvent.click(
@@ -459,10 +459,10 @@ describe("P-06.6 plain-language review flow", () => {
     ).toHaveBeenCalledTimes(1);
 
     expect(
-      screen.queryByLabelText(
+      await screen.findByLabelText(
         "Groundline reasoning graph",
       ),
-    ).not.toBeInTheDocument();
+    ).toBeInTheDocument();
   });
 
 

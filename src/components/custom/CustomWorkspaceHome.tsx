@@ -15,6 +15,21 @@ import type {
   Workspace,
 } from "../../domain/schema";
 
+function safeScrollIntoView(
+  element: Element | null,
+  options: ScrollIntoViewOptions,
+) {
+  if (!element) return;
+
+  const scrollIntoView =
+    (element as HTMLElement).scrollIntoView;
+
+  if (typeof scrollIntoView === "function") {
+    scrollIntoView.call(element, options);
+  }
+}
+
+
 const ExpandedReasoningMap = lazy(async () => {
   const module = await import(
     "../focus/ExpandedReasoningMap"
@@ -261,10 +276,13 @@ export function CustomWorkspaceHome({
     setMapOpen(true);
 
     window.requestAnimationFrame(() => {
-      analysisResultRef.current?.scrollIntoView({
-        behavior: "smooth",
-        block: "start",
-      });
+      safeScrollIntoView(
+        analysisResultRef.current,
+        {
+          behavior: "smooth",
+          block: "start",
+        },
+      );
     });
   }
 
@@ -283,14 +301,15 @@ export function CustomWorkspaceHome({
     setMapOpen(true);
 
     window.requestAnimationFrame(() => {
-      document
-        .querySelector(
+      safeScrollIntoView(
+        document.querySelector(
           '[aria-label="Groundline reasoning graph"]',
-        )
-        ?.scrollIntoView({
+        ),
+        {
           behavior: "smooth",
           block: "center",
-        });
+        },
+      );
     });
 
     return result;
@@ -488,6 +507,9 @@ export function CustomWorkspaceHome({
                 <p className="eyebrow">
                   Next · Semantic review
                 </p>
+                <span className="custom-agent-ready">
+                  Ready for agent review
+                </span>
                 <h5>
                   Now inspect what matters, not just
                   what is missing.
@@ -532,7 +554,7 @@ export function CustomWorkspaceHome({
                 >
                   {repairRequestedForActiveRisk &&
                   !proposedRevision
-                    ? "Repair requested"
+                    ? "Repair target ready"
                     : "Propose repair"}
                 </button>
               </div>
@@ -583,7 +605,9 @@ export function CustomWorkspaceHome({
                       : "Propose repair"}
                   </span>
                   <strong>
-                    Semantic agent review is required.
+                    {agentActionNotice === "REPAIR"
+                      ? "Agent action is required."
+                      : "Ready for WebMCP agent review."}
                   </strong>
                   <p>
                     {agentActionNotice === "FOCUS"
@@ -593,7 +617,7 @@ export function CustomWorkspaceHome({
                       : proposedRevision
                         ? "The WebMCP agent created a real proposal for the accepted conclusion. The focused risk remains the reason for the repair."
                         : activePrimaryRisk
-                          ? `Primary risk ${activePrimaryRisk.id} is the reason for review. Groundline moved the Inspector to the accepted conclusion because that is the repair target. A real WebMCP propose_revision result will appear in Revision Proposal below.`
+                          ? `Groundline prepared the accepted conclusion as the repair target. WebMCP tools are registered, but no agent runs in the background. Ask a WebMCP-aware agent to inspect this workspace, triage the reasoning, focus the highest-priority unresolved risk, and call propose_revision.`
                           : "Focus one risk before requesting a repair."}
                   </p>
                 </aside>

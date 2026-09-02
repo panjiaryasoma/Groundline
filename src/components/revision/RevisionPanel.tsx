@@ -59,7 +59,10 @@ export function RevisionPanel({
         : null;
 
     return (
-      <section className="revision-panel">
+      <section
+        className="revision-panel"
+        aria-label="Revision proposal"
+      >
         <p className="eyebrow">
           Revision proposal
         </p>
@@ -67,15 +70,28 @@ export function RevisionPanel({
         {repairRequest ? (
           <>
             <h2>
-              Waiting for agent proposal
+              Ready for WebMCP agent
             </h2>
             <p className="muted-copy">
-              Groundline prepared the repair
-              target. This panel will update
-              automatically when the connected
-              WebMCP agent calls{" "}
+              Groundline prepared the repair target.
+              Nothing is running in the background.
+              A WebMCP-aware agent must inspect this
+              page and call{" "}
               <code>propose_revision</code>.
             </p>
+
+            <div className="revision-agent-instruction">
+              <span>Ask your agent</span>
+              <p>
+                Review this Groundline workspace.
+                Inspect and triage the reasoning,
+                focus the highest-priority unresolved
+                risk, trace how it affects the accepted
+                conclusion, then propose a revision for
+                the prepared repair target. Do not
+                accept it.
+              </p>
+            </div>
 
             <dl className="revision-waiting-meta">
               <div>
@@ -113,7 +129,10 @@ export function RevisionPanel({
   );
 
   return (
-    <section className="revision-panel">
+    <section
+      className="revision-panel"
+      aria-label="Revision proposal"
+    >
       <div className="revision-heading">
         <div>
           <p className="eyebrow">Agent proposal</p>

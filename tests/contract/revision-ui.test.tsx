@@ -150,7 +150,7 @@ describe("P-06 revision panel", () => {
 
     expect(
       screen.getByText(
-        "Waiting for agent proposal",
+        "Ready for WebMCP agent",
       ),
     ).toBeInTheDocument();
 

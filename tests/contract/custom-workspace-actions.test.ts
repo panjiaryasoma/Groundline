@@ -537,4 +537,92 @@ describe("P-07/08 custom workspace actions", () => {
     );
   });
 
+
+  it("lets a later agent focus refine the prepared structural fallback risk", () => {
+    const current =
+      useWorkspaceStore.getState().workspace;
+
+    useWorkspaceStore.setState({
+      workspace: {
+        ...current,
+        triage_records: [
+          {
+            item_id: "C-USER-001",
+            state: "CRITICAL",
+            weakness_score_internal: 3,
+            impact_score_internal: 3,
+            priority_score_internal: 9,
+            reason_codes: [
+              "OVERGENERALIZATION",
+            ],
+            downstream_accepted_ids: [
+              "CONC-USER-001",
+            ],
+            direct_to_accepted_conclusion:
+              true,
+          },
+        ],
+      },
+    });
+
+    useWorkspaceStore
+      .getState()
+      .focusCustomPrimaryRisk();
+
+    useWorkspaceStore
+      .getState()
+      .prepareCustomRepairTarget();
+
+    useWorkspaceStore
+      .getState()
+      .focusItemsWithAudit(
+        [
+          "C-USER-001",
+          "CONC-USER-001",
+        ],
+        "C-USER-001",
+        "AGENT",
+        {
+          source: "WEBMCP",
+        },
+      );
+
+    useWorkspaceStore
+      .getState()
+      .proposeAgentRevision({
+        targetItemId:
+          "CONC-USER-001",
+        proposedText:
+          "Pilot the change before broad deployment.",
+        reasonCodes: [
+          "OVERGENERALIZATION",
+        ],
+        affectedItemIds: [
+          "C-USER-001",
+          "CONC-USER-001",
+        ],
+      });
+
+    const proposalEvent =
+      [...useWorkspaceStore
+        .getState()
+        .workspace.audit_events]
+        .reverse()
+        .find(
+          (event) =>
+            event.event_type ===
+            "PROPOSE_REVISION",
+        );
+
+    expect(
+      proposalEvent?.metadata
+        ?.primary_risk_id,
+    ).toBe("C-USER-001");
+
+    expect(
+      proposalEvent?.metadata
+        ?.repair_target_id,
+    ).toBe("CONC-USER-001");
+  });
+
 });

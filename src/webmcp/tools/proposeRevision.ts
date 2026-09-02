@@ -6,7 +6,7 @@ export function createProposeRevisionTool(): WebMCPToolDefinition {
     name: "propose_revision",
     title: "Propose Groundline revision",
     description:
-      "Create a PROPOSED revision for the prepared Groundline repair target. Inspect workspace state first: ui_state.primary_risk_id explains why the repair is needed and ui_state.repair_target_id identifies the accepted item to revise. This never accepts knowledge; a human must review the proposal.",
+      "Create a PROPOSED revision for Groundline's prepared repair target after inspecting and, when needed, triaging the workspace. The latest agent focus may refine the primary risk; ui_state.repair_target_id identifies the accepted item to revise. Never accept knowledge; a human reviews the proposal.",
     inputSchema: {
       type: "object",
       properties: {
