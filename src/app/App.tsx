@@ -1,12 +1,15 @@
 import { CustomWorkspaceHome } from "../components/custom";
 import { DecisionIntake } from "../components/intake";
-import { FocusWorkspace } from "../components/focus";
+import { P111FocusWorkspace } from "../components/focus";
 import { StartScreen } from "../components/start";
 import { hasWebMCP } from "../webmcp/modelContext";
 import { useGroundlineWebMCP } from "../webmcp/useGroundlineWebMCP";
+import { installP111RepairLifecycle } from "../state/p111RepairLifecycle";
 import { useWorkspaceStore } from "../state/workspaceStore";
 import "../styles/app.css";
 import "../styles/p11.css";
+
+installP111RepairLifecycle();
 
 export function App() {
   useGroundlineWebMCP();
@@ -137,7 +140,7 @@ export function App() {
       ) : null}
 
       {experienceMode === "DEMO" ? (
-        <FocusWorkspace
+        <P111FocusWorkspace
           workspace={workspace}
           selectedItemId={ui.selectedItemId}
           focusedItemIds={ui.focusedItemIds}
@@ -149,16 +152,10 @@ export function App() {
           }
           onSelectItem={selectItem}
           onRunAnalysis={runSeededAnalysis}
-          onFocusPrimaryRisk={
-            focusPrimaryRisk
-          }
-          onProposeRevision={
-            proposeSeededRevision
-          }
+          onFocusPrimaryRisk={focusPrimaryRisk}
+          onProposeRevision={proposeSeededRevision}
           onAccept={acceptLatestRevision}
-          onEditAndAccept={
-            editAndAcceptLatestRevision
-          }
+          onEditAndAccept={editAndAcceptLatestRevision}
           onReject={rejectLatestRevision}
           onDefer={deferLatestRevision}
           onReset={resetDemo}
@@ -178,16 +175,10 @@ export function App() {
             }
           }
           onSelectItem={selectItem}
-          onFocusPrimaryRisk={
-            focusCustomPrimaryRisk
-          }
-          onProposeRepair={
-            proposeCustomRepair
-          }
+          onFocusPrimaryRisk={focusCustomPrimaryRisk}
+          onProposeRepair={proposeCustomRepair}
           onAccept={acceptLatestRevision}
-          onEditAndAccept={
-            editAndAcceptLatestRevision
-          }
+          onEditAndAccept={editAndAcceptLatestRevision}
           onReject={rejectLatestRevision}
           onDefer={deferLatestRevision}
           onEdit={startIntake}

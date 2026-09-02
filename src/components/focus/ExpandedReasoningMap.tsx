@@ -89,7 +89,7 @@ export function ExpandedReasoningMap({
         </span>
         <span>
           <strong>Repair</strong>
-          revise the accepted conclusion
+          revise the focused accepted item
         </span>
       </div>
 
