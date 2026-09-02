@@ -30,6 +30,7 @@ interface FocusWorkspaceProps {
   workspace: Workspace;
   selectedItemId: string | null;
   focusedItemIds: string[];
+  graphSelectionRequest: GraphSelectionRequest;
   onSelectItem: (itemId: string | null) => void;
   onRunAnalysis: () => void;
   onFocusPrimaryRisk: () => void;
@@ -305,6 +306,7 @@ export function FocusWorkspace({
   workspace,
   selectedItemId,
   focusedItemIds,
+  graphSelectionRequest,
   onSelectItem,
   onRunAnalysis,
   onFocusPrimaryRisk,
@@ -1027,6 +1029,9 @@ export function FocusWorkspace({
             workspace={workspace}
             selectedItemId={selectedItemId}
             focusedItemIds={focusedItemIds}
+            graphSelectionRequest={
+              graphSelectionRequest
+            }
             onSelectItem={onSelectItem}
             onCollapse={() =>
               setMapExpanded(false)

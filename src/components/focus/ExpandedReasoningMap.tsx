@@ -1,4 +1,7 @@
 import type { Workspace } from "../../domain/schema";
+import type {
+  GraphSelectionRequest,
+} from "../../state/workspaceStore";
 import { AuditTrail } from "../audit";
 import { ReasoningGraph } from "../graph";
 import { InspectorPanel } from "../inspector";
@@ -8,6 +11,7 @@ interface ExpandedReasoningMapProps {
   workspace: Workspace;
   selectedItemId: string | null;
   focusedItemIds: string[];
+  graphSelectionRequest: GraphSelectionRequest;
   onSelectItem: (
     itemId: string | null,
   ) => void;
@@ -30,6 +34,7 @@ export function ExpandedReasoningMap({
   workspace,
   selectedItemId,
   focusedItemIds,
+  graphSelectionRequest,
   onSelectItem,
   onCollapse,
   onAccept = noop,
@@ -97,6 +102,9 @@ export function ExpandedReasoningMap({
             }
             focusedItemIds={
               focusedItemIds
+            }
+            graphSelectionRequest={
+              graphSelectionRequest
             }
             onSelectItem={
               onSelectItem

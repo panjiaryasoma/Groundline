@@ -26,12 +26,17 @@ import {
   getSelectedNodeIds,
   mergePreservedPositions,
   setAllGraphNodesSelected,
+  selectSingleGraphNode,
 } from "./graphInteraction";
+import type {
+  GraphSelectionRequest,
+} from "../../state/workspaceStore";
 
 interface ReasoningGraphProps {
   workspace: Workspace;
   selectedItemId: string | null;
   focusedItemIds: string[];
+  graphSelectionRequest: GraphSelectionRequest;
   onSelectItem: (itemId: string | null) => void;
 }
 
@@ -189,6 +194,7 @@ export function ReasoningGraph({
   workspace,
   selectedItemId,
   focusedItemIds,
+  graphSelectionRequest,
   onSelectItem,
 }: ReasoningGraphProps) {
   const structuralNodes = useMemo(
@@ -218,6 +224,17 @@ export function ReasoningGraph({
     );
   }, [structuralNodes]);
 
+  useEffect(() => {
+    setNodes((current) =>
+      selectSingleGraphNode(
+        current,
+        graphSelectionRequest.itemId,
+      ),
+    );
+  }, [
+    graphSelectionRequest.version,
+    graphSelectionRequest.itemId,
+  ]);
 
   const edges = useMemo(
     () => buildEdges(workspace),

@@ -30,6 +30,10 @@ describe("P-06.7 custom workspace next-step UX", () => {
         workspace={workspace}
         selectedItemId={null}
         focusedItemIds={[]}
+        graphSelectionRequest={{
+          itemId: null,
+          version: 0,
+        }}
         onSelectItem={vi.fn()}
         onFocusPrimaryRisk={vi.fn(() => ({
           targetId: "C-USER-001",
@@ -89,6 +93,10 @@ describe("P-06.7 custom workspace next-step UX", () => {
         workspace={workspace}
         selectedItemId={null}
         focusedItemIds={[]}
+        graphSelectionRequest={{
+          itemId: null,
+          version: 0,
+        }}
         onSelectItem={vi.fn()}
         onFocusPrimaryRisk={vi.fn(() => ({
           targetId: "C-USER-001",
@@ -166,6 +174,10 @@ describe("P-06.7 custom workspace next-step UX", () => {
         workspace={workspace}
         selectedItemId={null}
         focusedItemIds={[]}
+        graphSelectionRequest={{
+          itemId: null,
+          version: 0,
+        }}
         onSelectItem={vi.fn()}
         onFocusPrimaryRisk={vi.fn(() => ({
           targetId: "C-USER-001",
@@ -227,6 +239,10 @@ describe("P-06.7 custom workspace next-step UX", () => {
         workspace={workspace}
         selectedItemId={null}
         focusedItemIds={[]}
+        graphSelectionRequest={{
+          itemId: null,
+          version: 0,
+        }}
         onSelectItem={vi.fn()}
         onFocusPrimaryRisk={vi.fn(() => ({
           targetId: "C-USER-001",
@@ -296,6 +312,10 @@ describe("P-06.7 custom workspace next-step UX", () => {
         workspace={workspace}
         selectedItemId={null}
         focusedItemIds={[]}
+        graphSelectionRequest={{
+          itemId: null,
+          version: 0,
+        }}
         onSelectItem={vi.fn()}
         onFocusPrimaryRisk={vi.fn(() => ({
           targetId: "C-USER-001",
@@ -356,6 +376,10 @@ describe("P-06.7 custom workspace next-step UX", () => {
         workspace={workspace}
         selectedItemId={null}
         focusedItemIds={[]}
+        graphSelectionRequest={{
+          itemId: null,
+          version: 0,
+        }}
         onSelectItem={vi.fn()}
         onFocusPrimaryRisk={vi.fn(() => ({
           targetId: "C-USER-001",
@@ -417,6 +441,26 @@ describe("P-06.7 custom workspace next-step UX", () => {
         "Releases fail too often.",
     });
 
+    workspace.audit_events.push({
+      event_id: "AUD-FOCUS-UI-TEST",
+      event_type: "FOCUS",
+      timestamp:
+        "2026-09-02T12:00:00+07:00",
+      actor_type: "HUMAN",
+      entity_ids: [
+        "C-USER-001",
+        "CONC-USER-001",
+      ],
+      metadata: {
+        primary_item_id:
+          "C-USER-001",
+        requested_action:
+          "FOCUS_PRIMARY_RISK",
+        basis:
+          "STRUCTURAL_FALLBACK",
+      },
+    });
+
     const onProposeRepair =
       vi.fn(() => ({
         targetId:
@@ -439,6 +483,10 @@ describe("P-06.7 custom workspace next-step UX", () => {
           "C-USER-001",
           "CONC-USER-001",
         ]}
+        graphSelectionRequest={{
+          itemId: null,
+          version: 0,
+        }}
         onSelectItem={vi.fn()}
         onFocusPrimaryRisk={vi.fn(() => ({
           targetId:
@@ -494,6 +542,10 @@ describe("P-06.7 custom workspace next-step UX", () => {
         workspace={workspace}
         selectedItemId={null}
         focusedItemIds={[]}
+        graphSelectionRequest={{
+          itemId: null,
+          version: 0,
+        }}
         onSelectItem={vi.fn()}
         onFocusPrimaryRisk={vi.fn(() => ({
           targetId: "C-USER-001",
@@ -571,6 +623,10 @@ describe("P-06.7 custom workspace next-step UX", () => {
           "C-USER-001",
           "CONC-USER-001",
         ]}
+        graphSelectionRequest={{
+          itemId: null,
+          version: 0,
+        }}
         onSelectItem={vi.fn()}
         onFocusPrimaryRisk={vi.fn(() => ({
           targetId: "C-USER-001",
@@ -641,6 +697,10 @@ describe("P-06.7 custom workspace next-step UX", () => {
         workspace={workspace}
         selectedItemId={null}
         focusedItemIds={[]}
+        graphSelectionRequest={{
+          itemId: null,
+          version: 0,
+        }}
         onSelectItem={vi.fn()}
         onFocusPrimaryRisk={onFocusPrimaryRisk}
         onProposeRepair={vi.fn(() => ({
@@ -708,6 +768,10 @@ describe("P-06.7 custom workspace next-step UX", () => {
           "C-USER-001",
           "CONC-USER-001",
         ]}
+        graphSelectionRequest={{
+          itemId: null,
+          version: 0,
+        }}
         onSelectItem={vi.fn()}
         onFocusPrimaryRisk={vi.fn(() => null)}
         onProposeRepair={vi.fn(() => null)}
@@ -772,6 +836,10 @@ describe("P-06.7 custom workspace next-step UX", () => {
         workspace={workspace}
         selectedItemId={null}
         focusedItemIds={[]}
+        graphSelectionRequest={{
+          itemId: null,
+          version: 0,
+        }}
         onSelectItem={vi.fn()}
         onFocusPrimaryRisk={
           onFocusPrimaryRisk

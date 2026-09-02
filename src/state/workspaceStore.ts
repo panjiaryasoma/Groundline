@@ -31,9 +31,15 @@ export type ExperienceMode =
   | "DEMO"
   | "CUSTOM";
 
+export interface GraphSelectionRequest {
+  itemId: string | null;
+  version: number;
+}
+
 interface EphemeralUiState {
   selectedItemId: string | null;
   focusedItemIds: string[];
+  graphSelectionRequest: GraphSelectionRequest;
 }
 
 
@@ -92,6 +98,17 @@ interface WorkspaceState {
 
 function nowIso(): string {
   return new Date().toISOString();
+}
+
+function nextGraphSelectionRequest(
+  ui: EphemeralUiState,
+  itemId: string | null,
+): GraphSelectionRequest {
+  return {
+    itemId,
+    version:
+      ui.graphSelectionRequest.version + 1,
+  };
 }
 
 function nextId(prefix: string, workspace: Workspace): string {
@@ -464,6 +481,10 @@ export const useWorkspaceStore = create<WorkspaceState>((set, get) => ({
   ui: {
     selectedItemId: null,
     focusedItemIds: [],
+    graphSelectionRequest: {
+      itemId: null,
+      version: 0,
+    },
   },
 
   startIntake: () =>
@@ -479,6 +500,10 @@ export const useWorkspaceStore = create<WorkspaceState>((set, get) => ({
       ui: {
         selectedItemId: null,
         focusedItemIds: [],
+        graphSelectionRequest: {
+          itemId: null,
+          version: 0,
+        },
       },
     }),
 
@@ -488,6 +513,10 @@ export const useWorkspaceStore = create<WorkspaceState>((set, get) => ({
       ui: {
         selectedItemId: null,
         focusedItemIds: [],
+        graphSelectionRequest: {
+          itemId: null,
+          version: 0,
+        },
       },
     }),
 
@@ -499,6 +528,10 @@ export const useWorkspaceStore = create<WorkspaceState>((set, get) => ({
       ui: {
         selectedItemId: null,
         focusedItemIds: [],
+        graphSelectionRequest: {
+          itemId: null,
+          version: 0,
+        },
       },
     }),
 
@@ -510,6 +543,10 @@ export const useWorkspaceStore = create<WorkspaceState>((set, get) => ({
       ui: {
         selectedItemId: null,
         focusedItemIds: [],
+        graphSelectionRequest: {
+          itemId: null,
+          version: 0,
+        },
       },
     }),
 
@@ -560,11 +597,18 @@ export const useWorkspaceStore = create<WorkspaceState>((set, get) => ({
       },
     });
 
+    const ui = get().ui;
+
     set({
       workspace: validateWorkspaceState(next),
       ui: {
         selectedItemId: primaryItemId,
         focusedItemIds: focused,
+        graphSelectionRequest:
+          nextGraphSelectionRequest(
+            ui,
+            primaryItemId,
+          ),
       },
     });
   },
@@ -620,11 +664,19 @@ export const useWorkspaceStore = create<WorkspaceState>((set, get) => ({
         // Reassert UI selection only. Do not write another
         // identical FOCUS event just because the user clicked
         // another card and then returned to the primary risk.
+        const ui = get().ui;
+
         set({
           ui: {
+            ...ui,
             selectedItemId:
               existingPrimaryRiskId,
             focusedItemIds,
+            graphSelectionRequest:
+              nextGraphSelectionRequest(
+                ui,
+                existingPrimaryRiskId,
+              ),
           },
         });
 
@@ -930,12 +982,20 @@ export const useWorkspaceStore = create<WorkspaceState>((set, get) => ({
     const validated =
       validateWorkspaceState(next);
 
+    const ui = get().ui;
+
     set({
       workspace: validated,
       ui: {
+        ...ui,
         selectedItemId:
           repairTargetId,
         focusedItemIds,
+        graphSelectionRequest:
+          nextGraphSelectionRequest(
+            ui,
+            repairTargetId,
+          ),
       },
     });
 
@@ -1127,9 +1187,12 @@ export const useWorkspaceStore = create<WorkspaceState>((set, get) => ({
     const validatedNext =
       validateWorkspaceState(next);
 
+    const ui = get().ui;
+
     set({
       workspace: validatedNext,
       ui: {
+        ...ui,
         selectedItemId:
           input.targetItemId,
         focusedItemIds: [
@@ -1143,6 +1206,11 @@ export const useWorkspaceStore = create<WorkspaceState>((set, get) => ({
           (id, index, values) =>
             values.indexOf(id) === index,
         ),
+        graphSelectionRequest:
+          nextGraphSelectionRequest(
+            ui,
+            input.targetItemId,
+          ),
       },
     });
   },
@@ -1165,12 +1233,21 @@ export const useWorkspaceStore = create<WorkspaceState>((set, get) => ({
 
     const analyzed = attachWorkspaceAnalysis(current, analysis);
 
+    const ui = get().ui;
+    const targetId =
+      analysis.ordered_review_targets[0]
+        ?.item_id ?? null;
+
     set({
       workspace: analyzed,
       ui: {
-        ...get().ui,
-        selectedItemId:
-          analysis.ordered_review_targets[0]?.item_id ?? null,
+        ...ui,
+        selectedItemId: targetId,
+        graphSelectionRequest:
+          nextGraphSelectionRequest(
+            ui,
+            targetId,
+          ),
       },
     });
   },
@@ -1204,6 +1281,11 @@ export const useWorkspaceStore = create<WorkspaceState>((set, get) => ({
           targetId,
           ...trace.node_ids,
         ],
+        graphSelectionRequest:
+          nextGraphSelectionRequest(
+            state.ui,
+            targetId,
+          ),
       },
     }));
   },
@@ -1246,12 +1328,22 @@ export const useWorkspaceStore = create<WorkspaceState>((set, get) => ({
       auditEventId,
     });
 
+    const ui = get().ui;
+    const targetId =
+      current.accepted_conclusion_id ??
+      "CONC-001";
+
     set({
       workspace: next,
       ui: {
-        ...get().ui,
+        ...ui,
         selectedItemId:
-          current.accepted_conclusion_id ?? "CONC-001",
+          targetId,
+        graphSelectionRequest:
+          nextGraphSelectionRequest(
+            ui,
+            targetId,
+          ),
       },
     });
   },
@@ -1282,8 +1374,14 @@ export const useWorkspaceStore = create<WorkspaceState>((set, get) => ({
         acceptedItemId,
       }),
       ui: {
+        ...get().ui,
         selectedItemId: acceptedItemId,
         focusedItemIds: [acceptedItemId],
+        graphSelectionRequest:
+          nextGraphSelectionRequest(
+            get().ui,
+            acceptedItemId,
+          ),
       },
     });
   },
@@ -1315,8 +1413,14 @@ export const useWorkspaceStore = create<WorkspaceState>((set, get) => ({
         editedText,
       }),
       ui: {
+        ...get().ui,
         selectedItemId: acceptedItemId,
         focusedItemIds: [acceptedItemId],
+        graphSelectionRequest:
+          nextGraphSelectionRequest(
+            get().ui,
+            acceptedItemId,
+          ),
       },
     });
   },

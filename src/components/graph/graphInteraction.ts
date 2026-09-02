@@ -70,3 +70,16 @@ export function setAllGraphNodesSelected(
     selected,
   }));
 }
+
+
+export function selectSingleGraphNode(
+  nodes: Node[],
+  itemId: string | null,
+): Node[] {
+  return nodes.map((node) => ({
+    ...node,
+    selected:
+      itemId !== null &&
+      node.id === itemId,
+  }));
+}

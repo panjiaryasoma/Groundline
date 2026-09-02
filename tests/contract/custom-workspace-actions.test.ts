@@ -795,4 +795,56 @@ describe("P-07/08 custom workspace actions", () => {
     );
   });
 
+
+  it("advances the graph selection command when Focus primary risk reselects its target", () => {
+    const before =
+      useWorkspaceStore
+        .getState()
+        .ui.graphSelectionRequest
+        .version;
+
+    const result =
+      useWorkspaceStore
+        .getState()
+        .focusCustomPrimaryRisk();
+
+    const state =
+      useWorkspaceStore.getState();
+
+    expect(result?.targetId).toBe(
+      state.ui.selectedItemId,
+    );
+
+    expect(
+      state.ui.graphSelectionRequest
+        .itemId,
+    ).toBe(result?.targetId);
+
+    expect(
+      state.ui.graphSelectionRequest
+        .version,
+    ).toBeGreaterThan(before);
+  });
+
+  it("repair commands ReactFlow to select the accepted conclusion", () => {
+    useWorkspaceStore
+      .getState()
+      .focusCustomPrimaryRisk();
+
+    useWorkspaceStore
+      .getState()
+      .proposeCustomRepair();
+
+    const state =
+      useWorkspaceStore.getState();
+
+    expect(
+      state.ui.graphSelectionRequest
+        .itemId,
+    ).toBe(
+      state.workspace
+        .accepted_conclusion_id,
+    );
+  });
+
 });

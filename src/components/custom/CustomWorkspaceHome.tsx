@@ -14,6 +14,9 @@ import type {
   KnowledgeItem,
   Workspace,
 } from "../../domain/schema";
+import type {
+  GraphSelectionRequest,
+} from "../../state/workspaceStore";
 
 function safeScrollIntoView(
   element: Element | null,
@@ -44,6 +47,7 @@ interface CustomWorkspaceHomeProps {
   workspace: Workspace;
   selectedItemId: string | null;
   focusedItemIds: string[];
+  graphSelectionRequest: GraphSelectionRequest;
   onSelectItem: (itemId: string | null) => void;
   onFocusPrimaryRisk: () => {
     targetId: string;
@@ -107,6 +111,7 @@ export function CustomWorkspaceHome({
   workspace,
   selectedItemId,
   focusedItemIds,
+  graphSelectionRequest,
   onSelectItem,
   onFocusPrimaryRisk,
   onProposeRepair,
@@ -649,6 +654,9 @@ export function CustomWorkspaceHome({
             workspace={workspace}
             selectedItemId={selectedItemId}
             focusedItemIds={focusedItemIds}
+            graphSelectionRequest={
+              graphSelectionRequest
+            }
             onSelectItem={onSelectItem}
             onCollapse={() => {
               setMapOpen(false);

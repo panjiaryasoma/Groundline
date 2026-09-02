@@ -1,0 +1,28 @@
+{
+  "milestone": "P-08.8",
+  "mode": "PONYTAIL_FULL",
+  "artifact_status": "PASS_STATIC",
+  "runtime_status": "PENDING_USER_LOCAL_RUN",
+  "user_p087_runtime_baseline": {
+    "typecheck": "PASS",
+    "build": "PASS",
+    "tests_passed": 147,
+    "tests_failed": 2,
+    "tests_total": 149
+  },
+  "test_cases_counted_from_source": 153,
+  "contract_change": false,
+  "checks": {
+    "versioned_request_defined": true,
+    "focus_commands_graph_selection": true,
+    "reasoning_graph_consumes_request": true,
+    "manual_selection_does_not_issue_request": true,
+    "repair_selects_conclusion": true,
+    "accept_selects_new_card": true,
+    "old_feedback_effect_absent": true,
+    "typescript_syntax": true,
+    "contract_unchanged": true
+  },
+  "syntax_stdout": "syntax-ok",
+  "syntax_stderr": ""
+}

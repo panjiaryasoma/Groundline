@@ -7,6 +7,7 @@ import {
   attachWorkspaceAnalysis,
   triageWorkspaceFromEvaluations,
 } from "../../src/domain/workspaceAnalysis";
+import { proposeRevision } from "../../src/domain/revisions";
 
 describe("P-06 inspector", () => {
   it("shows a selected reasoning item's text and relations", () => {
@@ -60,22 +61,28 @@ describe("P-06 inspector", () => {
     ).toBeInTheDocument();
   });
 
-  it("shows a waiting repair request for the selected target", () => {
-    const workspace =
-      structuredClone(integration001);
-
-    workspace.audit_events.push({
-      event_id:
-        "AUD-FOCUS-REPAIR",
-      event_type: "FOCUS",
-      timestamp:
-        "2026-09-02T05:10:00+07:00",
-      actor_type: "HUMAN",
-      entity_ids: ["A-001"],
-      metadata: {
-        requested_action:
-          "PROPOSE_REPAIR",
-      },
+  it("shows proposed repair activity for an affected selected item", () => {
+    const workspace = proposeRevision({
+      workspace:
+        structuredClone(
+          integration001,
+        ),
+      revisionId: "REV-TEST-001",
+      targetItemId: "CONC-001",
+      proposedText:
+        "Keep the conclusion provisional until the focused risk is resolved.",
+      reasonCodes: [
+        "UNSUPPORTED_ASSUMPTION",
+      ],
+      affectedItemIds: [
+        "A-001",
+        "CONC-001",
+      ],
+      createdBy: "AGENT",
+      createdAt:
+        "2026-09-02T12:00:00+07:00",
+      auditEventId:
+        "AUD-PROP-TEST-001",
     });
 
     render(
@@ -87,8 +94,18 @@ describe("P-06 inspector", () => {
 
     expect(
       screen.getByText(
-        /Repair requested/i,
+        "Revision activity",
       ),
+    ).toBeInTheDocument();
+
+    expect(
+      screen.getByText(
+        "REV-TEST-001",
+      ),
+    ).toBeInTheDocument();
+
+    expect(
+      screen.getByText("PROPOSED"),
     ).toBeInTheDocument();
   });
 

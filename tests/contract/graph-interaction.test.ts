@@ -181,4 +181,56 @@ describe("P-06.2 graph interaction semantics", () => {
 
 
 
+
+  it("programmatically selects exactly the requested card", () => {
+    const nodes = [
+      {
+        id: "A",
+        position: { x: 0, y: 0 },
+        data: {},
+        selected: true,
+      },
+      {
+        id: "B",
+        position: { x: 10, y: 10 },
+        data: {},
+        selected: false,
+      },
+    ];
+
+    const selected =
+      selectSingleGraphNode(
+        nodes,
+        "B",
+      );
+
+    expect(
+      selected
+        .filter((node) => node.selected)
+        .map((node) => node.id),
+    ).toEqual(["B"]);
+  });
+
+  it("programmatic clear removes ReactFlow selection without changing node identity", () => {
+    const nodes = [
+      {
+        id: "A",
+        position: { x: 0, y: 0 },
+        data: {},
+        selected: true,
+      },
+    ];
+
+    const cleared =
+      selectSingleGraphNode(
+        nodes,
+        null,
+      );
+
+    expect(
+      cleared[0].selected,
+    ).toBe(false);
+    expect(cleared[0].id).toBe("A");
+  });
+
 });
