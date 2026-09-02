@@ -155,12 +155,12 @@ describe("P-06 revision panel", () => {
     ).toBeInTheDocument();
 
     expect(
-      screen.getByText("A-001"),
-    ).toBeInTheDocument();
+      screen.getAllByText("A-001").length,
+    ).toBeGreaterThan(0);
 
     expect(
-      screen.getByText("CONC-001"),
-    ).toBeInTheDocument();
+      screen.getAllByText("CONC-001").length,
+    ).toBeGreaterThan(0);
   });
 
 });

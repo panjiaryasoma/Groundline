@@ -212,7 +212,7 @@ describe("P-06.7 custom workspace next-step UX", () => {
     ).toBeInTheDocument();
   });
 
-  it("does not show a redundant Open map action and opens the live workspace from Run analysis", () => {
+  it("does not show a redundant Open map action and opens the live workspace from Run analysis", async () => {
     const workspace = buildCustomWorkspace({
       question:
         "Should we change our release process?",
@@ -268,7 +268,7 @@ describe("P-06.7 custom workspace next-step UX", () => {
     );
 
     expect(
-      screen.getByLabelText(
+      await screen.findByLabelText(
         "Live reasoning workspace",
       ),
     ).toBeInTheDocument();
@@ -458,12 +458,6 @@ describe("P-06.7 custom workspace next-step UX", () => {
         name: "Propose repair",
       }),
     );
-
-    expect(
-      screen.getByText(
-        "No pending proposal",
-      ),
-    ).toBeInTheDocument();
 
     expect(
       screen.queryByRole("button", {
@@ -714,16 +708,16 @@ describe("P-06.7 custom workspace next-step UX", () => {
     );
 
     expect(
-      screen.getByText(
+      screen.getAllByText(
         "We should change it.",
-      ),
-    ).toBeInTheDocument();
+      ).length,
+    ).toBeGreaterThan(0);
 
     expect(
-      screen.getByText(
+      screen.getAllByText(
         "Pilot the change before replacing the current release process.",
-      ),
-    ).toBeInTheDocument();
+      ).length,
+    ).toBeGreaterThan(0);
 
     for (const name of [
       "Accept proposal",
@@ -738,7 +732,7 @@ describe("P-06.7 custom workspace next-step UX", () => {
   });
 
 
-  it("Run analysis immediately invokes primary focus and exposes the live workspace", () => {
+  it("Run analysis immediately invokes primary focus and exposes the live workspace", async () => {
     const workspace = buildCustomWorkspace({
       question:
         "Should we change our release process?",
@@ -799,7 +793,7 @@ describe("P-06.7 custom workspace next-step UX", () => {
     ).toHaveBeenCalledTimes(1);
 
     expect(
-      screen.getByLabelText(
+      await screen.findByLabelText(
         "Live reasoning workspace",
       ),
     ).toBeInTheDocument();

@@ -178,4 +178,23 @@ describe("P-06.2 graph interaction semantics", () => {
     });
   });
 
+
+  it("keeps app selection separate from ReactFlow local selection", () => {
+    const source = readFileSync(
+      resolve(
+        process.cwd(),
+        "src/components/graph/ReasoningGraph.tsx",
+      ),
+      "utf8",
+    );
+
+    expect(source).not.toContain(
+      "node.id === selectedItemId,",
+    );
+
+    expect(source).toContain(
+      "reasoning-node--app-selected",
+    );
+  });
+
 });

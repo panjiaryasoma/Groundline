@@ -42,8 +42,8 @@ describe("P-08.3 live review workspace", () => {
     );
 
     expect(
-      screen.getByText("A-001"),
-    ).toBeInTheDocument();
+      screen.getAllByText("A-001").length,
+    ).toBeGreaterThanOrEqual(2);
 
     expect(
       screen.getByText(

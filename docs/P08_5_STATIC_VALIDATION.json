@@ -1,0 +1,25 @@
+{
+  "milestone": "P-08.5",
+  "mode": "PONYTAIL_FULL",
+  "artifact_status": "PASS_STATIC",
+  "runtime_status": "PENDING_USER_LOCAL_RUN",
+  "test_cases_counted_from_source": 144,
+  "last_user_runtime_baseline": {
+    "total": 144,
+    "passed": 134,
+    "failed": 10
+  },
+  "contract_change": false,
+  "checks": {
+    "feedback_effect_removed": true,
+    "app_selection_style_retained": true,
+    "node_click_updates_app_selection": true,
+    "reactflow_selection_still_local": true,
+    "webmcp_test_accepts_extended_ui_state": true,
+    "live_test_handles_graph_plus_inspector": true,
+    "contract_change": true,
+    "typescript_syntax_transpile": true
+  },
+  "syntax_stdout": "syntax-ok",
+  "syntax_stderr": ""
+}

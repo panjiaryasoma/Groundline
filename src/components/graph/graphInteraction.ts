@@ -19,6 +19,14 @@ export function getSelectedNodeIds(nodes: Node[]): string[] {
     .map((node) => node.id);
 }
 
+/**
+ * Preserve manual card positions and ReactFlow-local multi-selection state
+ * across structural node regeneration.
+ *
+ * IMPORTANT:
+ * `node.selected` is not Groundline's Inspector selection source.
+ * Inspector selection lives in workspaceStore.ui.selectedItemId.
+ */
 export function mergePreservedPositions(
   currentNodes: Node[],
   nextNodes: Node[],

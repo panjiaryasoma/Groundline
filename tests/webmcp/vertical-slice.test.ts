@@ -173,13 +173,21 @@ describe("P-07/08 WebMCP vertical slice", () => {
     const result =
       (await tool.execute({})) as any;
 
-    expect(result.ui_state).toEqual({
+    expect(result.ui_state).toMatchObject({
       selected_item_id: "C-USER-001",
       focused_item_ids: [
         "C-USER-001",
         "CONC-USER-001",
       ],
     });
+
+    expect(
+      result.ui_state.primary_risk_id,
+    ).toBeNull();
+
+    expect(
+      result.ui_state.repair_target_id,
+    ).toBeNull();
   });
 
 
