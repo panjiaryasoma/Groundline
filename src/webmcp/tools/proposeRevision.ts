@@ -1,12 +1,13 @@
 import type { WebMCPToolDefinition } from "../modelContext";
 import { useWorkspaceStore } from "../../state/workspaceStore";
+import { assertActiveGroundlineWorkspace } from "../activeWorkspace";
 
 export function createProposeRevisionTool(): WebMCPToolDefinition {
   return {
     name: "propose_revision",
     title: "Propose Groundline revision",
     description:
-      "Create a PROPOSED revision for Groundline's prepared repair target after inspecting and, when needed, triaging the workspace. The latest agent focus may refine the primary risk; ui_state.repair_target_id identifies the accepted item to revise. Never accept knowledge; a human reviews the proposal.",
+      "Create a PROPOSED revision for an existing ACCEPTED Groundline item after inspecting and, when needed, triaging the active workspace. The latest semantic agent focus is preserved as primary-risk context. If a human already prepared a repair target, the proposal must target that same item. Never accept knowledge; a human reviews the proposal.",
     inputSchema: {
       type: "object",
       properties: {
@@ -46,6 +47,8 @@ export function createProposeRevisionTool(): WebMCPToolDefinition {
       untrustedContentHint: true,
     },
     execute(input) {
+      assertActiveGroundlineWorkspace();
+
       useWorkspaceStore
         .getState()
         .proposeAgentRevision({

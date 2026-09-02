@@ -3,7 +3,7 @@ import {
   getDownstreamDependencies,
   getUpstreamDependencies,
 } from "../../domain/dependencies";
-import { useWorkspaceStore } from "../../state/workspaceStore";
+import { assertActiveGroundlineWorkspace } from "../activeWorkspace";
 
 export function createTraceDependenciesTool(): WebMCPToolDefinition {
   return {
@@ -47,7 +47,8 @@ export function createTraceDependenciesTool(): WebMCPToolDefinition {
     },
     execute(input) {
       const workspace =
-        useWorkspaceStore.getState().workspace;
+        assertActiveGroundlineWorkspace()
+          .workspace;
       const options = {
         maxDepth:
           Number(input.max_depth) || 8,

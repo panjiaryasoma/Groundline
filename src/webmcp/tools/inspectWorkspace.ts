@@ -1,5 +1,6 @@
 import type { WebMCPToolDefinition } from "../modelContext";
-import { useWorkspaceStore } from "../../state/workspaceStore";
+import { assertActiveGroundlineWorkspace } from "../activeWorkspace";
+import { deriveGroundlineReviewContext } from "../../state/reviewContext";
 
 const MAX_ITEMS = 12;
 const MAX_TRIAGE = 8;
@@ -22,9 +23,13 @@ export function createInspectWorkspaceTool(): WebMCPToolDefinition {
     },
     execute() {
       const state =
-        useWorkspaceStore.getState();
+        assertActiveGroundlineWorkspace();
       const workspace =
         state.workspace;
+      const reviewContext =
+        deriveGroundlineReviewContext(
+          workspace,
+        );
 
       const acceptedConclusion =
         workspace.items.find(
@@ -33,18 +38,11 @@ export function createInspectWorkspaceTool(): WebMCPToolDefinition {
             workspace.accepted_conclusion_id,
         );
 
-      const repairRequest =
-        [...workspace.audit_events]
-          .reverse()
-          .find(
-            (event) =>
-              event.event_type === "FOCUS" &&
-              event.metadata
-                ?.requested_action ===
-                "PROPOSE_REPAIR",
-          );
 
       return {
+        active: true,
+        experience_mode:
+          state.experienceMode,
         workspace_id: workspace.workspace_id,
         title: workspace.title,
         question_id: workspace.question_id,
@@ -54,18 +52,12 @@ export function createInspectWorkspaceTool(): WebMCPToolDefinition {
           focused_item_ids: [
             ...state.ui.focusedItemIds,
           ],
+          primary_focus_id:
+            reviewContext.primaryFocusId,
           primary_risk_id:
-            typeof repairRequest?.metadata
-              ?.primary_risk_id === "string"
-              ? repairRequest.metadata
-                  .primary_risk_id
-              : null,
+            reviewContext.primaryRiskId,
           repair_target_id:
-            typeof repairRequest?.metadata
-              ?.repair_target_id === "string"
-              ? repairRequest.metadata
-                  .repair_target_id
-              : null,
+            reviewContext.repairTargetId,
         },
         accepted_conclusion:
           acceptedConclusion

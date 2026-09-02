@@ -54,9 +54,7 @@ export function useGroundlineWebMCP(): void {
             controller.signal,
           );
 
-        if (
-          !result.webmcpAvailable
-        ) {
+        if (!result.webmcpAvailable) {
           scheduleRetry(attempt);
         }
       } catch (error) {

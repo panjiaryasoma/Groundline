@@ -4,6 +4,7 @@ import {
   type EvaluationRecord,
 } from "../../domain/schema";
 import { useWorkspaceStore } from "../../state/workspaceStore";
+import { assertActiveGroundlineWorkspace } from "../activeWorkspace";
 
 const DIMENSIONS = [
   "evidence_strength",
@@ -114,6 +115,8 @@ export function createTriageWorkspaceTool(): WebMCPToolDefinition {
       untrustedContentHint: true,
     },
     execute(input) {
+      assertActiveGroundlineWorkspace();
+
       const timestamp =
         new Date().toISOString();
 

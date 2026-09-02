@@ -1,0 +1,22 @@
+{
+  "milestone": "P-08.8.3",
+  "mode": "PONYTAIL_FULL",
+  "source_baseline": "P-08.8.2 full artifact plus current P08 abort-safe registration hook",
+  "checks": {
+    "active_workspace_guard_present": true,
+    "all_5_tools_guard_execution": true,
+    "review_context_present": true,
+    "agent_focus_used_by_proposal": true,
+    "proposal_preserves_primary_focus": true,
+    "proposal_preserves_primary_risk": true,
+    "proposal_preserves_repair_target": true,
+    "inspect_exposes_context": true,
+    "agent_triage_commands_graph_selection": true,
+    "abort_safe_hook": true,
+    "regression_tests_added": true,
+    "contract_change": false
+  },
+  "typescript_transpile_syntax": "PASS_84_FILES",
+  "test_cases_counted_from_source": 157,
+  "runtime_status": "PENDING_USER_LOCAL_RUN"
+}

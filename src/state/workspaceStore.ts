@@ -24,6 +24,9 @@ import {
   proposeRevision,
   rejectRevision,
 } from "../domain/revisions";
+import {
+  getLatestAgentFocusPrimaryId,
+} from "./reviewContext";
 
 export type ExperienceMode =
   | "START"
@@ -1049,13 +1052,22 @@ export const useWorkspaceStore = create<WorkspaceState>((set, get) => ({
         analysis,
       );
 
+    const ui = get().ui;
+    const primaryTargetId =
+      analysis.ordered_review_targets[0]
+        ?.item_id ?? null;
+
     set({
       workspace: analyzed,
       ui: {
-        ...get().ui,
+        ...ui,
         selectedItemId:
-          analysis.ordered_review_targets[0]
-            ?.item_id ?? null,
+          primaryTargetId,
+        graphSelectionRequest:
+          nextGraphSelectionRequest(
+            ui,
+            primaryTargetId,
+          ),
       },
     });
   },
@@ -1088,43 +1100,44 @@ export const useWorkspaceStore = create<WorkspaceState>((set, get) => ({
       preparedRepairEvent
         ?.metadata?.primary_risk_id;
 
-    const preparedRepairIndex =
-      preparedRepairEvent
-        ? current.audit_events.findIndex(
-            (event) =>
-              event.event_id ===
-              preparedRepairEvent.event_id,
+    const latestAgentFocusId =
+      getLatestAgentFocusPrimaryId(
+        current,
+      );
+
+    const latestAgentFocusIsRisk =
+      latestAgentFocusId
+        ? current.triage_records.some(
+            (record) =>
+              record.item_id ===
+                latestAgentFocusId &&
+              (
+                record.state ===
+                  "CRITICAL" ||
+                record.state ===
+                  "REVIEW"
+              ),
           )
-        : -1;
+        : false;
 
-    const laterAgentFocus =
-      preparedRepairIndex >= 0
-        ? current.audit_events
-            .slice(preparedRepairIndex + 1)
-            .filter(
-              (event) =>
-                event.event_type === "FOCUS" &&
-                event.actor_type === "AGENT",
-            )
-            .at(-1)
-        : undefined;
-
-    const agentFocusedPrimary =
-      laterAgentFocus?.entity_ids.find(
-        (id) =>
-          id !== preparedRepairTarget &&
-          current.items.some(
-            (item) =>
-              item.id === id &&
-              item.state === "ACCEPTED",
-          ),
+    const effectivePrimaryFocus =
+      latestAgentFocusId ??
+      (
+        typeof preparedPrimaryRisk ===
+          "string"
+          ? preparedPrimaryRisk
+          : undefined
       );
 
     const effectivePrimaryRisk =
-      agentFocusedPrimary ??
-      (typeof preparedPrimaryRisk === "string"
-        ? preparedPrimaryRisk
-        : undefined);
+      latestAgentFocusIsRisk
+        ? latestAgentFocusId ?? undefined
+        : (
+            typeof preparedPrimaryRisk ===
+              "string"
+              ? preparedPrimaryRisk
+              : undefined
+          );
 
     if (
       typeof preparedRepairTarget === "string" &&
@@ -1133,6 +1146,21 @@ export const useWorkspaceStore = create<WorkspaceState>((set, get) => ({
     ) {
       throw new Error(
         `The prepared repair target is "${preparedRepairTarget}", not "${input.targetItemId}".`,
+      );
+    }
+
+    const repairTarget =
+      current.items.find(
+        (item) =>
+          item.id ===
+            input.targetItemId &&
+          item.state ===
+            "ACCEPTED",
+      );
+
+    if (!repairTarget) {
+      throw new Error(
+        `Repair target "${input.targetItemId}" is not an ACCEPTED knowledge item.`,
       );
     }
 
@@ -1149,9 +1177,9 @@ export const useWorkspaceStore = create<WorkspaceState>((set, get) => ({
       proposedText: input.proposedText,
       reasonCodes: input.reasonCodes,
       affectedItemIds: [
-        ...(typeof effectivePrimaryRisk ===
+        ...(typeof effectivePrimaryFocus ===
         "string"
-          ? [effectivePrimaryRisk]
+          ? [effectivePrimaryFocus]
           : []),
         ...input.affectedItemIds,
       ].filter(
@@ -1178,6 +1206,11 @@ export const useWorkspaceStore = create<WorkspaceState>((set, get) => ({
     if (proposalAudit) {
       proposalAudit.metadata = {
         ...(proposalAudit.metadata ?? {}),
+        primary_focus_id:
+          typeof effectivePrimaryFocus ===
+          "string"
+            ? effectivePrimaryFocus
+            : null,
         primary_risk_id:
           typeof effectivePrimaryRisk ===
           "string"
@@ -1185,6 +1218,8 @@ export const useWorkspaceStore = create<WorkspaceState>((set, get) => ({
             : null,
         repair_target_id:
           input.targetItemId,
+        proposal_source:
+          "WEBMCP_AGENT",
       };
     }
 
@@ -1200,9 +1235,9 @@ export const useWorkspaceStore = create<WorkspaceState>((set, get) => ({
         selectedItemId:
           input.targetItemId,
         focusedItemIds: [
-          ...(typeof effectivePrimaryRisk ===
+          ...(typeof effectivePrimaryFocus ===
           "string"
-            ? [effectivePrimaryRisk]
+            ? [effectivePrimaryFocus]
             : []),
           input.targetItemId,
           ...input.affectedItemIds,

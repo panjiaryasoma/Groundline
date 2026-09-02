@@ -1,5 +1,6 @@
 import type { WebMCPToolDefinition } from "../modelContext";
 import { useWorkspaceStore } from "../../state/workspaceStore";
+import { assertActiveGroundlineWorkspace } from "../activeWorkspace";
 
 export function createFocusItemsTool(): WebMCPToolDefinition {
   return {
@@ -36,6 +37,8 @@ export function createFocusItemsTool(): WebMCPToolDefinition {
       untrustedContentHint: false,
     },
     execute(input) {
+      assertActiveGroundlineWorkspace();
+
       const itemIds = Array.isArray(
         input.item_ids,
       )
