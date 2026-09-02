@@ -142,6 +142,9 @@ describe("P-09 remaining P0 WebMCP tools", () => {
     expect(
       result.findings[0].evidence_item_ids,
     ).toContain("E-SUB-001");
+    expect(
+      result.findings[0].source_item_ids,
+    ).toContain("SRC-NIST-001");
   });
 
   it("find_evidence_gaps distinguishes missing support from contradiction", async () => {
@@ -188,7 +191,7 @@ describe("P-09 remaining P0 WebMCP tools", () => {
     expect(result.findings).toEqual([]);
   });
 
-  it("new P09 tools reject invalid item IDs instead of silently guessing", async () => {
+  it("new P09 tools reject invalid item IDs instead of silently guessing", () => {
     const tools = createVerticalSliceTools();
 
     const inspect = tools.find(
@@ -206,33 +209,27 @@ describe("P-09 remaining P0 WebMCP tools", () => {
         tool.name === "find_evidence_gaps",
     )!;
 
-    await expect(
-      Promise.resolve(
-        inspect.execute({
-          item_id: "DOES-NOT-EXIST",
-        }),
-      ),
-    ).rejects.toThrow(
+    expect(() =>
+      inspect.execute({
+        item_id: "DOES-NOT-EXIST",
+      }),
+    ).toThrow(
       'Knowledge item "DOES-NOT-EXIST" was not found.',
     );
 
-    await expect(
-      Promise.resolve(
-        contradictions.execute({
-          item_id: "DOES-NOT-EXIST",
-        }),
-      ),
-    ).rejects.toThrow(
+    expect(() =>
+      contradictions.execute({
+        item_id: "DOES-NOT-EXIST",
+      }),
+    ).toThrow(
       'Knowledge item "DOES-NOT-EXIST" was not found.',
     );
 
-    await expect(
-      Promise.resolve(
-        gaps.execute({
-          item_id: "DOES-NOT-EXIST",
-        }),
-      ),
-    ).rejects.toThrow(
+    expect(() =>
+      gaps.execute({
+        item_id: "DOES-NOT-EXIST",
+      }),
+    ).toThrow(
       'Knowledge item "DOES-NOT-EXIST" was not found.',
     );
 
