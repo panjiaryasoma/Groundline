@@ -4,6 +4,7 @@ import {
   applyGraphNodeChanges,
   mergePreservedPositions,
   setAllGraphNodesSelected,
+  selectSingleGraphNode,
 } from "../../src/components/graph";
 
 function node(

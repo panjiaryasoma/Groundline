@@ -797,11 +797,14 @@ describe("P-07/08 custom workspace actions", () => {
 
 
   it("advances the graph selection command when Focus primary risk reselects its target", () => {
-    const before =
+    const requestBefore =
       useWorkspaceStore
         .getState()
-        .ui.graphSelectionRequest
-        .version;
+        .ui.graphSelectionRequest;
+
+    expect(requestBefore).toBeDefined();
+
+    const before = requestBefore!.version;
 
     const result =
       useWorkspaceStore
@@ -815,14 +818,17 @@ describe("P-07/08 custom workspace actions", () => {
       state.ui.selectedItemId,
     );
 
+    const requestAfter =
+      state.ui.graphSelectionRequest;
+
+    expect(requestAfter).toBeDefined();
+
     expect(
-      state.ui.graphSelectionRequest
-        .itemId,
+      requestAfter!.itemId,
     ).toBe(result?.targetId);
 
     expect(
-      state.ui.graphSelectionRequest
-        .version,
+      requestAfter!.version,
     ).toBeGreaterThan(before);
   });
 
@@ -838,9 +844,13 @@ describe("P-07/08 custom workspace actions", () => {
     const state =
       useWorkspaceStore.getState();
 
+    const request =
+      state.ui.graphSelectionRequest;
+
+    expect(request).toBeDefined();
+
     expect(
-      state.ui.graphSelectionRequest
-        .itemId,
+      request!.itemId,
     ).toBe(
       state.workspace
         .accepted_conclusion_id,
