@@ -6,7 +6,10 @@ import {
   it,
 } from "vitest";
 
-import { buildEvaluationRecord } from "../../src/domain/evaluation";
+import {
+  buildEvaluationRecord,
+  type ReasonCode,
+} from "../../src/domain/evaluation";
 import { installP111RepairLifecycle } from "../../src/state/p111RepairLifecycle";
 import {
   getP112CustomNextTarget,
@@ -30,7 +33,7 @@ const input = {
 
 function evaluation(
   itemId: string,
-  reasonCodes: string[],
+  reasonCodes: ReasonCode[],
 ) {
   return buildEvaluationRecord({
     evaluationId: `EVAL-P112-${itemId}`,

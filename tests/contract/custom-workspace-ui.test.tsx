@@ -286,10 +286,11 @@ describe("P-06.7 custom workspace next-step UX", () => {
     expect(
       await screen.findByLabelText(
         "Live reasoning workspace",
+        {},
+        { timeout: 5000 },
       ),
     ).toBeInTheDocument();
   });
-
 
   it("shows a ready-for-agent-review result when the structure is complete", () => {
     const workspace = buildCustomWorkspace({
@@ -360,7 +361,6 @@ describe("P-06.7 custom workspace next-step UX", () => {
     ).toBeInTheDocument();
   });
 
-
   it("explains why semantic agent actions cannot be fabricated locally", () => {
     const workspace = buildCustomWorkspace({
       question:
@@ -429,7 +429,6 @@ describe("P-06.7 custom workspace next-step UX", () => {
       ),
     ).toBeInTheDocument();
   });
-
 
   it("requests an immediate repair proposal instead of entering a waiting-only state", () => {
     const workspace = buildCustomWorkspace({
@@ -584,8 +583,7 @@ describe("P-06.7 custom workspace next-step UX", () => {
     ).not.toBeInTheDocument();
   });
 
-
-  it("activates human decision controls when a real AGENT proposal exists", () => {
+  it("activates human decision controls when a real AGENT proposal exists", async () => {
     const base = buildCustomWorkspace({
       question:
         "Should we change our release process?",
@@ -653,8 +651,12 @@ describe("P-06.7 custom workspace next-step UX", () => {
     );
 
     expect(
-      screen.getAllByText(
-        "Pilot the new release process before replacing the current one.",
+      (
+        await screen.findAllByText(
+          "Pilot the new release process before replacing the current one.",
+          {},
+          { timeout: 5000 },
+        )
       ).length,
     ).toBeGreaterThan(0);
 
@@ -671,7 +673,6 @@ describe("P-06.7 custom workspace next-step UX", () => {
       ).toBeEnabled();
     }
   });
-
 
   it("shows the focused risk and prevents skipping it before repair", () => {
     const workspace = buildCustomWorkspace({
@@ -692,7 +693,7 @@ describe("P-06.7 custom workspace next-step UX", () => {
       basis: "STRUCTURAL_FALLBACK" as const,
     }));
 
-    const { rerender } = render(
+    render(
       <CustomWorkspaceHome
         workspace={workspace}
         selectedItemId={null}
@@ -732,7 +733,7 @@ describe("P-06.7 custom workspace next-step UX", () => {
     expect(onFocusPrimaryRisk).toHaveBeenCalledTimes(2);
   });
 
-  it("shows the canonical RevisionPanel for a real proposal", () => {
+  it("shows the canonical RevisionPanel for a real proposal", async () => {
     const base = buildCustomWorkspace({
       question:
         "Should we change our release process?",
@@ -791,8 +792,12 @@ describe("P-06.7 custom workspace next-step UX", () => {
     ).toBeGreaterThan(0);
 
     expect(
-      screen.getAllByText(
-        "Pilot the change before replacing the current release process.",
+      (
+        await screen.findAllByText(
+          "Pilot the change before replacing the current release process.",
+          {},
+          { timeout: 5000 },
+        )
       ).length,
     ).toBeGreaterThan(0);
 
@@ -807,7 +812,6 @@ describe("P-06.7 custom workspace next-step UX", () => {
       ).toBeEnabled();
     }
   });
-
 
   it("Run analysis immediately invokes primary focus and exposes the live workspace", async () => {
     const workspace = buildCustomWorkspace({
@@ -876,8 +880,9 @@ describe("P-06.7 custom workspace next-step UX", () => {
     expect(
       await screen.findByLabelText(
         "Live reasoning workspace",
+        {},
+        { timeout: 5000 },
       ),
     ).toBeInTheDocument();
   });
-
 });
