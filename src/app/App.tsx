@@ -6,6 +6,7 @@ import { hasWebMCP } from "../webmcp/modelContext";
 import { useGroundlineWebMCP } from "../webmcp/useGroundlineWebMCP";
 import { useWorkspaceStore } from "../state/workspaceStore";
 import "../styles/app.css";
+import "../styles/p11.css";
 
 export function App() {
   useGroundlineWebMCP();
