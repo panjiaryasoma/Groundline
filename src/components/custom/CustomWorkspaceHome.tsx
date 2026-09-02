@@ -12,7 +12,6 @@ import {
 } from "../../domain/intakeDiagnostics";
 import type {
   KnowledgeItem,
-  Revision,
   Workspace,
 } from "../../domain/schema";
 
@@ -98,12 +97,6 @@ export function CustomWorkspaceHome({
     useState(false);
   const [agentActionNotice, setAgentActionNotice] =
     useState<"FOCUS" | "REPAIR" | null>(null);
-  const [mapDetailsRequested, setMapDetailsRequested] =
-    useState(false);
-  const [editingProposal, setEditingProposal] =
-    useState(false);
-  const [editedProposalText, setEditedProposalText] =
-    useState("");
 
   const analysisResultRef =
     useRef<HTMLDivElement | null>(null);
@@ -157,16 +150,6 @@ export function CustomWorkspaceHome({
           revision.state === "PROPOSED",
       );
 
-  const latestReviewedRevision:
-    | Revision
-    | undefined =
-    [...workspace.revisions]
-      .reverse()
-      .find(
-        (revision) =>
-          revision.state !== "PROPOSED",
-      );
-
   const latestPrimaryFocusEvent =
     [...workspace.audit_events]
       .reverse()
@@ -197,11 +180,30 @@ export function CustomWorkspaceHome({
   const latestPrimaryRiskReviewed =
     latestPrimaryRiskId
       ? workspace.revisions.some(
-          (revision) =>
-            revision.target_item_id ===
-              latestPrimaryRiskId &&
-            revision.state !==
-              "PROPOSED",
+          (revision) => {
+            if (
+              revision.state ===
+              "PROPOSED"
+            ) {
+              return false;
+            }
+
+            const proposalEvent =
+              workspace.audit_events.find(
+                (event) =>
+                  event.event_type ===
+                    "PROPOSE_REVISION" &&
+                  event.entity_ids.includes(
+                    revision.revision_id,
+                  ),
+              );
+
+            return (
+              proposalEvent?.metadata
+                ?.primary_risk_id ===
+              latestPrimaryRiskId
+            );
+          },
         )
       : false;
 
@@ -219,26 +221,10 @@ export function CustomWorkspaceHome({
               ?.requested_action ===
               "PROPOSE_REPAIR" &&
             event.metadata
-              ?.repair_target_id ===
+              ?.primary_risk_id ===
               activePrimaryRisk.id,
         )
       : false;
-
-  const proposalTarget =
-    proposedRevision
-      ? workspace.items.find(
-          (item) =>
-            item.id ===
-            proposedRevision.target_item_id,
-        )
-      : undefined;
-
-  const keepCurrentLabel =
-    proposalTarget?.type === "CONCLUSION"
-      ? "Keep current conclusion"
-      : proposalTarget
-        ? `Keep current ${proposalTarget.type.toLowerCase()}`
-        : "Keep current";
 
   const lastTriageIndex =
     workspace.audit_events.findLastIndex(
@@ -261,10 +247,18 @@ export function CustomWorkspaceHome({
   function runReadinessAnalysis() {
     setChecked(true);
 
+    // Observable consequence, like P-06:
+    // if semantic triage exists this selects its
+    // highest-priority unresolved item; otherwise
+    // the explicitly non-semantic structural fallback.
+    onFocusPrimaryRisk();
+
+    setMapOpen(true);
+
     window.requestAnimationFrame(() => {
       analysisResultRef.current?.scrollIntoView({
         behavior: "smooth",
-        block: "center",
+        block: "start",
       });
     });
   }
@@ -281,7 +275,6 @@ export function CustomWorkspaceHome({
       return null;
     }
 
-    setMapDetailsRequested(true);
     setMapOpen(true);
 
     window.requestAnimationFrame(() => {
@@ -307,7 +300,6 @@ export function CustomWorkspaceHome({
     }
 
     setAgentActionNotice("REPAIR");
-    setMapDetailsRequested(true);
     setMapOpen(true);
 
     return result;
@@ -508,7 +500,6 @@ export function CustomWorkspaceHome({
                   type="button"
                   onClick={focusPrimaryRisk}
                   disabled={Boolean(
-                    activePrimaryRisk ||
                     proposedRevision ||
                     semanticAnalysisStale,
                   )}
@@ -518,7 +509,7 @@ export function CustomWorkspaceHome({
                       : proposedRevision
                         ? "Finish the current human review first."
                         : activePrimaryRisk
-                          ? "Repair the focused risk before moving to the next one."
+                          ? "Return selection to the current primary risk."
                           : "Focus the highest-priority unresolved risk."
                   }
                 >
@@ -595,156 +586,14 @@ export function CustomWorkspaceHome({
                         ? "Groundline selected one highest-priority unresolved risk. Repair this item before moving to the next risk."
                         : "No semantic triage exists yet, so Groundline focused one structural fallback item. The map and inspector show exactly what is selected."
                       : proposedRevision
-                        ? "The WebMCP agent created a real proposal for the focused risk. Review it below."
+                        ? "The WebMCP agent created a real proposal for the accepted conclusion. The focused risk remains the reason for the repair."
                         : activePrimaryRisk
-                          ? `Repair target prepared: ${activePrimaryRisk.id}. Ask the connected WebMCP agent to repair the focused risk; its propose_revision call will appear here automatically.`
+                          ? `Primary risk ${activePrimaryRisk.id} is the reason for review. Groundline moved the Inspector to the accepted conclusion because that is the repair target. A real WebMCP propose_revision result will appear in Revision Proposal below.`
                           : "Focus one risk before requesting a repair."}
                   </p>
                 </aside>
               ) : null}
 
-              {(proposedRevision || latestReviewedRevision) ? (
-                <section className="custom-human-decision">
-                  <div className="custom-human-decision__heading">
-                    <p className="eyebrow">
-                      Human decision
-                    </p>
-                    <h6>
-                      Review the agent proposal before
-                      anything becomes accepted.
-                    </h6>
-                    <p>
-                      Agent proposals always start as
-                      PROPOSED. Only your explicit
-                      action can accept, edit, reject,
-                      or defer one.
-                    </p>
-                  </div>
-
-                  {proposedRevision ? (
-                    <>
-                      <div className="custom-proposal-comparison">
-                        <article>
-                          <span>Current</span>
-                          <strong>
-                            {proposalTarget?.text ??
-                              "Repair target is unavailable."}
-                          </strong>
-                        </article>
-                        <div aria-hidden="true">
-                          →
-                        </div>
-                        <article>
-                          <span>Suggested</span>
-                          <strong>
-                            {proposedRevision.proposed_text}
-                          </strong>
-                        </article>
-                      </div>
-
-                      {editingProposal ? (
-                        <div className="custom-proposal-editor">
-                          <label>
-                            <span>Edit the proposal</span>
-                            <textarea
-                              rows={5}
-                              value={editedProposalText}
-                              onChange={(event) =>
-                                setEditedProposalText(
-                                  event.target.value,
-                                )
-                              }
-                            />
-                          </label>
-                          <div>
-                            <button
-                              type="button"
-                              onClick={() => {
-                                if (
-                                  editedProposalText.trim()
-                                    .length >= 3
-                                ) {
-                                  onEditAndAccept(
-                                    editedProposalText.trim(),
-                                  );
-                                  setEditingProposal(false);
-                                }
-                              }}
-                            >
-                              Accept edited version
-                            </button>
-                            <button
-                              type="button"
-                              onClick={() =>
-                                setEditingProposal(false)
-                              }
-                            >
-                              Cancel edit
-                            </button>
-                          </div>
-                        </div>
-                      ) : (
-                        <div
-                          className="custom-human-decision__actions"
-                          aria-label="Human decision actions"
-                        >
-                          <button
-                            type="button"
-                            onClick={onAccept}
-                          >
-                            Use suggestion
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => {
-                              setEditedProposalText(
-                                proposedRevision.proposed_text,
-                              );
-                              setEditingProposal(true);
-                            }}
-                          >
-                            Edit first
-                          </button>
-                          <button
-                            type="button"
-                            onClick={onReject}
-                          >
-                            {keepCurrentLabel}
-                          </button>
-                          <button
-                            type="button"
-                            onClick={onDefer}
-                          >
-                            Decide later
-                          </button>
-                        </div>
-                      )}
-
-                      <p className="custom-human-decision__note">
-                        Proposal {proposedRevision.revision_id}
-                        {" · "}
-                        {proposedRevision.created_by}
-                        {" · "}
-                        {proposedRevision.reason_codes.join(
-                          ", ",
-                        ) || "no reason codes"}
-                      </p>
-                    </>
-                  ) : latestReviewedRevision ? (
-                    <div className="custom-proposal-placeholder">
-                      <span>Review outcome</span>
-                      <strong>
-                        {latestReviewedRevision.state}
-                      </strong>
-                      <p>
-                        The proposal is no longer
-                        pending. The audit trail
-                        preserves the human decision.
-                      </p>
-                    </div>
-                  ) : null}
-                </section>
-              ) : null}
             </section>
           </div>
         ) : null}
@@ -767,7 +616,7 @@ export function CustomWorkspaceHome({
         </aside>
       </section>
 
-      {mapOpen ? (
+      {mapOpen || proposedRevision ? (
         <Suspense
           fallback={
             <section className="focus-map-loading">
@@ -782,11 +631,15 @@ export function CustomWorkspaceHome({
             onSelectItem={onSelectItem}
             onCollapse={() => {
               setMapOpen(false);
-              setMapDetailsRequested(false);
             }}
-            forceDetailsOpen={
-              mapDetailsRequested
+            onAccept={onAccept}
+            onEditAndAccept={
+              onEditAndAccept
             }
+            onReject={onReject}
+            onDefer={onDefer}
+            heading="Inspect what Groundline is reviewing right now."
+            showCollapse
           />
         </Suspense>
       ) : null}

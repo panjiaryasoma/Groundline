@@ -450,13 +450,13 @@ describe("P-06.7 custom workspace next-step UX", () => {
 
     expect(
       screen.getByText(
-        "Waiting for agent proposal",
+        "No pending proposal",
       ),
     ).toBeInTheDocument();
 
     expect(
       screen.queryByRole("button", {
-        name: "Use suggestion",
+        name: "Accept proposal",
       }),
     ).not.toBeInTheDocument();
   });
@@ -509,7 +509,7 @@ describe("P-06.7 custom workspace next-step UX", () => {
 
     expect(
       screen.queryByRole("button", {
-        name: "Use suggestion",
+        name: "Accept proposal",
       }),
     ).not.toBeInTheDocument();
   });
@@ -585,10 +585,10 @@ describe("P-06.7 custom workspace next-step UX", () => {
     ).toBeInTheDocument();
 
     for (const name of [
-      "Use suggestion",
-      "Edit first",
-      "Keep current conclusion",
-      "Decide later",
+      "Accept proposal",
+      "Accept edited",
+      "Reject",
+      "Defer",
     ]) {
       expect(
         screen.getByRole("button", {
@@ -651,10 +651,10 @@ describe("P-06.7 custom workspace next-step UX", () => {
       }),
     );
 
-    expect(onFocusPrimaryRisk).toHaveBeenCalledTimes(1);
+    expect(onFocusPrimaryRisk).toHaveBeenCalledTimes(2);
   });
 
-  it("compares the proposal against its actual repair target, not always the conclusion", () => {
+  it("shows the canonical RevisionPanel for a real proposal", () => {
     const base = buildCustomWorkspace({
       question:
         "Should we change our release process?",
@@ -669,11 +669,14 @@ describe("P-06.7 custom workspace next-step UX", () => {
     const workspace = proposeRevision({
       workspace: base,
       revisionId: "REV-AGENT-EVIDENCE",
-      targetItemId: "E-USER-001",
+      targetItemId: "CONC-USER-001",
       proposedText:
-        "Treat this as evidence from three recent releases, not a general rule.",
+        "Pilot the change before replacing the current release process.",
       reasonCodes: ["SCOPE_MISMATCH"],
-      affectedItemIds: ["E-USER-001"],
+      affectedItemIds: [
+        "C-USER-001",
+        "CONC-USER-001",
+      ],
       createdBy: "AGENT",
       createdAt: "2026-09-02T09:00:00+07:00",
       auditEventId: "AUD-PROP-EVIDENCE",
@@ -682,8 +685,11 @@ describe("P-06.7 custom workspace next-step UX", () => {
     render(
       <CustomWorkspaceHome
         workspace={workspace}
-        selectedItemId="E-USER-001"
-        focusedItemIds={["E-USER-001"]}
+        selectedItemId="CONC-USER-001"
+        focusedItemIds={[
+          "C-USER-001",
+          "CONC-USER-001",
+        ]}
         onSelectItem={vi.fn()}
         onFocusPrimaryRisk={vi.fn(() => null)}
         onPrepareRepairTarget={vi.fn(() => null)}
@@ -698,26 +704,94 @@ describe("P-06.7 custom workspace next-step UX", () => {
 
     expect(
       screen.getByText(
-        "Three recent releases failed at the same handoff.",
+        "We should change it.",
       ),
     ).toBeInTheDocument();
 
     expect(
       screen.getByText(
-        "Treat this as evidence from three recent releases, not a general rule.",
+        "Pilot the change before replacing the current release process.",
       ),
     ).toBeInTheDocument();
 
     for (const name of [
-      "Use suggestion",
-      "Edit first",
-      "Keep current evidence",
-      "Decide later",
+      "Accept proposal",
+      "Accept edited",
+      "Reject",
+      "Defer",
     ]) {
       expect(
         screen.getByRole("button", { name }),
       ).toBeEnabled();
     }
+  });
+
+
+  it("Run analysis immediately invokes primary focus and exposes the live workspace", () => {
+    const workspace = buildCustomWorkspace({
+      question:
+        "Should we change our release process?",
+      conclusion:
+        "We should change it.",
+      reason:
+        "Releases fail too often.",
+    });
+
+    const onFocusPrimaryRisk =
+      vi.fn(() => ({
+        targetId:
+          "C-USER-001",
+        focusedItemIds: [
+          "C-USER-001",
+          "CONC-USER-001",
+        ],
+        basis:
+          "STRUCTURAL_FALLBACK" as const,
+      }));
+
+    render(
+      <CustomWorkspaceHome
+        workspace={workspace}
+        selectedItemId={null}
+        focusedItemIds={[]}
+        onSelectItem={vi.fn()}
+        onFocusPrimaryRisk={
+          onFocusPrimaryRisk
+        }
+        onPrepareRepairTarget={vi.fn(() => ({
+          targetId:
+            "CONC-USER-001",
+          focusedItemIds: [
+            "C-USER-001",
+            "CONC-USER-001",
+          ],
+          basis:
+            "STRUCTURAL_FALLBACK" as const,
+        }))}
+        onAccept={vi.fn()}
+        onEditAndAccept={vi.fn()}
+        onReject={vi.fn()}
+        onDefer={vi.fn()}
+        onEdit={vi.fn()}
+        onBackToStart={vi.fn()}
+      />,
+    );
+
+    fireEvent.click(
+      screen.getByRole("button", {
+        name: /Run analysis/i,
+      }),
+    );
+
+    expect(
+      onFocusPrimaryRisk,
+    ).toHaveBeenCalledTimes(1);
+
+    expect(
+      screen.getByLabelText(
+        "Live reasoning workspace",
+      ),
+    ).toBeInTheDocument();
   });
 
 });

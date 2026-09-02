@@ -206,17 +206,37 @@ function structuralFallbackTarget(
 function reviewedTargetIds(
   workspace: Workspace,
 ): Set<string> {
-  return new Set(
-    workspace.revisions
-      .filter(
-        (revision) =>
-          revision.state !== "PROPOSED",
-      )
-      .map(
-        (revision) =>
-          revision.target_item_id,
-      ),
-  );
+  const reviewed = new Set<string>();
+
+  for (const revision of workspace.revisions) {
+    if (revision.state === "PROPOSED") {
+      continue;
+    }
+
+    const proposalEvent =
+      workspace.audit_events.find(
+        (event) =>
+          event.event_type ===
+            "PROPOSE_REVISION" &&
+          event.entity_ids.includes(
+            revision.revision_id,
+          ),
+      );
+
+    const primaryRiskId =
+      proposalEvent?.metadata
+        ?.primary_risk_id;
+
+    if (typeof primaryRiskId === "string") {
+      reviewed.add(primaryRiskId);
+    } else {
+      reviewed.add(
+        revision.target_item_id,
+      );
+    }
+  }
+
+  return reviewed;
 }
 
 function semanticAnalysisIsStale(
@@ -520,25 +540,36 @@ export const useWorkspaceStore = create<WorkspaceState>((set, get) => ({
       return null;
     }
 
-    const targetId =
+    const primaryRiskId =
       latestPrimaryRiskFocus(current);
 
-    if (!targetId) {
+    const repairTargetId =
+      current.accepted_conclusion_id;
+
+    if (!primaryRiskId || !repairTargetId) {
       return null;
     }
 
-    const target =
+    const primaryRisk =
       current.items.find(
         (item) =>
-          item.id === targetId,
+          item.id === primaryRiskId,
+      );
+
+    const repairTarget =
+      current.items.find(
+        (item) =>
+          item.id === repairTargetId,
       );
 
     if (
-      !target ||
-      target.state !== "ACCEPTED" ||
+      !primaryRisk ||
+      primaryRisk.state !== "ACCEPTED" ||
       reviewedTargetIds(current).has(
-        targetId,
-      )
+        primaryRiskId,
+      ) ||
+      !repairTarget ||
+      repairTarget.state !== "ACCEPTED"
     ) {
       return null;
     }
@@ -546,39 +577,46 @@ export const useWorkspaceStore = create<WorkspaceState>((set, get) => ({
     const trace =
       getDownstreamDependencies(
         current,
-        targetId,
+        primaryRiskId,
       );
 
     const focusedItemIds = [
-      targetId,
+      primaryRiskId,
       ...trace.node_ids,
+      repairTargetId,
     ].filter(
       (id, index, values) =>
         values.indexOf(id) === index,
     );
 
+    // Restore P-06 interaction semantics:
+    // the risk remains highlighted, but Inspector moves
+    // to the accepted conclusion because that is what
+    // the revision will actually replace.
     get().focusItemsWithAudit(
       focusedItemIds,
-      targetId,
+      repairTargetId,
       "HUMAN",
       {
         requested_action:
           "PROPOSE_REPAIR",
+        primary_risk_id:
+          primaryRiskId,
         repair_target_id:
-          targetId,
+          repairTargetId,
         proposal_state:
           "AWAITING_AGENT",
       },
     );
 
     return {
-      targetId,
+      targetId: repairTargetId,
       focusedItemIds,
       basis:
         current.triage_records.some(
           (record) =>
             record.item_id ===
-            targetId,
+            primaryRiskId,
         )
           ? "SEMANTIC_TRIAGE"
           : "STRUCTURAL_FALLBACK",
@@ -637,7 +675,7 @@ export const useWorkspaceStore = create<WorkspaceState>((set, get) => ({
       );
     }
 
-    const preparedRepairTarget =
+    const preparedRepairEvent =
       [...current.audit_events]
         .reverse()
         .find(
@@ -646,7 +684,15 @@ export const useWorkspaceStore = create<WorkspaceState>((set, get) => ({
             event.metadata
               ?.requested_action ===
               "PROPOSE_REPAIR",
-        )?.metadata?.repair_target_id;
+        );
+
+    const preparedRepairTarget =
+      preparedRepairEvent
+        ?.metadata?.repair_target_id;
+
+    const preparedPrimaryRisk =
+      preparedRepairEvent
+        ?.metadata?.primary_risk_id;
 
     if (
       typeof preparedRepairTarget === "string" &&
@@ -670,19 +716,59 @@ export const useWorkspaceStore = create<WorkspaceState>((set, get) => ({
       targetItemId: input.targetItemId,
       proposedText: input.proposedText,
       reasonCodes: input.reasonCodes,
-      affectedItemIds:
-        input.affectedItemIds,
+      affectedItemIds: [
+        ...(typeof preparedPrimaryRisk ===
+        "string"
+          ? [preparedPrimaryRisk]
+          : []),
+        ...input.affectedItemIds,
+      ].filter(
+        (id, index, values) =>
+          values.indexOf(id) === index,
+      ),
       createdBy: "AGENT",
       createdAt,
       auditEventId,
     });
 
+    const proposalAudit =
+      [...next.audit_events]
+        .reverse()
+        .find(
+          (event) =>
+            event.event_type ===
+              "PROPOSE_REVISION" &&
+            event.entity_ids.includes(
+              revisionId,
+            ),
+        );
+
+    if (proposalAudit) {
+      proposalAudit.metadata = {
+        ...(proposalAudit.metadata ?? {}),
+        primary_risk_id:
+          typeof preparedPrimaryRisk ===
+          "string"
+            ? preparedPrimaryRisk
+            : null,
+        repair_target_id:
+          input.targetItemId,
+      };
+    }
+
+    const validatedNext =
+      validateWorkspaceState(next);
+
     set({
-      workspace: next,
+      workspace: validatedNext,
       ui: {
         selectedItemId:
           input.targetItemId,
         focusedItemIds: [
+          ...(typeof preparedPrimaryRisk ===
+          "string"
+            ? [preparedPrimaryRisk]
+            : []),
           input.targetItemId,
           ...input.affectedItemIds,
         ].filter(

@@ -78,40 +78,15 @@ export function App() {
     useWorkspaceStore(
       (state) => state.deferLatestRevision,
     );
-  const focusCustomTarget =
+  const focusCustomPrimaryRisk =
     useWorkspaceStore(
       (state) =>
-        state.focusCustomTarget,
+        state.focusCustomPrimaryRisk,
     );
   const prepareCustomRepairTarget =
     useWorkspaceStore(
       (state) =>
         state.prepareCustomRepairTarget,
-    );
-  const proposeHumanRevision =
-    useWorkspaceStore(
-      (state) =>
-        state.proposeHumanRevision,
-    );
-  const acceptRevisionById =
-    useWorkspaceStore(
-      (state) =>
-        state.acceptRevisionById,
-    );
-  const editAndAcceptRevisionById =
-    useWorkspaceStore(
-      (state) =>
-        state.editAndAcceptRevisionById,
-    );
-  const rejectRevisionById =
-    useWorkspaceStore(
-      (state) =>
-        state.rejectRevisionById,
-    );
-  const deferRevisionById =
-    useWorkspaceStore(
-      (state) =>
-        state.deferRevisionById,
     );
 
   return (
@@ -190,27 +165,18 @@ export function App() {
           selectedItemId={ui.selectedItemId}
           focusedItemIds={ui.focusedItemIds}
           onSelectItem={selectItem}
-          onFocusTarget={
-            focusCustomTarget
+          onFocusPrimaryRisk={
+            focusCustomPrimaryRisk
           }
           onPrepareRepairTarget={
             prepareCustomRepairTarget
           }
-          onProposeHumanRevision={
-            proposeHumanRevision
+          onAccept={acceptLatestRevision}
+          onEditAndAccept={
+            editAndAcceptLatestRevision
           }
-          onAcceptRevision={
-            acceptRevisionById
-          }
-          onEditAndAcceptRevision={
-            editAndAcceptRevisionById
-          }
-          onRejectRevision={
-            rejectRevisionById
-          }
-          onDeferRevision={
-            deferRevisionById
-          }
+          onReject={rejectLatestRevision}
+          onDefer={deferLatestRevision}
           onEdit={startIntake}
           onBackToStart={backToStart}
         />
@@ -222,6 +188,10 @@ export function App() {
         </span>
         <span>
           Agent proposes. Human decides.
+        </span>
+        <span>
+          Priority scores are review mechanics,
+          never truth scores.
         </span>
       </footer>
     </main>

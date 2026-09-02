@@ -33,6 +33,17 @@ export function createInspectWorkspaceTool(): WebMCPToolDefinition {
             workspace.accepted_conclusion_id,
         );
 
+      const repairRequest =
+        [...workspace.audit_events]
+          .reverse()
+          .find(
+            (event) =>
+              event.event_type === "FOCUS" &&
+              event.metadata
+                ?.requested_action ===
+                "PROPOSE_REPAIR",
+          );
+
       return {
         workspace_id: workspace.workspace_id,
         title: workspace.title,
@@ -43,6 +54,18 @@ export function createInspectWorkspaceTool(): WebMCPToolDefinition {
           focused_item_ids: [
             ...state.ui.focusedItemIds,
           ],
+          primary_risk_id:
+            typeof repairRequest?.metadata
+              ?.primary_risk_id === "string"
+              ? repairRequest.metadata
+                  .primary_risk_id
+              : null,
+          repair_target_id:
+            typeof repairRequest?.metadata
+              ?.repair_target_id === "string"
+              ? repairRequest.metadata
+                  .repair_target_id
+              : null,
         },
         accepted_conclusion:
           acceptedConclusion

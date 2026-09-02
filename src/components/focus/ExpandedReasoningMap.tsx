@@ -1,21 +1,30 @@
-import {
-  useEffect,
-  useState,
-} from "react";
-
 import type { Workspace } from "../../domain/schema";
 import { AuditTrail } from "../audit";
 import { ReasoningGraph } from "../graph";
 import { InspectorPanel } from "../inspector";
+import { RevisionPanel } from "../revision";
 
 interface ExpandedReasoningMapProps {
   workspace: Workspace;
   selectedItemId: string | null;
   focusedItemIds: string[];
-  onSelectItem: (itemId: string | null) => void;
-  onCollapse: () => void;
-  forceDetailsOpen?: boolean;
+  onSelectItem: (
+    itemId: string | null,
+  ) => void;
+  onCollapse?: () => void;
+  onAccept?: () => void;
+  onEditAndAccept?: (
+    editedText: string,
+  ) => void;
+  onReject?: () => void;
+  onDefer?: () => void;
+  heading?: string;
+  showCollapse?: boolean;
 }
+
+const noop = () => undefined;
+const noopEdit = (_text: string) =>
+  undefined;
 
 export function ExpandedReasoningMap({
   workspace,
@@ -23,40 +32,41 @@ export function ExpandedReasoningMap({
   focusedItemIds,
   onSelectItem,
   onCollapse,
-  forceDetailsOpen = false,
+  onAccept = noop,
+  onEditAndAccept = noopEdit,
+  onReject = noop,
+  onDefer = noop,
+  heading =
+    "Inspect the live reasoning workspace.",
+  showCollapse = false,
 }: ExpandedReasoningMapProps) {
-  const [detailsOpen, setDetailsOpen] =
-    useState(forceDetailsOpen);
-
-  useEffect(() => {
-    if (forceDetailsOpen) {
-      setDetailsOpen(true);
-    }
-  }, [forceDetailsOpen]);
-
   return (
-    <section className="focus-map-expansion">
+    <section
+      className="focus-map-expansion focus-map-expansion--live"
+      aria-label="Live reasoning workspace"
+    >
       <div className="focus-map-expansion__heading">
         <div>
           <p className="eyebrow">
-            Advanced reasoning map
+            Reasoning workspace
           </p>
-          <h3>
-            Inspect the structure behind the review.
-          </h3>
+          <h3>{heading}</h3>
           <p className="focus-map-expansion__copy">
-            This view is optional. The normal Groundline
-            workflow does not require editing the graph.
+            Selection, inspector, revision proposal,
+            and decision history share the same state.
+            Click any card to inspect it.
           </p>
         </div>
 
-        <button
-          type="button"
-          className="focus-text-action"
-          onClick={onCollapse}
-        >
-          Back to simple review
-        </button>
+        {showCollapse && onCollapse ? (
+          <button
+            type="button"
+            className="focus-text-action"
+            onClick={onCollapse}
+          >
+            Hide reasoning workspace
+          </button>
+        ) : null}
       </div>
 
       <div className="focus-map-legend">
@@ -65,48 +75,67 @@ export function ExpandedReasoningMap({
           reasoning objects
         </span>
         <span>
-          <strong>Arrows</strong>
-          relationships
-        </span>
-        <span>
           <strong>Click</strong>
           inspect one object
         </span>
         <span>
-          <strong>Ctrl / Shift</strong>
-          select several
+          <strong>Focus</strong>
+          return to primary risk
+        </span>
+        <span>
+          <strong>Repair</strong>
+          revise the accepted conclusion
         </span>
       </div>
 
-      <ReasoningGraph
-        workspace={workspace}
-        selectedItemId={selectedItemId}
-        focusedItemIds={focusedItemIds}
-        onSelectItem={onSelectItem}
-      />
+      <div className="live-review-grid">
+        <div className="live-review-grid__graph">
+          <ReasoningGraph
+            workspace={workspace}
+            selectedItemId={
+              selectedItemId
+            }
+            focusedItemIds={
+              focusedItemIds
+            }
+            onSelectItem={
+              onSelectItem
+            }
+          />
+        </div>
 
-      <div className="focus-map-technical-toggle">
-        <button
-          type="button"
-          onClick={() =>
-            setDetailsOpen((value) => !value)
-          }
-        >
-          {detailsOpen
-            ? "Hide technical details"
-            : "Show selected item and decision history"}
-        </button>
-      </div>
-
-      {detailsOpen ? (
-        <div className="focus-map-details">
+        <div className="live-review-grid__inspector">
           <InspectorPanel
             workspace={workspace}
-            selectedItemId={selectedItemId}
+            selectedItemId={
+              selectedItemId
+            }
           />
-          <AuditTrail workspace={workspace} />
         </div>
-      ) : null}
+
+        <div className="live-review-grid__revision">
+          <RevisionPanel
+            workspace={workspace}
+            onAccept={onAccept}
+            onEditAndAccept={
+              onEditAndAccept
+            }
+            onReject={onReject}
+            onDefer={onDefer}
+          />
+        </div>
+
+        <div className="live-review-grid__audit">
+          <AuditTrail
+            workspace={workspace}
+          />
+        </div>
+      </div>
+
+      <p className="live-review-epistemic-note">
+        Priority scores are review mechanics,
+        never truth scores.
+      </p>
     </section>
   );
 }

@@ -389,6 +389,21 @@ export function FocusWorkspace({
     proposed?.proposed_text,
   ]);
 
+  function runAnalysisAndOpenWorkspace() {
+    onRunAnalysis();
+    setMapExpanded(true);
+  }
+
+  function focusRiskAndOpenWorkspace() {
+    onFocusPrimaryRisk();
+    setMapExpanded(true);
+  }
+
+  function proposeAndOpenWorkspace() {
+    onProposeRevision();
+    setMapExpanded(true);
+  }
+
   function openAdvancedMap() {
     if (
       analysisFresh &&
@@ -460,7 +475,7 @@ export function FocusWorkspace({
 
           <button
             type="button"
-            onClick={onRunAnalysis}
+            onClick={runAnalysisAndOpenWorkspace}
             disabled={
               analysisFresh ||
               cycleComplete
@@ -471,7 +486,7 @@ export function FocusWorkspace({
 
           <button
             type="button"
-            onClick={onFocusPrimaryRisk}
+            onClick={focusRiskAndOpenWorkspace}
             disabled={
               !analysisFresh ||
               cycleComplete
@@ -482,7 +497,7 @@ export function FocusWorkspace({
 
           <button
             type="button"
-            onClick={onProposeRevision}
+            onClick={proposeAndOpenWorkspace}
             disabled={
               !analysisFresh ||
               Boolean(proposed) ||
@@ -551,7 +566,7 @@ export function FocusWorkspace({
           <button
             type="button"
             className="focus-primary-action"
-            onClick={onRunAnalysis}
+            onClick={runAnalysisAndOpenWorkspace}
           >
             Check this reasoning
             <small>
@@ -706,7 +721,7 @@ export function FocusWorkspace({
             <button
               type="button"
               className="focus-primary-action"
-              onClick={onProposeRevision}
+              onClick={proposeAndOpenWorkspace}
             >
               Show me a clearer conclusion
               <small>
@@ -734,7 +749,7 @@ export function FocusWorkspace({
         </section>
       ) : null}
 
-      {proposed ? (
+      {proposed && !mapExpanded ? (
         <section className="focus-revision">
           <div className="focus-analysis__heading">
             <div>
@@ -1016,6 +1031,14 @@ export function FocusWorkspace({
             onCollapse={() =>
               setMapExpanded(false)
             }
+            onAccept={onAccept}
+            onEditAndAccept={
+              onEditAndAccept
+            }
+            onReject={onReject}
+            onDefer={onDefer}
+            heading="Inspect the seeded decision as it changes."
+            showCollapse
           />
         </Suspense>
       ) : null}

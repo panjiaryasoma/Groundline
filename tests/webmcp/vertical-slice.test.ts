@@ -182,4 +182,55 @@ describe("P-07/08 WebMCP vertical slice", () => {
     });
   });
 
+
+  it("inspect_workspace distinguishes the focused primary risk from the conclusion repair target", async () => {
+    const current =
+      useWorkspaceStore.getState().workspace;
+
+    useWorkspaceStore.setState({
+      workspace: {
+        ...current,
+        triage_records: [
+          {
+            item_id: "C-USER-001",
+            state: "CRITICAL",
+            weakness_score_internal: 3,
+            impact_score_internal: 3,
+            priority_score_internal: 9,
+            reason_codes: ["OVERGENERALIZATION"],
+            downstream_accepted_ids: [
+              "CONC-USER-001",
+            ],
+            direct_to_accepted_conclusion: true,
+          },
+        ],
+      },
+    });
+
+    useWorkspaceStore
+      .getState()
+      .focusCustomPrimaryRisk();
+    useWorkspaceStore
+      .getState()
+      .prepareCustomRepairTarget();
+
+    const tool =
+      createVerticalSliceTools().find(
+        (candidate) =>
+          candidate.name ===
+          "inspect_workspace",
+      )!;
+
+    const result =
+      (await tool.execute({})) as any;
+
+    expect(
+      result.ui_state.primary_risk_id,
+    ).toBe("C-USER-001");
+
+    expect(
+      result.ui_state.repair_target_id,
+    ).toBe("CONC-USER-001");
+  });
+
 });

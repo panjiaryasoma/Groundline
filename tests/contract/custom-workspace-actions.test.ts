@@ -377,4 +377,129 @@ describe("P-07/08 custom workspace actions", () => {
     ).toBeNull();
   });
 
+
+  it("repairs the accepted conclusion while retaining the focused primary risk as context", () => {
+    const current =
+      useWorkspaceStore.getState().workspace;
+
+    useWorkspaceStore.setState({
+      workspace: {
+        ...current,
+        triage_records: [
+          {
+            item_id: "C-USER-001",
+            state: "CRITICAL",
+            weakness_score_internal: 3,
+            impact_score_internal: 3,
+            priority_score_internal: 9,
+            reason_codes: ["OVERGENERALIZATION"],
+            downstream_accepted_ids: [
+              "CONC-USER-001",
+            ],
+            direct_to_accepted_conclusion: true,
+          },
+        ],
+      },
+    });
+
+    useWorkspaceStore
+      .getState()
+      .focusCustomPrimaryRisk();
+
+    const result =
+      useWorkspaceStore
+        .getState()
+        .prepareCustomRepairTarget();
+
+    const state =
+      useWorkspaceStore.getState();
+
+    expect(result?.targetId).toBe(
+      "CONC-USER-001",
+    );
+    expect(
+      state.ui.selectedItemId,
+    ).toBe("CONC-USER-001");
+    expect(
+      state.ui.focusedItemIds,
+    ).toContain("C-USER-001");
+    expect(
+      state.workspace.audit_events.at(-1)
+        ?.metadata,
+    ).toEqual(
+      expect.objectContaining({
+        primary_risk_id:
+          "C-USER-001",
+        repair_target_id:
+          "CONC-USER-001",
+      }),
+    );
+  });
+
+  it("writes primary-risk context into the proposal audit event", () => {
+    const current =
+      useWorkspaceStore.getState().workspace;
+
+    useWorkspaceStore.setState({
+      workspace: {
+        ...current,
+        triage_records: [
+          {
+            item_id: "C-USER-001",
+            state: "CRITICAL",
+            weakness_score_internal: 3,
+            impact_score_internal: 3,
+            priority_score_internal: 9,
+            reason_codes: ["OVERGENERALIZATION"],
+            downstream_accepted_ids: [
+              "CONC-USER-001",
+            ],
+            direct_to_accepted_conclusion: true,
+          },
+        ],
+      },
+    });
+
+    useWorkspaceStore
+      .getState()
+      .focusCustomPrimaryRisk();
+    useWorkspaceStore
+      .getState()
+      .prepareCustomRepairTarget();
+
+    useWorkspaceStore
+      .getState()
+      .proposeAgentRevision({
+        targetItemId:
+          "CONC-USER-001",
+        proposedText:
+          "Narrow the conclusion to the observed evidence.",
+        reasonCodes: [
+          "OVERGENERALIZATION",
+        ],
+        affectedItemIds: [
+          "CONC-USER-001",
+        ],
+      });
+
+    const event =
+      useWorkspaceStore
+        .getState()
+        .workspace.audit_events
+        .findLast(
+          (candidate) =>
+            candidate.event_type ===
+            "PROPOSE_REVISION",
+        );
+
+    expect(event?.metadata).toEqual(
+      expect.objectContaining({
+        primary_risk_id:
+          "C-USER-001",
+        repair_target_id:
+          "CONC-USER-001",
+      }),
+    );
+  });
+
 });

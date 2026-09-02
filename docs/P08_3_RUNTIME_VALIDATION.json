@@ -1,0 +1,21 @@
+{
+  "milestone": "P-08.3",
+  "expected_test_cases": 141,
+  "commands": [
+    "npm run typecheck",
+    "npm run build",
+    "npm test",
+    "npm run dev"
+  ],
+  "browser_smoke": [
+    "Demo Run analysis -> live workspace opens; Inspector selects primary critical item; EVALUATE/TRIAGE are visible in Decision history.",
+    "Click another graph card -> Inspector changes to that card.",
+    "Click Focus primary risk -> Inspector returns to primary risk.",
+    "Click Propose repair -> Inspector moves to accepted conclusion while primary risk remains highlighted.",
+    "Seeded proposal appears in Revision Proposal with Accepted now, Proposed revision, editable draft, Accept proposal, Accept edited, Reject, Defer.",
+    "Accept -> old conclusion becomes SUPERSEDED/dim, new conclusion becomes ACCEPTED/selected, Decision history adds SUPERSEDE and ACCEPT_REVISION.",
+    "Custom Run analysis -> live workspace opens and produces visible selection/audit feedback.",
+    "Custom WebMCP triage -> EVALUATE/TRIAGE select ordered semantic primary risk.",
+    "Custom Propose repair -> inspect_workspace reports primary_risk_id and repair_target_id; WebMCP propose_revision fills Revision Proposal."
+  ]
+}
