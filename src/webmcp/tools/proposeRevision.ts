@@ -36,6 +36,7 @@ function parseStringArray(
   value: unknown,
   field: string,
   maxItems: number,
+  requireUnique = false,
 ): string[] {
   if (!Array.isArray(value)) {
     throw new GroundlineError(
@@ -56,7 +57,10 @@ function parseStringArray(
       requireString(item, field),
   );
 
-  if (new Set(parsed).size !== parsed.length) {
+  if (
+    requireUnique &&
+    new Set(parsed).size !== parsed.length
+  ) {
     throw new GroundlineError(
       "INVALID_INPUT",
       `${field} must not contain duplicate values.`,
@@ -92,7 +96,6 @@ export function createProposeRevisionTool(): WebMCPToolDefinition {
           type: "array",
           items: { type: "string", minLength: 1 },
           maxItems: MAX_REASON_CODES,
-          uniqueItems: true,
         },
         affected_item_ids: {
           type: "array",
@@ -146,6 +149,7 @@ export function createProposeRevisionTool(): WebMCPToolDefinition {
         input?.affected_item_ids,
         "affected_item_ids",
         MAX_AFFECTED_ITEMS,
+        true,
       );
 
       getItem(workspace, targetItemId);
