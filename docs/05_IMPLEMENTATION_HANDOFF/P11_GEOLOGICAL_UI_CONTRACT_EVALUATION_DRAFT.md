@@ -3,7 +3,7 @@
 **Project:** Groundline  
 **Branch:** `P11`  
 **Date:** 2026-09-03  
-**Status:** IMPLEMENTED / LOCAL VALIDATION PENDING  
+**Status:** IMPLEMENTED / LOCAL REVALIDATION PENDING  
 **Baseline:** `GL-BASELINE-1.1`
 
 ---
@@ -119,6 +119,10 @@ The contract test asserts that `.graph-fault-line` is absent.
 
 **PRESERVED BY DESIGN.** Fault emphasis is local to critical cards. The previous decorative diagonal line remains absent. Dragging, selection, multi-selection, Select all, programmatic focus, and inspector behavior are untouched.
 
+### Lazy reasoning-map boundary
+
+**UNCHANGED.** The full React Flow reasoning map remains lazy-loaded and appears only after the user requests it. P11 does not remove the code-splitting boundary merely to make a test execute faster.
+
 ---
 
 ## 5. Files Changed
@@ -128,15 +132,56 @@ src/components/graph/ReasoningGraph.tsx
 src/styles/p11.css
 src/app/App.tsx
 tests/contract/p11-geological-ui.test.tsx
+tests/contract/focus-workspace.test.tsx
 ```
 
 ---
 
-## 6. Required Local Validation
+## 6. First Local Validation Observation
 
-Run from local `P11`:
+The first local P11 full-suite run reported:
+
+```text
+Test Files  1 failed | 35 passed
+Tests       1 failed | 175 passed
+```
+
+The failing contract was:
+
+```text
+P-06.6 plain-language review flow
+> expands the full map inline instead of switching modes
+```
+
+The rendered output showed the intended Suspense fallback:
+
+```text
+Loading reasoning map
+Preparing the interactive graph only because you asked for it.
+```
+
+The failure occurred because Testing Library's default async query timeout expired while the cold lazy `ExpandedReasoningMap` chunk was still resolving. Other map-opening tests in the same run passed after the lazy module had been loaded.
+
+This is a test-timing mismatch, not evidence that the product should abandon lazy loading.
+
+### Test alignment applied
+
+The affected test now:
+
+1. asserts that the lazy-loading fallback appears after `Open map`;
+2. allows up to 5 seconds for the first cold lazy module load;
+3. still requires both `Live reasoning workspace` and `Groundline reasoning graph` to appear.
+
+No product state logic, graph semantics, or authority behavior changed.
+
+---
+
+## 7. Required Local Revalidation
+
+Pull the latest `P11`, then run:
 
 ```powershell
+git pull origin P11
 npm run typecheck
 npm run build
 npm test
@@ -162,20 +207,21 @@ Then visually inspect the analyzed seeded demo and confirm:
 
 ---
 
-## 7. P11 Exit Decision
+## 8. P11 Exit Decision
 
 Current state:
 
 ```text
-Implementation                 DONE
-Contract-preserving design     DONE
-P11 contract test authored     DONE
-Local typecheck                PENDING
-Local production build         PENDING
-Local full test suite          PENDING
-Manual visual validation       PENDING
+Implementation                    DONE
+Contract-preserving design        DONE
+P11 contract test authored        DONE
+Cold lazy-map test alignment      DONE
+Local typecheck after alignment   PENDING
+Local production build            PENDING
+Local full test suite              PENDING
+Manual visual validation          PENDING
 ```
 
-**P11 STATUS: VALIDATION PENDING**
+**P11 STATUS: LOCAL REVALIDATION PENDING**
 
 No release tag or freeze is created.
