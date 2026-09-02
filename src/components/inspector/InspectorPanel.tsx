@@ -116,7 +116,74 @@ export function InspectorPanel({
           </>
         ) : (
           <p className="muted-copy">
-            Run analysis to populate triage.
+            No triage result yet. Semantic analysis must run before a risk status appears.
+          </p>
+        )}
+      </section>
+
+      <section className="inspector-section">
+        <p className="eyebrow">
+          Revision activity
+        </p>
+
+        {workspace.revisions.filter(
+          (revision) =>
+            revision.target_item_id ===
+            item.id,
+        ).length > 0 ? (
+          <ul className="relation-list">
+            {workspace.revisions
+              .filter(
+                (revision) =>
+                  revision.target_item_id ===
+                  item.id,
+              )
+              .slice()
+              .reverse()
+              .map((revision) => (
+                <li
+                  key={
+                    revision.revision_id
+                  }
+                >
+                  <span>
+                    {revision.state}
+                    {" · "}
+                    {revision.created_by}
+                  </span>
+                  <code>
+                    {
+                      revision.revision_id
+                    }
+                  </code>
+                  <p className="muted-copy">
+                    {
+                      revision.proposed_text
+                    }
+                  </p>
+                </li>
+              ))}
+          </ul>
+        ) : workspace.audit_events.some(
+            (event) =>
+              event.event_type ===
+                "FOCUS" &&
+              event.entity_ids.includes(
+                item.id,
+              ) &&
+              event.metadata
+                ?.requested_action ===
+                "PROPOSE_REPAIR",
+          ) ? (
+          <p className="muted-copy">
+            Repair requested. This
+            item is waiting for a
+            proposal.
+          </p>
+        ) : (
+          <p className="muted-copy">
+            No repair activity for
+            this item yet.
           </p>
         )}
       </section>

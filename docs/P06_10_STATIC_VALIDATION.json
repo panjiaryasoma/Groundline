@@ -1,0 +1,17 @@
+{
+  "milestone": "P-06.10",
+  "artifact_status": "PASS_STATIC",
+  "runtime_status": "PENDING_USER_LOCAL_RUN",
+  "expected_total_tests": 117,
+  "contract_change": false,
+  "contract_consistency_fix": true,
+  "schema_change_request_required": false,
+  "checks": {
+    "intake_exit": true,
+    "optional_not_blocking": true,
+    "semantic_buttons_after_analysis": true,
+    "no_primary_add_missing": true,
+    "optional_edit_action": true,
+    "honest_agent_handoff": true
+  }
+}

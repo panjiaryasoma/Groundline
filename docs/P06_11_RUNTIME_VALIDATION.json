@@ -1,0 +1,19 @@
+{
+  "milestone": "P-06.11",
+  "required_commands": [
+    "npm run typecheck",
+    "npm run build",
+    "npm test",
+    "npm run dev"
+  ],
+  "expected_tests": 119,
+  "browser_smoke": [
+    "Create a custom workspace.",
+    "Run analysis.",
+    "Click Propose repair.",
+    "Confirm Human decision section appears.",
+    "Confirm Waiting for agent proposal appears.",
+    "Confirm Use suggestion / Edit first / Keep current conclusion / Decide later are all visible.",
+    "Confirm all four remain disabled until a real WebMCP proposal exists."
+  ]
+}

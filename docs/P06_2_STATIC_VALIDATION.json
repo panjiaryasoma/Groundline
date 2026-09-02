@@ -1,0 +1,16 @@
+{
+  "milestone": "P-06.2",
+  "status": "PASS_STATIC",
+  "expected_total_tests": 79,
+  "contract_change": false,
+  "schema_change_request_required": false,
+  "checks": {
+    "fault_line_removed": true,
+    "nodes_draggable": true,
+    "multi_select": true,
+    "box_select": true,
+    "connections_disabled": true,
+    "position_preservation": true,
+    "three_regression_tests": true
+  }
+}

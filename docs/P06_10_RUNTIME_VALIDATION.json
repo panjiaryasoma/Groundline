@@ -1,0 +1,20 @@
+{
+  "milestone": "P-06.10",
+  "required_commands": [
+    "npm run typecheck",
+    "npm run build",
+    "npm test",
+    "npm run dev"
+  ],
+  "expected_tests": 117,
+  "browser_smoke": [
+    "Open custom intake and confirm Exit workspace returns Home.",
+    "Create a workspace with only decision, current answer, and main reason.",
+    "Run analysis.",
+    "Confirm the result says structurally ready even when optional context is missing.",
+    "Confirm optional gaps are labeled Optional improvement, not blockers.",
+    "Confirm Focus primary risk and Propose repair appear after Run analysis.",
+    "Click each semantic action and confirm Groundline explains the WebMCP agent requirement rather than fabricating a result.",
+    "Confirm Add optional context remains available as a secondary action."
+  ]
+}

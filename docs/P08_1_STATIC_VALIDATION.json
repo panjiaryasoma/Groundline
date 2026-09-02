@@ -1,0 +1,21 @@
+{
+  "milestone": "P-08.1",
+  "artifact_status": "PASS_STATIC",
+  "runtime_status": "PENDING_USER_LOCAL_RUN",
+  "expected_total_tests": 131,
+  "contract_change": false,
+  "schema_change_request_required": false,
+  "checks": {
+    "target_picker": true,
+    "repair_requires_target": true,
+    "focus_another": true,
+    "multi_proposals": true,
+    "human_buttons": true,
+    "manual_fallback": true,
+    "revision_by_id": true,
+    "multi_agent_proposal": true,
+    "inspector_revision_activity": true,
+    "audit_action_detail": true
+  },
+  "test_count_basis": "counted from current tests/**/*.ts(x)"
+}

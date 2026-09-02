@@ -1,0 +1,22 @@
+{
+  "milestone": "P-08.1",
+  "required_commands": [
+    "npm run typecheck",
+    "npm run build",
+    "npm test",
+    "npm run dev"
+  ],
+  "expected_tests": 131,
+  "browser_smoke": [
+    "Create a custom workspace and Run analysis.",
+    "Click Focus primary risk. Confirm a target picker appears instead of silently choosing one.",
+    "Choose one target. Confirm only that target becomes selected/focused and map + inspector open.",
+    "Confirm Propose repair was disabled before selection and is enabled after selection.",
+    "Click Propose repair. Confirm inspector says Repair requested and audit gets FOCUS / PROPOSE_REPAIR.",
+    "Without an external agent, use Write repair manually and create a proposal. Confirm the proposal appears with Use suggestion / Edit first / Keep current / Decide later.",
+    "Before reviewing the first proposal, click Focus another risk, select a second target, and create/request a second proposal.",
+    "Confirm two distinct proposal cards can exist at the same time.",
+    "Review one proposal and confirm the other remains PROPOSED.",
+    "With a WebMCP agent, call propose_revision for two distinct targets and confirm both appear in the Human decision queue."
+  ]
+}

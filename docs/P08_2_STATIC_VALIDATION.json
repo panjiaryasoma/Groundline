@@ -1,0 +1,23 @@
+{
+  "milestone": "P-08.2",
+  "mode": "PONYTAIL_FULL",
+  "artifact_status": "PASS_STATIC",
+  "runtime_status": "PENDING_USER_LOCAL_RUN",
+  "test_cases_in_artifact": 136,
+  "contract_change": false,
+  "schema_change_request_required": false,
+  "checks": {
+    "baseline_is_v080_not_p081": true,
+    "rank_helper_reused": true,
+    "focus_one_unresolved": true,
+    "repair_uses_latest_focus": true,
+    "repair_not_forced_to_conclusion": true,
+    "proposal_targets_current_item_in_ui": true,
+    "human_decision_buttons": true,
+    "no_waiting_decision_placeholder": true,
+    "webmcp_exposes_ui_focus": true,
+    "replacement_prefix_preserved": true,
+    "no_new_dependency": true,
+    "accepted_revision_stales_old_triage": true
+  }
+}

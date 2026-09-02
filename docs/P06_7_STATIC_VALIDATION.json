@@ -1,0 +1,19 @@
+{
+  "milestone": "P-06.7",
+  "artifact_status": "PASS_STATIC",
+  "runtime_status": "PENDING_USER_LOCAL_RUN",
+  "expected_total_tests": 108,
+  "contract_change": false,
+  "schema_change_request_required": false,
+  "checks": {
+    "custom_builder_schema_version": true,
+    "required_minimum_three": true,
+    "optional_assumption_evidence_source": true,
+    "no_semantic_inference": true,
+    "start_own_or_demo": true,
+    "intake_no_manual_graph": true,
+    "next_step_check_missing": true,
+    "ready_for_agent": true,
+    "ten_new_tests": true
+  }
+}

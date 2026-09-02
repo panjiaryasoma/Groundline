@@ -1,9 +1,19 @@
 import { create } from "zustand";
 import { integration001 } from "../fixtures/integration001";
 import { integration001Evaluations } from "../fixtures/integration001Evaluations";
-import type { Workspace } from "../domain/schema";
+import {
+  EvaluationRecordSchema,
+  WorkspaceSchema,
+  type EvaluationRecord,
+  type Workspace,
+} from "../domain/schema";
+import {
+  buildCustomWorkspace,
+  type CustomDecisionInput,
+} from "../domain/customWorkspace";
 import {
   attachWorkspaceAnalysis,
+  rankTriageRecords,
   triageWorkspaceFromEvaluations,
 } from "../domain/workspaceAnalysis";
 import { getDownstreamDependencies } from "../domain/dependencies";
@@ -15,18 +25,59 @@ import {
   rejectRevision,
 } from "../domain/revisions";
 
+export type ExperienceMode =
+  | "START"
+  | "INTAKE"
+  | "DEMO"
+  | "CUSTOM";
+
 interface EphemeralUiState {
   selectedItemId: string | null;
   focusedItemIds: string[];
 }
 
+
+export interface FocusResult {
+  targetId: string;
+  focusedItemIds: string[];
+  basis: "SEMANTIC_TRIAGE" | "STRUCTURAL_FALLBACK";
+}
+
+export interface AgentRevisionInput {
+  targetItemId: string;
+  proposedText: string;
+  reasonCodes: string[];
+  affectedItemIds: string[];
+}
+
 interface WorkspaceState {
+  experienceMode: ExperienceMode;
+  customInput: CustomDecisionInput | null;
   workspace: Workspace;
   ui: EphemeralUiState;
+
+  startIntake: () => void;
+  startDemo: () => void;
+  backToStart: () => void;
+  createCustomWorkspace: (input: CustomDecisionInput) => void;
 
   resetDemo: () => void;
   selectItem: (itemId: string | null) => void;
   focusItems: (itemIds: string[]) => void;
+  focusItemsWithAudit: (
+    itemIds: string[],
+    primaryItemId: string,
+    actor: "HUMAN" | "AGENT" | "SYSTEM",
+    metadata?: Record<string, unknown>,
+  ) => void;
+  focusCustomPrimaryRisk: () => FocusResult | null;
+  prepareCustomRepairTarget: () => FocusResult | null;
+  applyAgentEvaluations: (
+    evaluations: EvaluationRecord[],
+  ) => void;
+  proposeAgentRevision: (
+    input: AgentRevisionInput,
+  ) => void;
 
   runSeededAnalysis: () => void;
   focusPrimaryRisk: () => void;
@@ -84,15 +135,242 @@ export function isSeededAnalysisFresh(
   );
 }
 
+
+function validateWorkspaceState(
+  workspace: Workspace,
+): Workspace {
+  const parsed = WorkspaceSchema.safeParse(workspace);
+
+  if (!parsed.success) {
+    throw new Error(
+      "Workspace state violates the active schema.",
+    );
+  }
+
+  return parsed.data;
+}
+
+function uniqueExistingIds(
+  workspace: Workspace,
+  itemIds: string[],
+): string[] {
+  const existing = new Set(
+    workspace.items.map((item) => item.id),
+  );
+
+  const unique = [...new Set(itemIds)];
+
+  for (const id of unique) {
+    if (!existing.has(id)) {
+      throw new Error(
+        `Knowledge item "${id}" was not found.`,
+      );
+    }
+  }
+
+  return unique;
+}
+
+function structuralFallbackTarget(
+  workspace: Workspace,
+): string {
+  const byTag = (tag: string) =>
+    workspace.items.find((item) =>
+      item.tags?.includes(tag),
+    );
+
+  const evidence = byTag("main-evidence");
+  const source = byTag("user-source");
+  const assumption = byTag("stated-assumption");
+  const reason = byTag("main-reason");
+
+  if (evidence && !source) {
+    return evidence.id;
+  }
+
+  if (!evidence && reason) {
+    return reason.id;
+  }
+
+  if (!assumption && reason) {
+    return reason.id;
+  }
+
+  return (
+    workspace.accepted_conclusion_id ??
+    reason?.id ??
+    workspace.question_id
+  );
+}
+
+function reviewedTargetIds(
+  workspace: Workspace,
+): Set<string> {
+  return new Set(
+    workspace.revisions
+      .filter(
+        (revision) =>
+          revision.state !== "PROPOSED",
+      )
+      .map(
+        (revision) =>
+          revision.target_item_id,
+      ),
+  );
+}
+
+function semanticAnalysisIsStale(
+  workspace: Workspace,
+): boolean {
+  const lastTriageIndex =
+    workspace.audit_events.findLastIndex(
+      (event) =>
+        event.event_type === "TRIAGE",
+    );
+
+  const lastAcceptedRevisionIndex =
+    workspace.audit_events.findLastIndex(
+      (event) =>
+        event.event_type ===
+        "ACCEPT_REVISION",
+    );
+
+  return (
+    lastAcceptedRevisionIndex >
+    lastTriageIndex
+  );
+}
+
+function nextSemanticReviewTarget(
+  workspace: Workspace,
+): string | null {
+  const reviewed = reviewedTargetIds(
+    workspace,
+  );
+
+  return (
+    rankTriageRecords(
+      workspace.triage_records,
+    )
+      .filter(
+        (record) =>
+          record.state === "CRITICAL" ||
+          record.state === "REVIEW",
+      )
+      .find((record) => {
+        if (reviewed.has(record.item_id)) {
+          return false;
+        }
+
+        return workspace.items.some(
+          (item) =>
+            item.id === record.item_id &&
+            item.state === "ACCEPTED",
+        );
+      })?.item_id ?? null
+  );
+}
+
+function latestPrimaryRiskFocus(
+  workspace: Workspace,
+): string | null {
+  const event =
+    [...workspace.audit_events]
+      .reverse()
+      .find(
+        (candidate) =>
+          candidate.event_type === "FOCUS" &&
+          candidate.metadata
+            ?.requested_action ===
+            "FOCUS_PRIMARY_RISK",
+      );
+
+  const id =
+    event?.metadata?.primary_item_id;
+
+  return typeof id === "string"
+    ? id
+    : null;
+}
+
+function replacementPrefix(
+  workspace: Workspace,
+  targetItemId: string,
+): string {
+  const type =
+    workspace.items.find(
+      (item) =>
+        item.id === targetItemId,
+    )?.type;
+
+  switch (type) {
+    case "QUESTION":
+      return "Q";
+    case "CLAIM":
+      return "C";
+    case "COUNTERCLAIM":
+      return "CC";
+    case "EVIDENCE":
+      return "E";
+    case "ASSUMPTION":
+      return "A";
+    case "SOURCE":
+      return "SRC";
+    case "CONCLUSION":
+    default:
+      return "CONC";
+  }
+}
+
 export const useWorkspaceStore = create<WorkspaceState>((set, get) => ({
+  experienceMode: "START",
+  customInput: null,
   workspace: structuredClone(integration001),
   ui: {
     selectedItemId: null,
     focusedItemIds: [],
   },
 
+  startIntake: () =>
+    set({
+      experienceMode: "INTAKE",
+    }),
+
+  startDemo: () =>
+    set({
+      experienceMode: "DEMO",
+      customInput: null,
+      workspace: structuredClone(integration001),
+      ui: {
+        selectedItemId: null,
+        focusedItemIds: [],
+      },
+    }),
+
+  backToStart: () =>
+    set({
+      experienceMode: "START",
+      ui: {
+        selectedItemId: null,
+        focusedItemIds: [],
+      },
+    }),
+
+  createCustomWorkspace: (input) =>
+    set({
+      experienceMode: "CUSTOM",
+      customInput: structuredClone(input),
+      workspace: buildCustomWorkspace(input),
+      ui: {
+        selectedItemId: null,
+        focusedItemIds: [],
+      },
+    }),
+
   resetDemo: () =>
     set({
+      experienceMode: "DEMO",
+      customInput: null,
       workspace: structuredClone(integration001),
       ui: {
         selectedItemId: null,
@@ -115,6 +393,305 @@ export const useWorkspaceStore = create<WorkspaceState>((set, get) => ({
         focusedItemIds: [...new Set(itemIds)],
       },
     })),
+
+  focusItemsWithAudit: (
+    itemIds,
+    primaryItemId,
+    actor,
+    metadata = {},
+  ) => {
+    const current = get().workspace;
+    const focused = uniqueExistingIds(
+      current,
+      itemIds,
+    );
+
+    if (!focused.includes(primaryItemId)) {
+      throw new Error(
+        "primaryItemId must be included in focused item IDs.",
+      );
+    }
+
+    const next = structuredClone(current);
+    next.audit_events.push({
+      event_id: nextId("AUD-FOCUS", current),
+      event_type: "FOCUS",
+      timestamp: nowIso(),
+      actor_type: actor,
+      entity_ids: focused,
+      metadata: {
+        primary_item_id: primaryItemId,
+        ...metadata,
+      },
+    });
+
+    set({
+      workspace: validateWorkspaceState(next),
+      ui: {
+        selectedItemId: primaryItemId,
+        focusedItemIds: focused,
+      },
+    });
+  },
+
+  focusCustomPrimaryRisk: () => {
+    const current = get().workspace;
+
+    if (
+      current.triage_records.length > 0 &&
+      semanticAnalysisIsStale(current)
+    ) {
+      return null;
+    }
+
+    // One review cycle at a time. A pending proposal must be
+    // resolved by the human before Groundline advances.
+    if (getLatestProposedRevision(current)) {
+      return null;
+    }
+
+    const semanticTarget =
+      nextSemanticReviewTarget(current);
+
+    let targetId =
+      semanticTarget;
+
+    if (
+      !targetId &&
+      current.triage_records.length === 0
+    ) {
+      const fallback =
+        structuralFallbackTarget(current);
+
+      const alreadyReviewed =
+        reviewedTargetIds(current).has(
+          fallback,
+        );
+
+      if (!alreadyReviewed) {
+        targetId = fallback;
+      }
+    }
+
+    if (!targetId) {
+      return null;
+    }
+
+    const trace =
+      getDownstreamDependencies(
+        current,
+        targetId,
+      );
+
+    const focusedItemIds = [
+      targetId,
+      ...trace.node_ids,
+    ].filter(
+      (id, index, values) =>
+        values.indexOf(id) === index,
+    );
+
+    get().focusItemsWithAudit(
+      focusedItemIds,
+      targetId,
+      "HUMAN",
+      {
+        requested_action:
+          "FOCUS_PRIMARY_RISK",
+        basis: semanticTarget
+          ? "SEMANTIC_TRIAGE"
+          : "STRUCTURAL_FALLBACK",
+      },
+    );
+
+    return {
+      targetId,
+      focusedItemIds,
+      basis: semanticTarget
+        ? "SEMANTIC_TRIAGE"
+        : "STRUCTURAL_FALLBACK",
+    };
+  },
+
+  prepareCustomRepairTarget: () => {
+    const current = get().workspace;
+
+    if (getLatestProposedRevision(current)) {
+      return null;
+    }
+
+    const targetId =
+      latestPrimaryRiskFocus(current);
+
+    if (!targetId) {
+      return null;
+    }
+
+    const target =
+      current.items.find(
+        (item) =>
+          item.id === targetId,
+      );
+
+    if (
+      !target ||
+      target.state !== "ACCEPTED" ||
+      reviewedTargetIds(current).has(
+        targetId,
+      )
+    ) {
+      return null;
+    }
+
+    const trace =
+      getDownstreamDependencies(
+        current,
+        targetId,
+      );
+
+    const focusedItemIds = [
+      targetId,
+      ...trace.node_ids,
+    ].filter(
+      (id, index, values) =>
+        values.indexOf(id) === index,
+    );
+
+    get().focusItemsWithAudit(
+      focusedItemIds,
+      targetId,
+      "HUMAN",
+      {
+        requested_action:
+          "PROPOSE_REPAIR",
+        repair_target_id:
+          targetId,
+        proposal_state:
+          "AWAITING_AGENT",
+      },
+    );
+
+    return {
+      targetId,
+      focusedItemIds,
+      basis:
+        current.triage_records.some(
+          (record) =>
+            record.item_id ===
+            targetId,
+        )
+          ? "SEMANTIC_TRIAGE"
+          : "STRUCTURAL_FALLBACK",
+    };
+  },
+
+  applyAgentEvaluations: (evaluations) => {
+    const current = get().workspace;
+
+    const validated = evaluations.map(
+      (evaluation) => {
+        const parsed =
+          EvaluationRecordSchema.safeParse(
+            evaluation,
+          );
+
+        if (!parsed.success) {
+          throw new Error(
+            "Agent evaluation violates the active schema.",
+          );
+        }
+
+        return parsed.data;
+      },
+    );
+
+    const analysis =
+      triageWorkspaceFromEvaluations(
+        current,
+        validated,
+      );
+
+    const analyzed =
+      attachWorkspaceAnalysis(
+        current,
+        analysis,
+      );
+
+    set({
+      workspace: analyzed,
+      ui: {
+        ...get().ui,
+        selectedItemId:
+          analysis.ordered_review_targets[0]
+            ?.item_id ?? null,
+      },
+    });
+  },
+
+  proposeAgentRevision: (input) => {
+    const current = get().workspace;
+
+    if (getLatestProposedRevision(current)) {
+      throw new Error(
+        "A proposed revision already exists.",
+      );
+    }
+
+    const preparedRepairTarget =
+      [...current.audit_events]
+        .reverse()
+        .find(
+          (event) =>
+            event.event_type === "FOCUS" &&
+            event.metadata
+              ?.requested_action ===
+              "PROPOSE_REPAIR",
+        )?.metadata?.repair_target_id;
+
+    if (
+      typeof preparedRepairTarget === "string" &&
+      preparedRepairTarget !==
+        input.targetItemId
+    ) {
+      throw new Error(
+        `The prepared repair target is "${preparedRepairTarget}", not "${input.targetItemId}".`,
+      );
+    }
+
+    const createdAt = nowIso();
+    const revisionId =
+      nextId("REV-AGENT", current);
+    const auditEventId =
+      nextId("AUD-PROP", current);
+
+    const next = proposeRevision({
+      workspace: current,
+      revisionId,
+      targetItemId: input.targetItemId,
+      proposedText: input.proposedText,
+      reasonCodes: input.reasonCodes,
+      affectedItemIds:
+        input.affectedItemIds,
+      createdBy: "AGENT",
+      createdAt,
+      auditEventId,
+    });
+
+    set({
+      workspace: next,
+      ui: {
+        selectedItemId:
+          input.targetItemId,
+        focusedItemIds: [
+          input.targetItemId,
+          ...input.affectedItemIds,
+        ].filter(
+          (id, index, values) =>
+            values.indexOf(id) === index,
+        ),
+      },
+    });
+  },
 
   runSeededAnalysis: () => {
     const current = get().workspace;
@@ -232,7 +809,13 @@ export const useWorkspaceStore = create<WorkspaceState>((set, get) => ({
     if (!revision) return;
 
     const reviewedAt = nowIso();
-    const acceptedItemId = nextId("CONC", current);
+    const acceptedItemId = nextId(
+      replacementPrefix(
+        current,
+        revision.target_item_id,
+      ),
+      current,
+    );
     const auditEventId = nextId("AUD-ACCEPT", current);
 
     set({
@@ -258,7 +841,13 @@ export const useWorkspaceStore = create<WorkspaceState>((set, get) => ({
     if (!revision) return;
 
     const reviewedAt = nowIso();
-    const acceptedItemId = nextId("CONC", current);
+    const acceptedItemId = nextId(
+      replacementPrefix(
+        current,
+        revision.target_item_id,
+      ),
+      current,
+    );
     const auditEventId = nextId("AUD-EDIT-ACCEPT", current);
 
     set({

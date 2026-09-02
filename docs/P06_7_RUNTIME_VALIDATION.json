@@ -1,0 +1,20 @@
+{
+  "milestone": "P-06.7",
+  "required_commands": [
+    "npm run typecheck",
+    "npm run build",
+    "npm test",
+    "npm run dev"
+  ],
+  "expected_tests": 108,
+  "browser_smoke": [
+    "Open Groundline and confirm the first screen offers your own decision or the example.",
+    "Choose your own decision.",
+    "Complete Decision \u2192 Reason \u2192 Evidence \u2192 Review with only the three required inputs.",
+    "Create the workspace and confirm the page explains where each answer went.",
+    "Click Check what is missing and confirm missing assumption/evidence are explained.",
+    "Edit the inputs, add assumption/evidence/source, recreate the workspace, and confirm Ready for agent review.",
+    "Confirm the technical graph remains optional under Advanced.",
+    "Try the seeded example and confirm its existing flow still works."
+  ]
+}

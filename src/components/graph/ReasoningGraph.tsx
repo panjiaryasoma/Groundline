@@ -3,9 +3,17 @@ import {
   Controls,
   MarkerType,
   ReactFlow,
+  SelectionMode,
   type Edge,
   type Node,
+  type NodeChange,
 } from "@xyflow/react";
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useState,
+} from "react";
 import "@xyflow/react/dist/style.css";
 
 import type {
@@ -13,6 +21,12 @@ import type {
   TriageRecord,
   Workspace,
 } from "../../domain/schema";
+import {
+  applyGraphNodeChanges,
+  getSelectedNodeIds,
+  mergePreservedPositions,
+  setAllGraphNodesSelected,
+} from "./graphInteraction";
 
 interface ReasoningGraphProps {
   workspace: Workspace;
@@ -48,10 +62,37 @@ function getTriageRecord(
   return records.find((record) => record.item_id === itemId);
 }
 
+function getLayeredPosition(
+  item: KnowledgeItem,
+  index: number,
+): { x: number; y: number } {
+  const layer = TYPE_LAYER[item.type];
+
+  const baseX =
+    item.type === "QUESTION"
+      ? 220
+      : item.type === "CONCLUSION"
+        ? 350
+        : 120;
+
+  const horizontalGap =
+    item.type === "SOURCE" || item.type === "EVIDENCE"
+      ? 300
+      : 330;
+
+  return {
+    x:
+      baseX +
+      index * horizontalGap +
+      (layer % 2 === 0 ? 0 : 90),
+    y: 32 + layer * 170,
+  };
+}
+
 function buildNodes(
   workspace: Workspace,
-  selectedItemId: string | null,
   focusedItemIds: string[],
+  selectedItemId: string | null,
 ): Node[] {
   const countsByLayer = new Map<number, number>();
 
@@ -66,18 +107,10 @@ function buildNodes(
     );
 
     const focused = focusedItemIds.includes(item.id);
-    const selected = selectedItemId === item.id;
-
-    const x =
-      40 +
-      index * 300 +
-      (layer % 2 === 0 ? 0 : 130);
-
-    const y = 40 + layer * 165;
 
     return {
       id: item.id,
-      position: { x, y },
+      position: getLayeredPosition(item, index),
       data: {
         label: (
           <div
@@ -117,14 +150,16 @@ function buildNodes(
         "reasoning-node",
         `reasoning-node--${item.type.toLowerCase()}`,
         focused ? "reasoning-node--focused" : "",
-        selected ? "reasoning-node--selected" : "",
+        item.id === selectedItemId
+          ? "reasoning-node--app-selected"
+          : "",
         item.state === "SUPERSEDED"
           ? "reasoning-node--superseded"
           : "",
       ]
         .filter(Boolean)
         .join(" "),
-      draggable: false,
+      draggable: true,
       selectable: true,
     };
   });
@@ -156,18 +191,119 @@ export function ReasoningGraph({
   focusedItemIds,
   onSelectItem,
 }: ReasoningGraphProps) {
-  const nodes = buildNodes(
-    workspace,
-    selectedItemId,
-    focusedItemIds,
+  const structuralNodes = useMemo(
+    () =>
+      buildNodes(
+        workspace,
+        focusedItemIds,
+        selectedItemId,
+      ),
+    [
+      workspace,
+      focusedItemIds,
+      selectedItemId,
+    ],
   );
-  const edges = buildEdges(workspace);
+
+  const [nodes, setNodes] = useState<Node[]>(
+    structuralNodes,
+  );
+
+  useEffect(() => {
+    setNodes((current) =>
+      mergePreservedPositions(current, structuralNodes),
+    );
+  }, [structuralNodes]);
+
+  const edges = useMemo(
+    () => buildEdges(workspace),
+    [workspace],
+  );
+
+  const handleNodesChange = useCallback(
+    (changes: NodeChange<Node>[]) => {
+      setNodes((current) =>
+        applyGraphNodeChanges(current, changes),
+      );
+    },
+    [],
+  );
+
+  const selectedNodeCount = nodes.filter(
+    (node) => node.selected,
+  ).length;
+
+  const selectAllNodes = useCallback(() => {
+    setNodes((current) =>
+      setAllGraphNodesSelected(current, true),
+    );
+  }, []);
+
+  const clearNodeSelection = useCallback(() => {
+    setNodes((current) =>
+      setAllGraphNodesSelected(current, false),
+    );
+    onSelectItem(null);
+  }, [onSelectItem]);
+
+  const handleSelectionChange = useCallback(
+    ({ nodes: selectedNodes }: { nodes: Node[] }) => {
+      const ids = getSelectedNodeIds(selectedNodes);
+
+      if (ids.length === 1) {
+        onSelectItem(ids[0]);
+        return;
+      }
+
+      if (
+        selectedItemId &&
+        ids.includes(selectedItemId)
+      ) {
+        return;
+      }
+
+      onSelectItem(ids.at(-1) ?? null);
+    },
+    [onSelectItem, selectedItemId],
+  );
 
   return (
     <section
       className="graph-panel"
       aria-label="Groundline reasoning graph"
     >
+      <div className="graph-help">
+        <div className="graph-help__copy">
+          <span>Drag one card to move only that card.</span>
+          <span>Ctrl/Shift-click selects multiple.</span>
+          <span>Drag any selected card to move the group.</span>
+        </div>
+
+        <div className="graph-help__actions">
+          <button
+            type="button"
+            onClick={selectAllNodes}
+          >
+            Select all
+          </button>
+
+          {selectedNodeCount > 0 ? (
+            <button
+              type="button"
+              onClick={clearNodeSelection}
+            >
+              Clear selection
+            </button>
+          ) : null}
+
+          <span>
+            {selectedNodeCount > 0
+              ? `${selectedNodeCount} selected`
+              : "Nothing selected"}
+          </span>
+        </div>
+      </div>
+
       <div className="strata-labels" aria-hidden="true">
         <span>QUESTION</span>
         <span>CONCLUSION</span>
@@ -183,8 +319,16 @@ export function ReasoningGraph({
         fitView
         fitViewOptions={{ padding: 0.16 }}
         minZoom={0.45}
-        maxZoom={1.4}
-        nodesDraggable={false}
+        maxZoom={1.6}
+        nodesDraggable
+        nodesConnectable={false}
+        elementsSelectable
+        selectionOnDrag
+        selectionMode={SelectionMode.Partial}
+        multiSelectionKeyCode={["Control", "Shift"]}
+        panOnDrag={[1, 2]}
+        onNodesChange={handleNodesChange}
+        onSelectionChange={handleSelectionChange}
         onNodeClick={(_, node) => onSelectItem(node.id)}
         onPaneClick={() => onSelectItem(null)}
         proOptions={{ hideAttribution: true }}

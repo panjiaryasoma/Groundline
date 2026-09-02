@@ -1,0 +1,20 @@
+{
+  "milestone": "P-07/P-08",
+  "required_commands": [
+    "npm run typecheck",
+    "npm run build",
+    "npm test",
+    "npm run dev"
+  ],
+  "expected_tests": 128,
+  "browser_smoke": [
+    "Create a custom workspace and Run analysis.",
+    "Click Focus primary risk. Confirm the map opens, a target node receives the app-selected outline, inspector opens on that target, and audit gains FOCUS.",
+    "Click Propose repair before an agent proposal. Confirm accepted conclusion becomes selected, inspector opens it, audit gains a FOCUS event, and unusable human decision buttons are not shown.",
+    "Use a WebMCP-capable agent to call inspect_workspace.",
+    "Have the agent call triage_workspace with agent-supplied evaluations, then focus_items. Confirm triage badges, selected node, inspector and EVALUATE/TRIAGE/FOCUS audit events update.",
+    "Have the agent call propose_revision. Confirm PROPOSE_REVISION appears in audit, the suggested text appears in Human decision, and Use suggestion/Edit first/Keep current conclusion/Decide later are enabled.",
+    "Click Use suggestion. Confirm accepted conclusion changes only after the HUMAN click and SUPERSEDE/ACCEPT_REVISION audit events appear.",
+    "Confirm Select all still keeps all graph nodes selected for grouped drag."
+  ]
+}

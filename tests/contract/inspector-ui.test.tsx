@@ -59,4 +59,37 @@ describe("P-06 inspector", () => {
       screen.getByText("YES · UNTRUSTED CONTENT"),
     ).toBeInTheDocument();
   });
+
+  it("shows a waiting repair request for the selected target", () => {
+    const workspace =
+      structuredClone(integration001);
+
+    workspace.audit_events.push({
+      event_id:
+        "AUD-FOCUS-REPAIR",
+      event_type: "FOCUS",
+      timestamp:
+        "2026-09-02T05:10:00+07:00",
+      actor_type: "HUMAN",
+      entity_ids: ["A-001"],
+      metadata: {
+        requested_action:
+          "PROPOSE_REPAIR",
+      },
+    });
+
+    render(
+      <InspectorPanel
+        workspace={workspace}
+        selectedItemId="A-001"
+      />,
+    );
+
+    expect(
+      screen.getByText(
+        /Repair requested/i,
+      ),
+    ).toBeInTheDocument();
+  });
+
 });

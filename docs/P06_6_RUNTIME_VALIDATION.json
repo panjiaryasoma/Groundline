@@ -1,0 +1,18 @@
+{
+  "milestone": "P-06.6",
+  "required_commands": [
+    "npm run typecheck",
+    "npm run build",
+    "npm test",
+    "npm run dev"
+  ],
+  "expected_tests": 98,
+  "browser_smoke": [
+    "Confirm the top journey says Check / Understand / Decide.",
+    "Without opening Advanced tools, complete Check -> Show me a clearer conclusion -> Use suggestion.",
+    "Confirm no graph was required.",
+    "Confirm completion primary action is Replay the example.",
+    "Open Advanced reasoning history only after completion and confirm graph still renders.",
+    "Confirm inspector/audit details are hidden until explicitly requested."
+  ]
+}
