@@ -17,6 +17,9 @@ import {
   isSeededAnalysisFresh,
   isSeededDemoCycleComplete,
 } from "../../state/workspaceStore";
+import type {
+  GraphSelectionRequest,
+} from "../../state/workspaceStore";
 
 
 const ExpandedReasoningMap = lazy(async () => {
@@ -30,7 +33,7 @@ interface FocusWorkspaceProps {
   workspace: Workspace;
   selectedItemId: string | null;
   focusedItemIds: string[];
-  graphSelectionRequest: GraphSelectionRequest;
+  graphSelectionRequest?: GraphSelectionRequest;
   onSelectItem: (itemId: string | null) => void;
   onRunAnalysis: () => void;
   onFocusPrimaryRisk: () => void;

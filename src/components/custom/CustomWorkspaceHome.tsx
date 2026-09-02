@@ -47,7 +47,7 @@ interface CustomWorkspaceHomeProps {
   workspace: Workspace;
   selectedItemId: string | null;
   focusedItemIds: string[];
-  graphSelectionRequest: GraphSelectionRequest;
+  graphSelectionRequest?: GraphSelectionRequest;
   onSelectItem: (itemId: string | null) => void;
   onFocusPrimaryRisk: () => {
     targetId: string;

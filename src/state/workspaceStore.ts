@@ -39,7 +39,11 @@ export interface GraphSelectionRequest {
 interface EphemeralUiState {
   selectedItemId: string | null;
   focusedItemIds: string[];
-  graphSelectionRequest: GraphSelectionRequest;
+  /**
+   * Versioned command consumed by ReactFlow for programmatic selection.
+   * Optional for backwards compatibility with older test fixtures / snapshots.
+   */
+  graphSelectionRequest?: GraphSelectionRequest;
 }
 
 
@@ -107,7 +111,7 @@ function nextGraphSelectionRequest(
   return {
     itemId,
     version:
-      ui.graphSelectionRequest.version + 1,
+      (ui.graphSelectionRequest?.version ?? 0) + 1,
   };
 }
 

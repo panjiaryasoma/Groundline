@@ -141,7 +141,10 @@ export function App() {
           selectedItemId={ui.selectedItemId}
           focusedItemIds={ui.focusedItemIds}
           graphSelectionRequest={
-            ui.graphSelectionRequest
+            ui.graphSelectionRequest ?? {
+              itemId: null,
+              version: 0,
+            }
           }
           onSelectItem={selectItem}
           onRunAnalysis={runSeededAnalysis}
@@ -168,7 +171,10 @@ export function App() {
           selectedItemId={ui.selectedItemId}
           focusedItemIds={ui.focusedItemIds}
           graphSelectionRequest={
-            ui.graphSelectionRequest
+            ui.graphSelectionRequest ?? {
+              itemId: null,
+              version: 0,
+            }
           }
           onSelectItem={selectItem}
           onFocusPrimaryRisk={

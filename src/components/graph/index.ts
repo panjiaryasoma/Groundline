@@ -4,4 +4,5 @@ export {
   getSelectedNodeIds,
   mergePreservedPositions,
   setAllGraphNodesSelected,
+  selectSingleGraphNode,
 } from "./graphInteraction";

@@ -36,7 +36,7 @@ interface ReasoningGraphProps {
   workspace: Workspace;
   selectedItemId: string | null;
   focusedItemIds: string[];
-  graphSelectionRequest: GraphSelectionRequest;
+  graphSelectionRequest?: GraphSelectionRequest;
   onSelectItem: (itemId: string | null) => void;
 }
 
@@ -224,16 +224,22 @@ export function ReasoningGraph({
     );
   }, [structuralNodes]);
 
+  const effectiveGraphSelectionRequest =
+    graphSelectionRequest ?? {
+      itemId: null,
+      version: 0,
+    };
+
   useEffect(() => {
     setNodes((current) =>
       selectSingleGraphNode(
         current,
-        graphSelectionRequest.itemId,
+        effectiveGraphSelectionRequest.itemId,
       ),
     );
   }, [
-    graphSelectionRequest.version,
-    graphSelectionRequest.itemId,
+    effectiveGraphSelectionRequest.version,
+    effectiveGraphSelectionRequest.itemId,
   ]);
 
   const edges = useMemo(
