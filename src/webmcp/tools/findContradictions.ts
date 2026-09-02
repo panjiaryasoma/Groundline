@@ -3,7 +3,6 @@ import { GroundlineError } from "../../domain/errors";
 import {
   getIncomingRelations,
   getItem,
-  getOutgoingRelations,
 } from "../../domain/dependencies";
 import { assertActiveGroundlineWorkspace } from "../activeWorkspace";
 
@@ -134,18 +133,28 @@ export function createFindContradictionsTool(): WebMCPToolDefinition {
           ),
         ];
 
+        // Frozen fixture direction is SOURCE -> EVIDENCE for SOURCED_FROM.
+        const sourceRelations =
+          evidenceIds.flatMap(
+            (evidenceId) =>
+              getIncomingRelations(
+                workspace,
+                evidenceId,
+                ["SOURCED_FROM"],
+              ).filter((candidate) =>
+                workspace.items.some(
+                  (item) =>
+                    item.id === candidate.from_id &&
+                    item.type === "SOURCE",
+                ),
+              ),
+          );
+
         const sourceIds = [
           ...new Set(
-            evidenceIds.flatMap(
-              (evidenceId) =>
-                getOutgoingRelations(
-                  workspace,
-                  evidenceId,
-                  ["SOURCED_FROM"],
-                ).map(
-                  (candidate) =>
-                    candidate.to_id,
-                ),
+            sourceRelations.map(
+              (candidate) =>
+                candidate.from_id,
             ),
           ),
         ];
@@ -182,6 +191,10 @@ export function createFindContradictionsTool(): WebMCPToolDefinition {
           relation_ids: [
             relation.id,
             ...supportingEvidenceRelations.map(
+              (candidate) =>
+                candidate.id,
+            ),
+            ...sourceRelations.map(
               (candidate) =>
                 candidate.id,
             ),
