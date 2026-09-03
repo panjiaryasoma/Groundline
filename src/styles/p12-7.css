@@ -1,0 +1,244 @@
+/* P12.7 Paired editorial panels
+ * Turns the analysis and reasoning-map introductions into balanced 01/02
+ * editorial pairs without changing P11 behavior or component semantics.
+ */
+
+/* --------------------------------------------------------------------------
+   Current review status: 01 / Primary risk + 02 / Review focus
+   -------------------------------------------------------------------------- */
+
+.focus-analysis {
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) !important;
+  gap: 0 !important;
+  padding: 0 !important;
+  align-items: stretch !important;
+}
+
+.focus-analysis__heading,
+.focus-analysis > .focus-muted {
+  min-height: 340px;
+  padding: 42px clamp(38px, 4.5vw, 72px) 46px !important;
+}
+
+.focus-analysis__heading {
+  grid-column: 1 !important;
+  grid-row: 1 !important;
+  display: flex !important;
+  flex-direction: column;
+  justify-content: flex-start;
+  align-items: flex-start !important;
+  border-right: 1px solid color-mix(in srgb, var(--rule-strong) 42%, transparent);
+}
+
+.focus-analysis__heading::before {
+  content: "01 / PRIMARY RISK";
+  display: block;
+  margin-bottom: 58px;
+  color: var(--gold);
+  font-family: var(--font-mono);
+  font-size: 0.66rem;
+  font-weight: 600;
+  letter-spacing: 0.13em;
+}
+
+.focus-analysis__heading > div {
+  width: 100%;
+}
+
+.focus-analysis__heading .eyebrow {
+  margin-bottom: 14px !important;
+}
+
+.focus-analysis__heading h3 {
+  max-width: 14ch !important;
+  margin: 0 !important;
+  font-size: clamp(2.35rem, 3.45vw, 4rem) !important;
+  line-height: 1.04 !important;
+  letter-spacing: -0.035em !important;
+}
+
+.focus-analysis__heading .focus-status {
+  margin-top: auto;
+  align-self: flex-start;
+}
+
+.focus-analysis > .focus-muted {
+  grid-column: 2 !important;
+  grid-row: 1 !important;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  max-width: none !important;
+  margin: 0 !important;
+  color: var(--muted);
+  font-family: var(--font-sans);
+  font-size: 0.94rem !important;
+  line-height: 1.72 !important;
+}
+
+.focus-analysis > .focus-muted::before {
+  content: "02 / REVIEW FOCUS";
+  display: block;
+  margin-bottom: 58px;
+  color: var(--gold);
+  font-family: var(--font-mono);
+  font-size: 0.66rem;
+  font-weight: 600;
+  letter-spacing: 0.13em;
+}
+
+/* Keep additional UNLINKED note below the paired row rather than forcing it
+ * into either conceptual panel. */
+.focus-analysis > .focus-muted + .focus-muted {
+  grid-column: 1 / -1 !important;
+  grid-row: 2 !important;
+  min-height: 0;
+  padding: 18px clamp(38px, 4.5vw, 72px) 22px !important;
+  border-top: 1px solid color-mix(in srgb, var(--rule-strong) 28%, transparent);
+  border-right: 0;
+  font-size: 0.78rem !important;
+}
+
+.focus-analysis > .focus-muted + .focus-muted::before {
+  content: none;
+}
+
+/* --------------------------------------------------------------------------
+   Reasoning workspace intro: 01 / Reasoning map + 02 / Shared state
+   -------------------------------------------------------------------------- */
+
+.focus-map-expansion__heading {
+  display: block !important;
+  padding: 0 !important;
+}
+
+.focus-map-expansion__heading > div {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 0;
+  width: 100%;
+}
+
+.focus-map-expansion__heading > div > .eyebrow,
+.focus-map-expansion__heading > div > h3 {
+  grid-column: 1;
+}
+
+.focus-map-expansion__heading > div > .eyebrow {
+  grid-row: 1;
+  margin: 0 !important;
+  padding: 42px clamp(38px, 4.5vw, 72px) 0;
+  color: var(--gold) !important;
+}
+
+.focus-map-expansion__heading > div > .eyebrow::before {
+  content: "01 / ";
+}
+
+.focus-map-expansion__heading > div > h3 {
+  grid-row: 2;
+  min-height: 286px;
+  max-width: none !important;
+  margin: 0 !important;
+  padding: 58px clamp(38px, 4.5vw, 72px) 46px;
+  border-right: 1px solid color-mix(in srgb, var(--rule-strong) 42%, transparent);
+  font-size: clamp(2.35rem, 3.45vw, 4rem) !important;
+  line-height: 1.04 !important;
+  letter-spacing: -0.035em !important;
+}
+
+.focus-map-expansion__copy {
+  grid-column: 2;
+  grid-row: 1 / span 2;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  max-width: none !important;
+  margin: 0 !important;
+  padding: 42px clamp(38px, 4.5vw, 72px) 46px;
+  color: var(--muted);
+  font-family: var(--font-sans);
+  font-size: 0.94rem !important;
+  line-height: 1.72 !important;
+}
+
+.focus-map-expansion__copy::before {
+  content: "02 / SHARED STATE";
+  display: block;
+  margin-bottom: 58px;
+  color: var(--gold);
+  font-family: var(--font-mono);
+  font-size: 0.66rem;
+  font-weight: 600;
+  letter-spacing: 0.13em;
+}
+
+.focus-map-expansion__heading > .focus-text-action {
+  margin: 0 clamp(38px, 4.5vw, 72px) 24px;
+}
+
+/* The 01/02 introduction is the conceptual pair. Operational controls below
+ * keep their crisp table/grid treatment. */
+.focus-map-legend {
+  margin-top: 0 !important;
+}
+
+@media (max-width: 900px) {
+  .focus-analysis {
+    grid-template-columns: 1fr !important;
+  }
+
+  .focus-analysis__heading,
+  .focus-analysis > .focus-muted {
+    grid-column: 1 !important;
+    grid-row: auto !important;
+    min-height: 0;
+    padding: 34px 28px 38px !important;
+  }
+
+  .focus-analysis__heading {
+    border-right: 0;
+    border-bottom: 1px solid color-mix(in srgb, var(--rule-strong) 36%, transparent);
+  }
+
+  .focus-analysis__heading::before,
+  .focus-analysis > .focus-muted::before {
+    margin-bottom: 34px;
+  }
+
+  .focus-analysis > .focus-muted + .focus-muted {
+    padding: 16px 28px 20px !important;
+  }
+
+  .focus-map-expansion__heading > div {
+    grid-template-columns: 1fr;
+  }
+
+  .focus-map-expansion__heading > div > .eyebrow,
+  .focus-map-expansion__heading > div > h3,
+  .focus-map-expansion__copy {
+    grid-column: 1;
+    grid-row: auto;
+  }
+
+  .focus-map-expansion__heading > div > .eyebrow {
+    padding: 34px 28px 0;
+  }
+
+  .focus-map-expansion__heading > div > h3 {
+    min-height: 0;
+    padding: 34px 28px 38px;
+    border-right: 0;
+    border-bottom: 1px solid color-mix(in srgb, var(--rule-strong) 36%, transparent);
+  }
+
+  .focus-map-expansion__copy {
+    padding: 34px 28px 38px;
+  }
+
+  .focus-map-expansion__copy::before {
+    margin-bottom: 34px;
+  }
+}

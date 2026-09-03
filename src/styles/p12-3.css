@@ -1,0 +1,371 @@
+/* P12.3 Layout tightening pass
+ * Fixes proportion, spacing, split composition, specimen integrity, and
+ * full-bleed bedrock only. P11 interaction/state contracts remain untouched.
+ */
+
+html,
+body {
+  overflow-x: clip;
+}
+
+/* --------------------------------------------------------------------------
+   Seeded/custom decision scene: smaller, denser, less billboard-like
+   -------------------------------------------------------------------------- */
+
+.focus-decision-strip {
+  grid-template-columns: minmax(0, 1fr) minmax(340px, 0.78fr) !important;
+  gap: clamp(36px, 5vw, 72px) !important;
+  align-items: center !important;
+  padding: 44px 0 48px !important;
+}
+
+.focus-decision-strip h2 {
+  max-width: 12ch !important;
+  font-size: clamp(2.55rem, 4.15vw, 4.6rem) !important;
+  line-height: 0.96 !important;
+  letter-spacing: -0.04em !important;
+}
+
+.focus-question {
+  max-width: 760px !important;
+  margin-top: 12px !important;
+  font-size: 0.92rem !important;
+  line-height: 1.55 !important;
+}
+
+.focus-current-conclusion {
+  width: min(100%, 520px);
+  justify-self: end;
+  padding: 19px 21px !important;
+  box-shadow: 0 12px 34px rgba(44, 37, 30, 0.07) !important;
+}
+
+.focus-current-conclusion strong {
+  font-size: 1.02rem !important;
+  line-height: 1.4 !important;
+}
+
+.focus-current-conclusion code {
+  font-size: 0.62rem !important;
+}
+
+/* --------------------------------------------------------------------------
+   Analysis scene: headline left, explanation right, less vertical dead space
+   -------------------------------------------------------------------------- */
+
+.focus-analysis {
+  display: grid !important;
+  grid-template-columns: minmax(0, 0.86fr) minmax(340px, 0.64fr);
+  column-gap: clamp(42px, 6vw, 86px);
+  row-gap: 12px;
+  align-items: center;
+  padding: 52px 0 56px !important;
+}
+
+.focus-analysis__heading {
+  grid-column: 1;
+  grid-row: 1 / span 4;
+  display: flex !important;
+  flex-direction: column;
+  align-items: flex-start !important;
+  justify-content: center;
+  gap: 18px !important;
+  margin: 0 !important;
+}
+
+.focus-analysis__heading > div {
+  max-width: 620px !important;
+}
+
+.focus-analysis__heading h3 {
+  max-width: 10.5ch !important;
+  font-size: clamp(2.45rem, 3.65vw, 4.15rem) !important;
+  line-height: 0.98 !important;
+  letter-spacing: -0.035em !important;
+}
+
+.focus-analysis__heading .focus-status {
+  margin: 0 !important;
+}
+
+.focus-analysis > .focus-muted {
+  grid-column: 2;
+  max-width: 560px !important;
+  margin: 0 !important;
+  align-self: center;
+  font-size: 0.84rem !important;
+  line-height: 1.68 !important;
+}
+
+.focus-analysis > .focus-muted + .focus-muted {
+  margin-top: 4px !important;
+  padding-top: 12px;
+  border-top: 1px solid color-mix(in srgb, var(--rule-strong) 55%, transparent);
+}
+
+/* --------------------------------------------------------------------------
+   Reasoning workspace intro: split and compact before the actual graph
+   -------------------------------------------------------------------------- */
+
+.focus-map-expansion--live {
+  padding: 54px 0 66px !important;
+}
+
+.focus-map-expansion__heading {
+  grid-template-columns: minmax(0, 0.9fr) minmax(330px, 0.58fr) !important;
+  gap: clamp(34px, 5vw, 66px) !important;
+  align-items: end !important;
+  margin-bottom: 24px !important;
+}
+
+.focus-map-expansion__heading h3 {
+  max-width: 11ch !important;
+  font-size: clamp(2.45rem, 3.65vw, 4.15rem) !important;
+  line-height: 0.98 !important;
+  letter-spacing: -0.035em !important;
+}
+
+.focus-map-expansion__copy {
+  max-width: 460px !important;
+  justify-self: end;
+  margin-bottom: 2px !important;
+  font-size: 0.8rem !important;
+  line-height: 1.65 !important;
+}
+
+.focus-map-legend {
+  margin-bottom: 14px !important;
+}
+
+.focus-map-legend > span {
+  padding: 9px 12px !important;
+}
+
+/* --------------------------------------------------------------------------
+   Revision + audit gutters: content should not kiss the grid frame
+   -------------------------------------------------------------------------- */
+
+.live-review-grid__revision .revision-panel,
+.live-review-grid__audit .audit-panel {
+  padding: 30px 34px 34px !important;
+}
+
+.live-review-grid__revision .revision-heading,
+.live-review-grid__audit .audit-heading {
+  padding-inline: 0 !important;
+}
+
+.live-review-grid__audit .audit-list,
+.live-review-grid__revision .revision-compare,
+.live-review-grid__revision .revision-actions,
+.live-review-grid__revision .authority-note {
+  margin-left: 0 !important;
+  margin-right: 0 !important;
+}
+
+/* --------------------------------------------------------------------------
+   Landing hero: pull content upward and repair the illustrative specimen
+   -------------------------------------------------------------------------- */
+
+.start-scene--hero {
+  min-height: 0 !important;
+  align-items: center !important;
+  padding: 50px 0 68px !important;
+}
+
+.start-hero__copy h2 {
+  margin-top: 16px !important;
+}
+
+.reasoning-specimen {
+  min-height: 552px !important;
+  padding: 20px !important;
+}
+
+.reasoning-specimen__topline {
+  padding-bottom: 13px !important;
+}
+
+.reasoning-specimen__conclusion {
+  width: min(76%, 370px) !important;
+  margin: 20px auto 14px !important;
+  padding: 14px 18px !important;
+}
+
+.reasoning-specimen__conclusion strong {
+  font-size: 1.12rem !important;
+}
+
+.reasoning-specimen__stack {
+  margin-inline: -20px !important;
+}
+
+.reasoning-specimen__layer {
+  min-height: 76px !important;
+  grid-template-columns: 88px 1fr !important;
+  gap: 16px !important;
+  padding: 12px 40px !important;
+}
+
+.reasoning-specimen__layer strong {
+  max-width: 300px !important;
+  font-size: 0.92rem !important;
+  line-height: 1.32 !important;
+}
+
+.reasoning-specimen__fault {
+  top: 166px !important;
+  right: 29% !important;
+  height: 248px !important;
+  width: 3px !important;
+  transform: rotate(6deg) !important;
+}
+
+.reasoning-specimen__fault::before,
+.reasoning-specimen__fault::after {
+  width: 12px !important;
+  height: 12px !important;
+  box-shadow: 0 0 0 7px rgba(125, 63, 50, 0.11) !important;
+}
+
+.reasoning-specimen__fault::before {
+  top: 42% !important;
+}
+
+.reasoning-specimen__fault::after {
+  top: 72% !important;
+}
+
+.reasoning-specimen__fault-label {
+  right: 20px !important;
+  bottom: 28px !important;
+  width: 190px !important;
+  padding: 10px 12px !important;
+  background: color-mix(in srgb, var(--paper) 97%, var(--fault-soft)) !important;
+  font-size: 0.49rem !important;
+  line-height: 1.45 !important;
+  box-shadow: 0 8px 20px rgba(63, 42, 34, 0.06);
+}
+
+.reasoning-specimen figcaption {
+  margin-top: 10px !important;
+  padding-right: 215px;
+}
+
+/* --------------------------------------------------------------------------
+   Bedrock: full-bleed background, contained copy
+   -------------------------------------------------------------------------- */
+
+.product-footnote {
+  position: relative;
+  isolation: isolate;
+  background: transparent !important;
+}
+
+.product-footnote::before {
+  content: "";
+  position: absolute;
+  inset: 0 50%;
+  width: 100vw;
+  transform: translateX(-50%);
+  z-index: -1;
+  background: var(--strata-bedrock);
+  border-top: 1px solid color-mix(in srgb, var(--paper) 18%, transparent);
+}
+
+/* --------------------------------------------------------------------------
+   Responsive corrections
+   -------------------------------------------------------------------------- */
+
+@media (max-width: 1080px) {
+  .focus-decision-strip,
+  .focus-analysis {
+    grid-template-columns: 1fr !important;
+    gap: 28px !important;
+  }
+
+  .focus-current-conclusion {
+    justify-self: start;
+  }
+
+  .focus-analysis__heading,
+  .focus-analysis > .focus-muted {
+    grid-column: 1;
+    grid-row: auto;
+  }
+
+  .focus-analysis > .focus-muted {
+    max-width: 760px !important;
+  }
+
+  .focus-map-expansion__heading {
+    grid-template-columns: 1fr !important;
+  }
+
+  .focus-map-expansion__copy {
+    justify-self: start;
+  }
+}
+
+@media (max-width: 780px) {
+  .focus-decision-strip,
+  .focus-analysis,
+  .focus-map-expansion--live {
+    padding-block: 44px 50px !important;
+  }
+
+  .focus-decision-strip h2,
+  .focus-analysis__heading h3,
+  .focus-map-expansion__heading h3 {
+    font-size: clamp(2.45rem, 10vw, 4rem) !important;
+  }
+
+  .live-review-grid__revision .revision-panel,
+  .live-review-grid__audit .audit-panel {
+    padding: 24px 22px 28px !important;
+  }
+
+  .start-scene--hero {
+    padding: 42px 0 56px !important;
+  }
+
+  .reasoning-specimen {
+    min-height: 522px !important;
+    padding: 16px !important;
+  }
+
+  .reasoning-specimen__stack {
+    margin-inline: -16px !important;
+  }
+
+  .reasoning-specimen__layer {
+    grid-template-columns: 74px 1fr !important;
+    padding-inline: 22px !important;
+  }
+
+  .reasoning-specimen__fault {
+    top: 158px !important;
+    right: 24% !important;
+    height: 236px !important;
+  }
+
+  .reasoning-specimen__fault-label {
+    width: 158px !important;
+    right: 12px !important;
+    bottom: 24px !important;
+  }
+
+  .reasoning-specimen figcaption {
+    padding-right: 172px;
+  }
+}
+
+@media (max-width: 520px) {
+  .reasoning-specimen__fault-label {
+    display: none !important;
+  }
+
+  .reasoning-specimen figcaption {
+    padding-right: 0;
+  }
+}

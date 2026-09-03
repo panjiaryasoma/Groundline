@@ -1,0 +1,88 @@
+/* P12.11 Motion pass
+ * Smooth reveal for programmatic graph focus and quieter page/step transitions.
+ * No state-machine or authority semantics change.
+ */
+
+html {
+  scroll-behavior: smooth;
+}
+
+.focus-map-expansion {
+  scroll-margin-top: 88px;
+}
+
+/* New experience surfaces enter as one restrained motion layer instead of blinking in. */
+.app-shell--unified > :not(.site-header):not(.product-footnote) {
+  animation: p12-view-enter 320ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@keyframes p12-view-enter {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Intake steps remount inside one worksheet. Animate only the changing content. */
+.app-shell--intake .intake-card > .eyebrow,
+.app-shell--intake .intake-card > h3,
+.app-shell--intake .intake-card > .intake-field,
+.app-shell--intake .intake-card > .intake-review-list,
+.app-shell--intake .intake-card > .intake-review-note,
+.app-shell--intake .intake-card > .intake-error {
+  animation: p12-step-enter 260ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@keyframes p12-step-enter {
+  from {
+    opacity: 0;
+    transform: translateY(5px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Exact-focus requests become visually legible when the map arrives in view. */
+.reasoning-node--app-selected {
+  transition:
+    box-shadow 220ms ease,
+    border-color 220ms ease,
+    opacity 220ms ease;
+  animation: p12-focused-node-arrival 520ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+@keyframes p12-focused-node-arrival {
+  0% {
+    filter: brightness(1);
+  }
+  42% {
+    filter: brightness(1.08);
+  }
+  100% {
+    filter: brightness(1);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  .app-shell--unified > :not(.site-header):not(.product-footnote),
+  .app-shell--intake .intake-card > .eyebrow,
+  .app-shell--intake .intake-card > h3,
+  .app-shell--intake .intake-card > .intake-field,
+  .app-shell--intake .intake-card > .intake-review-list,
+  .app-shell--intake .intake-card > .intake-review-note,
+  .app-shell--intake .intake-card > .intake-error,
+  .reasoning-node--app-selected {
+    animation: none !important;
+    transition: none !important;
+  }
+}

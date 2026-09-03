@@ -8,8 +8,17 @@ import { installP111RepairLifecycle } from "../state/p111RepairLifecycle";
 import { installP112CustomSemanticGate } from "../state/p112CustomSemanticGate";
 import { installP113StructuralCycleGuard } from "../state/p113StructuralCycleGuard";
 import { useWorkspaceStore } from "../state/workspaceStore";
+import groundlineIcon from "../styles/asset/icon.png";
 import "../styles/app.css";
 import "../styles/p11.css";
+import "../styles/p12.css";
+import "../styles/p12-2.css";
+import "../styles/p12-3.css";
+import "../styles/p12-4.css";
+import "../styles/p12-6.css";
+import "../styles/p12-9.css";
+import "../styles/p12-10.css";
+import "../styles/p12-11.css";
 
 installP111RepairLifecycle();
 installP112CustomSemanticGate();
@@ -84,25 +93,40 @@ export function App() {
       version: 0,
     };
 
+  const modeClass = `app-shell--${experienceMode.toLowerCase()}`;
+
   return (
-    <main className="app-shell app-shell--unified">
-      <header className="masthead masthead--compact">
-        <div className="compact-brand">
-          <p className="eyebrow">
-            Human-agent reasoning workspace
-          </p>
-          <h1>GROUNDLINE</h1>
-          <p className="tagline">
-            See what your conclusions stand on.
-          </p>
+    <main
+      className={`app-shell app-shell--unified ${modeClass}`}
+      data-experience-mode={experienceMode}
+    >
+      <header className="masthead masthead--compact site-header">
+        <div className="site-header__brand">
+          <img src={groundlineIcon} alt="" width="38" height="38" />
+          <div className="site-header__brand-copy">
+            <h1>GROUNDLINE</h1>
+            <span>Auditable reasoning field system</span>
+          </div>
         </div>
 
-        <div className="status-block">
-          <span>SCHEMA 1.1.0</span>
-          <span>
-            {hasWebMCP()
-              ? "WEBMCP DETECTED"
-              : "WEBMCP NOT DETECTED"}
+        {experienceMode === "START" ? (
+          <nav className="site-header__nav" aria-label="Groundline sections">
+            <a href="#groundline-start">Surface</a>
+            <a href="#groundline-method">Method</a>
+            <a href="#groundline-entry">Enter field</a>
+          </nav>
+        ) : (
+          <div className="site-header__journey" aria-label="Groundline review lifecycle">
+            <span>Check</span>
+            <span>Understand</span>
+            <span>Decide</span>
+          </div>
+        )}
+
+        <div className="site-header__status">
+          <span>Schema 1.1.0</span>
+          <span className={hasWebMCP() ? "is-live" : undefined}>
+            {hasWebMCP() ? "WebMCP detected" : "WebMCP not detected"}
           </span>
         </div>
       </header>
@@ -136,17 +160,13 @@ export function App() {
           workspace={workspace}
           selectedItemId={ui.selectedItemId}
           focusedItemIds={ui.focusedItemIds}
-          graphSelectionRequest={
-            graphSelectionRequest
-          }
+          graphSelectionRequest={graphSelectionRequest}
           onSelectItem={selectItem}
           onRunAnalysis={runSeededAnalysis}
           onFocusPrimaryRisk={focusPrimaryRisk}
           onProposeRepair={proposeSeededRevision}
           onAccept={acceptLatestRevision}
-          onEditAndAccept={
-            editAndAcceptLatestRevision
-          }
+          onEditAndAccept={editAndAcceptLatestRevision}
           onReject={rejectLatestRevision}
           onDefer={deferLatestRevision}
           onExit={backToStart}
@@ -159,19 +179,13 @@ export function App() {
           workspace={workspace}
           selectedItemId={ui.selectedItemId}
           focusedItemIds={ui.focusedItemIds}
-          graphSelectionRequest={
-            graphSelectionRequest
-          }
+          graphSelectionRequest={graphSelectionRequest}
           onSelectItem={selectItem}
           onRunAnalysis={focusCustomPrimaryRisk}
-          onFocusPrimaryRisk={
-            focusCustomPrimaryRisk
-          }
+          onFocusPrimaryRisk={focusCustomPrimaryRisk}
           onProposeRepair={proposeCustomRepair}
           onAccept={acceptLatestRevision}
-          onEditAndAccept={
-            editAndAcceptLatestRevision
-          }
+          onEditAndAccept={editAndAcceptLatestRevision}
           onReject={rejectLatestRevision}
           onDefer={deferLatestRevision}
           onExit={backToStart}
@@ -180,16 +194,9 @@ export function App() {
       ) : null}
 
       <footer className="product-footnote">
-        <span>
-          GROUNDLINE · CHECK → UNDERSTAND → DECIDE
-        </span>
-        <span>
-          Agent proposes. Human decides.
-        </span>
-        <span>
-          Priority scores are review mechanics,
-          never truth scores.
-        </span>
+        <span>GROUNDLINE · CHECK → UNDERSTAND → DECIDE</span>
+        <span>Agent proposes. Human decides.</span>
+        <span>Priority scores are review mechanics, never truth scores.</span>
       </footer>
     </main>
   );

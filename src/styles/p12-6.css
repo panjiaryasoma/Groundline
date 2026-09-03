@@ -1,0 +1,149 @@
+/* P12.6 Gradient seam pass
+ * Replaces hard section dividers with short, controlled vertical transitions.
+ * Internal operational borders remain crisp. P11 interaction/state untouched.
+ */
+
+/* Remove only large-scene separator rules. */
+.start-scene--method::before {
+  border-top: 0 !important;
+  border-bottom: 0 !important;
+}
+
+.focus-decision-strip::before,
+.focus-analysis::before {
+  border-bottom: 0 !important;
+}
+
+/* Shared seam geometry. The gradient lives inside the bottom of the scene,
+ * so it does not add layout height or intercept interaction. */
+.start-scene--hero::after,
+.start-scene--method::after,
+.start-scene--entry::after,
+.focus-decision-strip::after,
+.focus-analysis::after,
+.focus-map-expansion--live::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  bottom: 0;
+  width: 100vw;
+  height: 48px;
+  transform: translateX(-50%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* Keep scene content above the atmospheric seam. */
+.start-scene > *,
+.focus-decision-strip > *,
+.focus-analysis > *,
+.focus-map-expansion--live > * {
+  position: relative;
+  z-index: 1;
+}
+
+/* Surface -> Method.
+ * The next scene is a 50/50 claim/evidence split, so each half transitions
+ * independently instead of smearing the horizontal information boundary. */
+.start-scene--hero::after {
+  background:
+    linear-gradient(
+      to bottom,
+      transparent 0%,
+      color-mix(in srgb, var(--strata-claim) 22%, transparent) 42%,
+      color-mix(in srgb, var(--strata-claim) 48%, var(--paper)) 100%
+    ) left / 50% 100% no-repeat,
+    linear-gradient(
+      to bottom,
+      transparent 0%,
+      color-mix(in srgb, var(--strata-evidence) 24%, transparent) 42%,
+      color-mix(in srgb, var(--strata-evidence) 55%, var(--paper)) 100%
+    ) right / 50% 100% no-repeat;
+}
+
+/* Method -> Entry.
+ * Entry changes to a 39/61 assumption/source split. Preserve that split while
+ * softening only the vertical transition. */
+.start-scene--method::after {
+  background:
+    linear-gradient(
+      to bottom,
+      transparent 0%,
+      color-mix(in srgb, var(--strata-assumption) 26%, transparent) 44%,
+      color-mix(in srgb, var(--strata-assumption) 56%, var(--paper)) 100%
+    ) left / 39% 100% no-repeat,
+    linear-gradient(
+      to bottom,
+      transparent 0%,
+      color-mix(in srgb, var(--strata-source) 22%, transparent) 44%,
+      color-mix(in srgb, var(--strata-source) 42%, var(--paper)) 100%
+    ) right / 61% 100% no-repeat;
+}
+
+/* Entry -> Bedrock. This is the strongest seam because the narrative reaches
+ * the auditable record layer. */
+.start-scene--entry::after {
+  height: 58px;
+  background: linear-gradient(
+    to bottom,
+    transparent 0%,
+    color-mix(in srgb, var(--bedrock) 18%, transparent) 34%,
+    color-mix(in srgb, var(--bedrock) 58%, transparent) 70%,
+    var(--bedrock) 100%
+  );
+}
+
+/* Workspace: conclusion -> claim. */
+.focus-decision-strip::after {
+  background: linear-gradient(
+    to bottom,
+    transparent 0%,
+    color-mix(in srgb, var(--strata-claim) 28%, transparent) 46%,
+    color-mix(in srgb, var(--strata-claim) 64%, var(--paper)) 100%
+  );
+}
+
+/* Workspace: claim -> evidence. */
+.focus-analysis::after {
+  background: linear-gradient(
+    to bottom,
+    transparent 0%,
+    color-mix(in srgb, var(--strata-evidence) 30%, transparent) 46%,
+    color-mix(in srgb, var(--strata-evidence) 72%, var(--paper)) 100%
+  );
+}
+
+/* Workspace -> Bedrock. The map already descends through evidence,
+ * assumption, and source internally, so only its final edge softens to dark. */
+.focus-map-expansion--live::after {
+  height: 56px;
+  background: linear-gradient(
+    to bottom,
+    transparent 0%,
+    color-mix(in srgb, var(--bedrock) 20%, transparent) 38%,
+    color-mix(in srgb, var(--bedrock) 62%, transparent) 74%,
+    var(--bedrock) 100%
+  );
+}
+
+/* The footer's own top rule is no longer needed once the preceding scene
+ * actually resolves into bedrock. Internal footer/content structure is kept. */
+.product-footnote {
+  border-top-color: transparent !important;
+}
+
+@media (max-width: 780px) {
+  .start-scene--hero::after,
+  .start-scene--method::after,
+  .start-scene--entry::after,
+  .focus-decision-strip::after,
+  .focus-analysis::after,
+  .focus-map-expansion--live::after {
+    height: 32px;
+  }
+
+  .start-scene--entry::after,
+  .focus-map-expansion--live::after {
+    height: 38px;
+  }
+}

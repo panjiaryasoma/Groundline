@@ -1,0 +1,251 @@
+/* P12.8 Cross-section review band
+ * Visually pairs the current review status with the reasoning-workspace intro
+ * as one 50/50 editorial band. Operational graph content remains full-width
+ * below it. No P11 state or interaction behavior changes.
+ */
+
+:root {
+  --p12-review-band-height: 360px;
+}
+
+/* --------------------------------------------------------------------------
+   Left half: 01 / PRIMARY RISK + 02 / REVIEW FOCUS
+   -------------------------------------------------------------------------- */
+
+.focus-analysis {
+  position: relative !important;
+  z-index: 3;
+  display: block !important;
+  width: 50% !important;
+  min-height: var(--p12-review-band-height) !important;
+  margin: 0 !important;
+  padding: 32px clamp(34px, 4vw, 56px) 34px !important;
+  border: 0 !important;
+  border-right: 1px solid color-mix(in srgb, var(--rule-strong) 42%, transparent) !important;
+  background: color-mix(in srgb, var(--strata-claim) 64%, var(--paper)) !important;
+  isolation: isolate;
+}
+
+.focus-analysis::before,
+.focus-analysis::after {
+  content: none !important;
+}
+
+.focus-analysis__heading {
+  display: block !important;
+  min-height: 0 !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  border: 0 !important;
+}
+
+.focus-analysis__heading::before {
+  content: "01 / PRIMARY RISK" !important;
+  display: block;
+  margin: 0 0 18px;
+  color: var(--gold);
+  font-family: var(--font-mono);
+  font-size: 0.62rem;
+  font-weight: 600;
+  letter-spacing: 0.13em;
+}
+
+.focus-analysis__heading > div {
+  width: 100%;
+}
+
+.focus-analysis__heading .eyebrow {
+  margin: 0 0 10px !important;
+  color: color-mix(in srgb, var(--gold) 80%, var(--ink)) !important;
+  font-size: 0.58rem !important;
+}
+
+.focus-analysis__heading h3 {
+  max-width: 16ch !important;
+  margin: 0 !important;
+  font-size: clamp(2rem, 2.9vw, 3.35rem) !important;
+  line-height: 1.03 !important;
+  letter-spacing: -0.035em !important;
+}
+
+.focus-analysis > .focus-muted {
+  display: block !important;
+  min-height: 0 !important;
+  max-width: 36rem !important;
+  margin: 26px 0 0 !important;
+  padding: 0 0 42px !important;
+  color: var(--muted) !important;
+  font-family: var(--font-sans) !important;
+  font-size: 0.82rem !important;
+  line-height: 1.62 !important;
+}
+
+.focus-analysis > .focus-muted::before {
+  content: "02 / REVIEW FOCUS" !important;
+  display: block;
+  margin: 0 0 14px;
+  color: var(--gold);
+  font-family: var(--font-mono);
+  font-size: 0.58rem;
+  font-weight: 600;
+  letter-spacing: 0.13em;
+}
+
+.focus-analysis > .focus-muted::after {
+  content: none !important;
+}
+
+.focus-analysis__heading .focus-status {
+  position: absolute;
+  left: clamp(34px, 4vw, 56px);
+  bottom: 24px;
+  margin: 0 !important;
+}
+
+/* Additional UNLINKED note remains visible but compact inside the left panel. */
+.focus-analysis > .focus-muted + .focus-muted {
+  margin-top: -18px !important;
+  padding: 12px 0 0 !important;
+  border-top: 1px solid color-mix(in srgb, var(--rule-strong) 26%, transparent) !important;
+  font-size: 0.7rem !important;
+}
+
+.focus-analysis > .focus-muted + .focus-muted::before,
+.focus-analysis > .focus-muted + .focus-muted::after {
+  content: none !important;
+}
+
+/* --------------------------------------------------------------------------
+   Right half: pull only the map introduction up beside the review panel.
+   The legend and graph remain in normal flow directly below the 50/50 band.
+   -------------------------------------------------------------------------- */
+
+.focus-map-expansion--live {
+  position: relative !important;
+  z-index: 1;
+  margin-top: calc(-1 * var(--p12-review-band-height)) !important;
+  padding-top: 0 !important;
+}
+
+.focus-map-expansion__heading {
+  position: relative;
+  z-index: 4;
+  display: block !important;
+  width: 50% !important;
+  min-height: var(--p12-review-band-height) !important;
+  margin: 0 0 0 50% !important;
+  padding: 32px clamp(34px, 4vw, 56px) 34px !important;
+  border: 0 !important;
+  background: color-mix(in srgb, var(--strata-evidence) 72%, var(--paper));
+}
+
+.focus-map-expansion__heading > div {
+  display: block !important;
+  width: 100%;
+}
+
+.focus-map-expansion__heading > div > .eyebrow {
+  margin: 0 0 18px !important;
+  padding: 0 !important;
+  color: var(--gold) !important;
+  font-family: var(--font-mono);
+  font-size: 0.62rem !important;
+  font-weight: 600;
+  letter-spacing: 0.13em;
+}
+
+.focus-map-expansion__heading > div > .eyebrow::before {
+  content: "01 / " !important;
+}
+
+.focus-map-expansion__heading > div > h3 {
+  min-height: 0 !important;
+  max-width: 16ch !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  border: 0 !important;
+  font-size: clamp(2rem, 2.9vw, 3.35rem) !important;
+  line-height: 1.03 !important;
+  letter-spacing: -0.035em !important;
+}
+
+.focus-map-expansion__copy {
+  display: block !important;
+  max-width: 36rem !important;
+  margin: 26px 0 0 !important;
+  padding: 0 !important;
+  color: var(--muted) !important;
+  font-family: var(--font-sans) !important;
+  font-size: 0.82rem !important;
+  line-height: 1.62 !important;
+}
+
+.focus-map-expansion__copy::before {
+  content: "02 / SHARED STATE" !important;
+  display: block;
+  margin: 0 0 14px;
+  color: var(--gold);
+  font-family: var(--font-mono);
+  font-size: 0.58rem;
+  font-weight: 600;
+  letter-spacing: 0.13em;
+}
+
+.focus-map-expansion__copy::after {
+  content: none !important;
+}
+
+.focus-map-expansion__heading > .focus-text-action {
+  position: absolute;
+  right: clamp(34px, 4vw, 56px);
+  bottom: 24px;
+  margin: 0 !important;
+}
+
+/* Operational controls start full width immediately after the paired intro. */
+.focus-map-legend {
+  position: relative;
+  z-index: 4;
+  width: 100%;
+  margin-top: 0 !important;
+}
+
+/* --------------------------------------------------------------------------
+   Responsive: return to normal stacked flow below tablet width.
+   -------------------------------------------------------------------------- */
+
+@media (max-width: 900px) {
+  :root {
+    --p12-review-band-height: auto;
+  }
+
+  .focus-analysis {
+    width: 100% !important;
+    min-height: 0 !important;
+    padding: 34px 28px 38px !important;
+    border-right: 0 !important;
+    border-bottom: 1px solid color-mix(in srgb, var(--rule-strong) 34%, transparent) !important;
+  }
+
+  .focus-analysis__heading .focus-status {
+    position: static;
+    display: inline-flex;
+    margin-top: 20px !important;
+  }
+
+  .focus-map-expansion--live {
+    margin-top: 0 !important;
+  }
+
+  .focus-map-expansion__heading {
+    width: 100% !important;
+    min-height: 0 !important;
+    margin-left: 0 !important;
+    padding: 34px 28px 38px !important;
+  }
+
+  .focus-map-expansion__heading > .focus-text-action {
+    position: static;
+    margin-top: 20px !important;
+  }
+}

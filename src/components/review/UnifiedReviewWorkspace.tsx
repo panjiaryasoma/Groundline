@@ -101,8 +101,7 @@ function reviewedRiskIds(workspace: Workspace): Set<string> {
         event.event_type === "PROPOSE_REVISION" &&
         event.entity_ids.includes(revision.revision_id),
     );
-    const primaryRiskId =
-      proposalEvent?.metadata?.primary_risk_id;
+    const primaryRiskId = proposalEvent?.metadata?.primary_risk_id;
 
     if (typeof primaryRiskId === "string") {
       reviewed.add(primaryRiskId);
@@ -114,9 +113,7 @@ function reviewedRiskIds(workspace: Workspace): Set<string> {
   return reviewed;
 }
 
-function nextReviewTargetId(
-  workspace: Workspace,
-): string | null {
+function nextReviewTargetId(workspace: Workspace): string | null {
   const reviewed = reviewedRiskIds(workspace);
 
   return (
@@ -276,6 +273,54 @@ export function UnifiedReviewWorkspace({
       (revision) => revision.state !== "PROPOSED",
     );
 
+  const reviewEyebrow = proposed
+    ? "Agent proposal"
+    : reviewFresh
+      ? `${criticalCount} CRITICAL · ${reviewCount} REVIEW · ${stableCount} STABLE`
+      : structuralFirstPass
+        ? "Structural first pass"
+        : reviewNeedsRefresh
+          ? "Review needs refresh"
+          : "Not reviewed yet";
+
+  const reviewHeadline = proposed
+    ? "Review the proposal without leaving the reasoning workspace."
+    : reviewFresh && currentTarget
+      ? `${currentTarget.id} is the current primary risk.`
+      : reviewFresh
+        ? "No unresolved CRITICAL or REVIEW item remains."
+        : structuralFirstPass && currentTarget
+          ? `${currentTarget.id} is the current review target.`
+          : reviewNeedsRefresh
+            ? "The reasoning changed after the last accepted review."
+            : mode === "DEMO"
+              ? "Run the seeded analysis, then inspect the selected risk in the graph."
+              : "Run analysis to select a first review target.";
+
+  const reviewCopy = proposed
+    ? "The graph, Inspector, Revision Proposal, and Decision History below are still the same shared state. Accept, edit, reject, or defer from the proposal panel."
+    : reviewFresh && currentTarget
+      ? "Groundline keeps the current risk and its downstream reasoning highlighted. Click any other card to inspect it; Focus primary risk returns to this exact item. Propose repair creates a reviewable draft for this item."
+      : structuralFirstPass && currentTarget
+        ? "This target came from Groundline's deterministic structural first pass, not an AI semantic risk judgment. It does not invent CRITICAL or REVIEW labels. Focus primary risk returns to this exact card; Propose repair creates a clearly marked local deterministic draft that you still decide on."
+        : reviewNeedsRefresh
+          ? mode === "CUSTOM"
+            ? "Accepted reasoning changed, so stale semantic labels were invalidated. Run analysis again to start the next structural review cycle, or let a connected WebMCP agent provide fresh semantic triage over the revised workspace."
+            : "The example reasoning changed. Run analysis again to refresh the seeded review before continuing."
+          : mode === "CUSTOM"
+            ? "Run analysis performs a deterministic first pass over the mapped structure so the real decision flow can continue in the browser. It does not pretend to be a WebMCP semantic review; a connected agent can later provide richer triage over this same workspace."
+            : "The example uses deterministic seeded results so you can see the full interaction loop without an external agent.";
+
+  const reviewStatus = proposed
+    ? "Human decision required"
+    : reviewFresh && currentTarget
+      ? workspace.triage_records.find(
+          (record) => record.item_id === currentTarget.id,
+        )?.state ?? "REVIEW"
+      : structuralFirstPass
+        ? "STRUCTURAL"
+        : null;
+
   return (
     <>
       <nav
@@ -419,84 +464,66 @@ export function UnifiedReviewWorkspace({
       </section>
 
       <section
-        className="focus-analysis"
-        aria-label="Current review status"
+        className="focus-review-overview"
+        aria-label="Current review overview"
       >
-        <div className="focus-analysis__heading">
-          <div>
-            <p className="eyebrow">
-              {proposed
-                ? "Agent proposal"
-                : reviewFresh
-                  ? `${criticalCount} CRITICAL · ${reviewCount} REVIEW · ${stableCount} STABLE`
-                  : structuralFirstPass
-                    ? "Structural first pass"
-                    : reviewNeedsRefresh
-                      ? "Review needs refresh"
-                      : "Not reviewed yet"}
-            </p>
+        <section
+          className="focus-analysis"
+          aria-label="Current review status"
+        >
+          <p className="eyebrow focus-analysis__section-label">
+            01 / Primary risk
+          </p>
 
-            <h3>
-              {proposed
-                ? "Review the proposal without leaving the reasoning workspace."
-                : reviewFresh && currentTarget
-                  ? `${currentTarget.id} is the current primary risk.`
-                  : reviewFresh
-                    ? "No unresolved CRITICAL or REVIEW item remains."
-                    : structuralFirstPass && currentTarget
-                      ? `${currentTarget.id} is the current review target.`
-                      : reviewNeedsRefresh
-                        ? "The reasoning changed after the last accepted review."
-                        : mode === "DEMO"
-                          ? "Run the seeded analysis, then inspect the selected risk in the graph."
-                          : "Run analysis to select a first review target."}
-            </h3>
+          <div className="focus-analysis__heading">
+            <div>
+              <p className="eyebrow">{reviewEyebrow}</p>
+              <h3>{reviewHeadline}</h3>
+            </div>
           </div>
 
-          {proposed ? (
+          <div className="focus-analysis__review-focus">
+            <p className="eyebrow">02 / Review focus</p>
+            <p className="focus-muted">{reviewCopy}</p>
+          </div>
+
+          {mode === "CUSTOM" && unlinkedCount > 0 ? (
+            <p className="focus-muted focus-analysis__unlinked-note">
+              {unlinkedCount} human-authored card
+              {unlinkedCount === 1 ? " is" : "s are"}{" "}
+              UNLINKED. An agent may suggest semantic
+              connections, but nothing is committed until
+              you approve the proposal.
+            </p>
+          ) : null}
+
+          {reviewStatus ? (
             <span className="focus-status">
-              Human decision required
-            </span>
-          ) : reviewFresh && currentTarget ? (
-            <span className="focus-status">
-              {workspace.triage_records.find(
-                (record) =>
-                  record.item_id === currentTarget.id,
-              )?.state ?? "REVIEW"}
-            </span>
-          ) : structuralFirstPass ? (
-            <span className="focus-status">
-              STRUCTURAL
+              {reviewStatus}
             </span>
           ) : null}
-        </div>
+        </section>
 
-        <p className="focus-muted">
-          {proposed
-            ? "The graph, Inspector, Revision Proposal, and Decision History below are still the same shared state. Accept, edit, reject, or defer from the proposal panel."
-            : reviewFresh && currentTarget
-              ? "Groundline keeps the current risk and its downstream reasoning highlighted. Click any other card to inspect it; Focus primary risk returns to this exact item. Propose repair creates a reviewable draft for this item."
-              : structuralFirstPass && currentTarget
-                ? "This target came from Groundline's deterministic structural first pass, not an AI semantic risk judgment. It does not invent CRITICAL or REVIEW labels. Focus primary risk returns to this exact card; Propose repair creates a clearly marked local deterministic draft that you still decide on."
-                : reviewNeedsRefresh
-                  ? mode === "CUSTOM"
-                    ? "Accepted reasoning changed, so stale semantic labels were invalidated. Run analysis again to start the next structural review cycle, or let a connected WebMCP agent provide fresh semantic triage over the revised workspace."
-                    : "The example reasoning changed. Run analysis again to refresh the seeded review before continuing."
-                  : mode === "CUSTOM"
-                    ? "Run analysis performs a deterministic first pass over the mapped structure so the real decision flow can continue in the browser. It does not pretend to be a WebMCP semantic review; a connected agent can later provide richer triage over this same workspace."
-                    : "The example uses deterministic seeded results so you can see the full interaction loop without an external agent."}
-        </p>
+        <section
+          className="focus-workspace-summary"
+          aria-label="Reasoning workspace overview"
+        >
+          <div>
+            <p className="eyebrow">
+              01 / Reasoning workspace
+            </p>
+            <h3>Work directly with the reasoning map.</h3>
+          </div>
 
-        {mode === "CUSTOM" &&
-        unlinkedCount > 0 ? (
-          <p className="focus-muted">
-            {unlinkedCount} human-authored card
-            {unlinkedCount === 1 ? " is" : "s are"}{" "}
-            UNLINKED. An agent may suggest semantic
-            connections, but nothing is committed until
-            you approve the proposal.
-          </p>
-        ) : null}
+          <div className="focus-workspace-summary__shared">
+            <p className="eyebrow">02 / Shared state</p>
+            <p>
+              Selection, inspector, revision proposal, and
+              decision history share the same state. Click
+              any card to inspect it.
+            </p>
+          </div>
+        </section>
       </section>
 
       <ExpandedReasoningMap
@@ -509,7 +536,7 @@ export function UnifiedReviewWorkspace({
         onEditAndAccept={onEditAndAccept}
         onReject={onReject}
         onDefer={onDefer}
-        heading="Work directly with the reasoning map."
+        showHeading={false}
       />
     </>
   );
