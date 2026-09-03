@@ -153,3 +153,193 @@
     padding-inline: 10px 4px !important;
   }
 }
+
+/* --------------------------------------------------------------------------
+   Compact narrow workspace
+   Docked DevTools and small laptop panes should not fall into the oversized
+   phone treatment while there is still enough horizontal room.
+   -------------------------------------------------------------------------- */
+
+@media (min-width: 521px) and (max-width: 980px) {
+  .site-header {
+    grid-template-columns: minmax(0, 1fr) auto !important;
+    grid-template-rows: auto auto !important;
+    column-gap: 18px !important;
+    row-gap: 8px !important;
+    min-height: auto !important;
+    padding: 12px 0 11px !important;
+    align-items: center !important;
+  }
+
+  .site-header__brand {
+    grid-column: 1 !important;
+    grid-row: 1 !important;
+  }
+
+  .site-header__status {
+    grid-column: 2 !important;
+    grid-row: 1 !important;
+    width: auto !important;
+    justify-self: end !important;
+    align-self: center !important;
+    display: grid !important;
+    justify-items: end !important;
+    gap: 3px !important;
+  }
+
+  .site-header__nav,
+  .site-header__journey {
+    grid-column: 1 / -1 !important;
+    grid-row: 2 !important;
+    width: auto !important;
+    justify-self: start !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: flex-start !important;
+    gap: 18px !important;
+    white-space: nowrap;
+  }
+
+  .site-header__nav a {
+    padding: 4px 0 !important;
+  }
+
+  .site-header__journey span + span::before {
+    margin-right: 18px !important;
+  }
+}
+
+@media (max-width: 680px) {
+  .site-header__brand img {
+    width: 32px !important;
+    height: 32px !important;
+  }
+
+  .site-header__brand-copy h1 {
+    font-size: 1.22rem !important;
+    line-height: 1.05 !important;
+    overflow-wrap: normal !important;
+  }
+
+  .site-header__brand span {
+    font-size: 0.48rem !important;
+  }
+
+  .site-header__status span {
+    font-size: 0.46rem !important;
+  }
+
+  .focus-journey {
+    grid-template-columns: 1fr !important;
+    gap: 10px !important;
+    padding: 12px 0 !important;
+    align-items: start !important;
+  }
+
+  .focus-journey__intro {
+    width: 100% !important;
+    display: grid !important;
+    gap: 6px !important;
+  }
+
+  .focus-journey__intro strong {
+    max-width: 62ch;
+    font-size: 0.74rem;
+    line-height: 1.4;
+  }
+
+  .focus-journey ol {
+    width: 100% !important;
+    justify-self: stretch !important;
+    display: grid !important;
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+  }
+
+  .focus-journey li {
+    min-width: 0 !important;
+    padding: 9px 8px !important;
+  }
+
+  .workspace-toolbar {
+    width: 100% !important;
+    display: flex !important;
+    flex-direction: row !important;
+    align-items: flex-end !important;
+    gap: 8px !important;
+    flex-wrap: wrap !important;
+    padding: 10px 0 !important;
+  }
+
+  .workspace-toolbar__group {
+    width: auto !important;
+    display: flex !important;
+    grid-template-columns: none !important;
+    align-items: center !important;
+    gap: 8px !important;
+    flex: 1 1 420px;
+    flex-wrap: wrap !important;
+  }
+
+  .workspace-toolbar__label {
+    flex: 0 0 100%;
+  }
+
+  .workspace-toolbar button {
+    width: auto !important;
+    min-height: 40px !important;
+    padding: 9px 12px !important;
+  }
+
+  .workspace-toolbar > .secondary-button {
+    margin-left: auto;
+  }
+}
+
+/* True phone widths keep a compact stack so brand and runtime status never collide. */
+@media (max-width: 520px) {
+  .site-header {
+    grid-template-columns: 1fr !important;
+    grid-template-rows: auto auto auto !important;
+    row-gap: 8px !important;
+    min-height: auto !important;
+    padding: 11px 0 10px !important;
+  }
+
+  .site-header__brand {
+    grid-column: 1 !important;
+    grid-row: 1 !important;
+  }
+
+  .site-header__nav,
+  .site-header__journey {
+    grid-column: 1 !important;
+    grid-row: 2 !important;
+    width: 100% !important;
+    justify-self: stretch !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: flex-start !important;
+    gap: 12px !important;
+    flex-wrap: wrap;
+  }
+
+  .site-header__nav a {
+    padding: 3px 0 !important;
+  }
+
+  .site-header__journey span + span::before {
+    margin-right: 12px !important;
+  }
+
+  .site-header__status {
+    grid-column: 1 !important;
+    grid-row: 3 !important;
+    width: 100% !important;
+    justify-self: stretch !important;
+    display: flex !important;
+    flex-direction: row !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    gap: 12px !important;
+  }
+}
