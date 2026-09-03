@@ -10,7 +10,7 @@ import {
 } from "../../src/domain/workspaceAnalysis";
 
 describe("P11 geological UI pass", () => {
-  it("keeps the geology metaphor attached to reasoning semantics", () => {
+  it("keeps the geology metaphor attached to reasoning semantics", async () => {
     const analyzed = attachWorkspaceAnalysis(
       integration001,
       triageWorkspaceFromEvaluations(
@@ -27,6 +27,10 @@ describe("P11 geological UI pass", () => {
         onSelectItem={vi.fn()}
       />,
     );
+
+    expect(
+      await screen.findByLabelText("Groundline reasoning graph"),
+    ).toBeInTheDocument();
 
     expect(
       screen.getByText(
