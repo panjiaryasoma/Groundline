@@ -3,26 +3,30 @@ import {
   type WebMCPToolDefinition,
 } from "./modelContext";
 import { createInspectWorkspaceTool } from "./tools/inspectWorkspace";
+import { createInspectItemTool } from "./tools/inspectItem";
+import { createEvaluateItemTool } from "./tools/evaluateItem";
 import { createTriageWorkspaceTool } from "./tools/triageWorkspace";
 import { createTraceDependenciesTool } from "./tools/traceDependencies";
+import { createFindContradictionsTool } from "./tools/findContradictions";
+import { createFindEvidenceGapsTool } from "./tools/findEvidenceGaps";
 import { createFocusItemsTool } from "./tools/focusItems";
 import { createProposeRevisionTool } from "./tools/proposeRevision";
 import { P0_TOOL_NAMES } from "./toolSchemas";
 
 export const VERTICAL_SLICE_TOOL_NAMES = [
-  "inspect_workspace",
-  "triage_workspace",
-  "trace_dependencies",
-  "focus_items",
-  "propose_revision",
+  ...P0_TOOL_NAMES,
 ] as const;
 
 export function createVerticalSliceTools():
   WebMCPToolDefinition[] {
   return [
     createInspectWorkspaceTool(),
+    createInspectItemTool(),
+    createEvaluateItemTool(),
     createTriageWorkspaceTool(),
     createTraceDependenciesTool(),
+    createFindContradictionsTool(),
+    createFindEvidenceGapsTool(),
     createFocusItemsTool(),
     createProposeRevisionTool(),
   ];
