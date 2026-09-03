@@ -10,6 +10,7 @@ import { installP113StructuralCycleGuard } from "../state/p113StructuralCycleGua
 import { useWorkspaceStore } from "../state/workspaceStore";
 import "../styles/app.css";
 import "../styles/p11.css";
+import "../styles/p12.css";
 
 installP111RepairLifecycle();
 installP112CustomSemanticGate();
@@ -84,12 +85,26 @@ export function App() {
       version: 0,
     };
 
+  const modeClass = `app-shell--${experienceMode.toLowerCase()}`;
+
   return (
-    <main className="app-shell app-shell--unified">
+    <main
+      className={`app-shell app-shell--unified ${modeClass}`}
+      data-experience-mode={experienceMode}
+    >
       <header className="masthead masthead--compact">
         <div className="compact-brand">
+          <div className="groundline-lockup">
+            <span className="groundline-mark" aria-hidden="true">
+              <span />
+            </span>
+            <span className="groundline-lockup__word">
+              GROUNDLINE
+            </span>
+          </div>
+
           <p className="eyebrow">
-            Human-agent reasoning workspace
+            Human-agent workspace for auditable reasoning
           </p>
           <h1>GROUNDLINE</h1>
           <p className="tagline">
@@ -98,11 +113,17 @@ export function App() {
         </div>
 
         <div className="status-block">
+          <strong className="status-block__principle">
+            Conclusions depend on what lies beneath.
+          </strong>
           <span>SCHEMA 1.1.0</span>
           <span>
             {hasWebMCP()
               ? "WEBMCP DETECTED"
               : "WEBMCP NOT DETECTED"}
+          </span>
+          <span className="status-block__motto">
+            Reason with depth
           </span>
         </div>
       </header>

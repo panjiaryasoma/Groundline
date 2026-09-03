@@ -2,28 +2,49 @@
   font-family:
     Inter, ui-sans-serif, system-ui, -apple-system,
     BlinkMacSystemFont, "Segoe UI", sans-serif;
-  color: #24211d;
-  background: #f1eee5;
+  color: #211f1b;
+  background: #f3efe6;
   font-synthesis: none;
 
-  --paper: #f1eee5;
-  --paper-deep: #e8e2d3;
-  --ink: #24211d;
-  --muted: #746d61;
-  --rule: #c7bfaf;
-  --rule-strong: #8e877b;
+  --font-sans: Inter, ui-sans-serif, system-ui, -apple-system,
+    BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --font-serif: "Libre Baskerville", Georgia, "Times New Roman", serif;
+  --font-mono: "JetBrains Mono", "SFMono-Regular", Consolas, monospace;
 
-  --sand: #d8c7a0;
-  --stone: #c9c3b6;
-  --clay: #cfad9c;
-  --olive: #a9aa8f;
-  --slate: #aeb2b0;
-  --fault: #7d3f32;
+  --paper: #f3efe6;
+  --paper-deep: #e7dfd1;
+  --ink: #211f1b;
+  --muted: #6f685f;
+  --rule: #c8baa5;
+  --rule-strong: #8f8374;
 
-  --critical: #7d3f32;
-  --review: #8a6c2f;
-  --stable: #55634e;
-  --unassessed: #736f69;
+  --surface: #f3efe6;
+  --sand: #d9c6aa;
+  --stone: #b9b2a6;
+  --clay: #c99d7d;
+  --olive: #7f8069;
+  --slate: #444b4d;
+  --bedrock: #343b3e;
+  --bedrock-ink: #f0eadf;
+  --fault: #9f523d;
+  --gold: #aa8243;
+  --gold-soft: #c6a873;
+
+  --strata-question: #f3efe6;
+  --strata-conclusion: #eadfc9;
+  --strata-claim: #dcc9ae;
+  --strata-assumption: #c99d7d;
+  --strata-evidence: #bbb4a8;
+  --strata-source: #80806b;
+
+  --critical: #9f523d;
+  --review: #98743d;
+  --stable: #66705b;
+  --unassessed: #716c65;
+
+  --focus-ring:
+    0 0 0 2px var(--paper),
+    0 0 0 4px var(--ink);
 
   color-scheme: light;
 }
@@ -41,6 +62,7 @@ body {
   min-width: 320px;
   min-height: 100vh;
   background: var(--paper);
+  color: var(--ink);
 }
 
 button,
@@ -51,8 +73,11 @@ select {
 }
 
 button:focus-visible,
+input:focus-visible,
+select:focus-visible,
 textarea:focus-visible,
-a:focus-visible {
+a:focus-visible,
+summary:focus-visible {
   outline: 2px solid var(--ink);
   outline-offset: 3px;
 }

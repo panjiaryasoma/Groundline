@@ -1,0 +1,1032 @@
+/* P12 Strata UI pass
+ * Visual hierarchy only. P11 interaction, state, authority, and WebMCP
+ * contracts stay untouched.
+ */
+
+body {
+  font-family: var(--font-sans);
+  background-color: var(--paper);
+  background-image:
+    radial-gradient(circle at 12% 8%, rgba(170, 130, 67, 0.045), transparent 24rem),
+    radial-gradient(circle at 88% 22%, rgba(159, 82, 61, 0.035), transparent 28rem),
+    linear-gradient(rgba(33, 31, 27, 0.018) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(33, 31, 27, 0.012) 1px, transparent 1px);
+  background-size: auto, auto, 42px 42px, 42px 42px;
+}
+
+::selection {
+  background: var(--gold-soft);
+  color: var(--ink);
+}
+
+.app-shell--unified {
+  width: min(1500px, calc(100% - 56px));
+  padding-top: 0;
+  padding-bottom: 0;
+}
+
+.eyebrow,
+.section-label,
+.workspace-toolbar__label,
+.focus-journey,
+.focus-status,
+.knowledge-state,
+.triage-badge,
+.strata-labels,
+.product-footnote,
+.status-block,
+.start-screen__field-note > span,
+.start-strata-guide > article > span {
+  font-family: var(--font-mono);
+}
+
+h1,
+.masthead h1,
+.start-screen h2,
+.start-choice h3,
+.intake-heading h2,
+.intake-card h3,
+.focus-decision-strip h2,
+.focus-analysis__heading h3,
+.focus-map-expansion__heading h3,
+.inspector-panel h2,
+.revision-panel h2,
+.audit-panel h2,
+.reasoning-node__text {
+  font-family: var(--font-serif);
+}
+
+/* --------------------------------------------------------------------------
+   Surface / masthead
+   -------------------------------------------------------------------------- */
+
+.masthead--compact {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 1.45fr) minmax(300px, 0.55fr);
+  gap: clamp(44px, 7vw, 112px);
+  align-items: end;
+  min-height: 300px;
+  padding: 40px 0 44px;
+  border-bottom: 1px solid var(--rule-strong);
+  isolation: isolate;
+}
+
+.masthead--compact::before {
+  content: "";
+  position: absolute;
+  inset: 0 50% 0 50%;
+  width: 100vw;
+  transform: translateX(-50%);
+  z-index: -1;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.24), transparent 62%),
+    var(--strata-question);
+  border-bottom: 1px solid color-mix(in srgb, var(--rule) 80%, transparent);
+}
+
+.compact-brand {
+  min-width: 0;
+}
+
+.groundline-lockup {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  width: max-content;
+  margin-bottom: 34px;
+}
+
+.groundline-lockup__word {
+  padding-left: 14px;
+  border-left: 1px solid var(--rule-strong);
+  font-size: 0.78rem;
+  font-weight: 600;
+  letter-spacing: 0.2em;
+}
+
+.groundline-mark {
+  position: relative;
+  display: inline-block;
+  width: 48px;
+  height: 48px;
+  flex: 0 0 auto;
+  border: 1px solid var(--ink);
+  border-radius: 50%;
+}
+
+.groundline-mark::before,
+.groundline-mark::after {
+  content: "";
+  position: absolute;
+  background: var(--ink);
+  opacity: 0.72;
+}
+
+.groundline-mark::before {
+  left: 5px;
+  right: 5px;
+  top: 50%;
+  height: 1px;
+}
+
+.groundline-mark::after {
+  top: 5px;
+  bottom: 5px;
+  left: 50%;
+  width: 1px;
+}
+
+.groundline-mark > span {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  z-index: 2;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  background: var(--ink);
+  box-shadow: 0 0 0 5px var(--paper);
+}
+
+.masthead--compact .eyebrow {
+  margin-bottom: 12px;
+  color: var(--muted);
+}
+
+.masthead--compact h1 {
+  font-family: var(--font-serif);
+  font-size: clamp(4.2rem, 8.5vw, 8.6rem);
+  line-height: 0.86;
+  letter-spacing: -0.065em;
+  font-weight: 400;
+}
+
+.masthead--compact .tagline {
+  margin-top: 18px;
+  font-family: var(--font-serif);
+  font-size: clamp(1.2rem, 2vw, 1.75rem);
+  line-height: 1.35;
+}
+
+.app-shell--demo .masthead--compact,
+.app-shell--custom .masthead--compact,
+.app-shell--intake .masthead--compact {
+  min-height: 215px;
+  padding-block: 30px;
+}
+
+.app-shell--demo .masthead--compact h1,
+.app-shell--custom .masthead--compact h1,
+.app-shell--intake .masthead--compact h1 {
+  font-size: clamp(3.2rem, 6vw, 6.2rem);
+}
+
+.status-block {
+  align-self: center;
+  min-width: 0;
+  padding: 18px 0 18px 22px;
+  border-left: 2px solid var(--gold);
+  text-align: left;
+  letter-spacing: 0.12em;
+}
+
+.status-block__principle {
+  max-width: 310px;
+  margin-bottom: 12px;
+  color: var(--ink);
+  font-family: var(--font-sans);
+  font-size: clamp(0.9rem, 1.35vw, 1.1rem);
+  line-height: 1.45;
+  font-weight: 600;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+}
+
+.status-block > span {
+  font-size: 0.62rem;
+}
+
+.status-block__motto {
+  margin-top: 7px;
+  color: var(--gold);
+}
+
+/* --------------------------------------------------------------------------
+   Start screen: surface -> claims/evidence -> reasoning strata
+   -------------------------------------------------------------------------- */
+
+.start-screen {
+  min-height: 0;
+  gap: 34px;
+  padding: 66px 0 76px;
+  border-bottom: 0;
+}
+
+.start-screen__lead-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.3fr) minmax(300px, 0.7fr);
+  gap: clamp(42px, 7vw, 104px);
+  align-items: end;
+}
+
+.start-screen__copy h2 {
+  max-width: 11ch;
+  font-size: clamp(3rem, 5.2vw, 5.6rem);
+  line-height: 0.98;
+  font-weight: 400;
+}
+
+.start-screen__copy > p:not(.eyebrow) {
+  max-width: 680px;
+  font-size: 1rem;
+  line-height: 1.75;
+}
+
+.start-screen__field-note {
+  padding: 24px 0 4px 24px;
+  border-left: 1px solid var(--gold);
+}
+
+.start-screen__field-note > span {
+  color: var(--gold);
+  font-size: 0.62rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.start-screen__field-note > strong {
+  display: block;
+  max-width: 360px;
+  margin-top: 12px;
+  font-family: var(--font-serif);
+  font-size: 1.45rem;
+  line-height: 1.4;
+  font-weight: 400;
+}
+
+.start-screen__field-note > p {
+  max-width: 380px;
+  margin: 16px 0 0;
+  color: var(--muted);
+  font-size: 0.86rem;
+  line-height: 1.75;
+}
+
+.start-choice-grid {
+  border: 1px solid var(--rule-strong);
+  background: transparent;
+  gap: 0;
+}
+
+.start-choice {
+  min-height: 320px;
+  padding: 34px;
+  border: 0;
+  background: color-mix(in srgb, var(--strata-evidence) 18%, var(--paper));
+}
+
+.start-choice + .start-choice {
+  border-left: 1px solid var(--rule-strong);
+}
+
+.start-choice--primary {
+  background: color-mix(in srgb, var(--strata-claim) 58%, var(--paper));
+}
+
+.start-choice--example {
+  background: color-mix(in srgb, var(--strata-evidence) 34%, var(--paper));
+}
+
+.start-choice > span {
+  font-family: var(--font-mono);
+  color: var(--muted);
+}
+
+.start-choice h3 {
+  max-width: 15ch;
+  margin-top: 6px;
+  font-size: clamp(1.75rem, 3vw, 2.8rem);
+  font-weight: 400;
+}
+
+.start-choice p,
+.start-choice ul {
+  max-width: 600px;
+  line-height: 1.65;
+}
+
+.start-choice button,
+.custom-workspace-heading button,
+.workspace-toolbar button,
+.revision-actions button,
+.intake-actions button,
+.intake-exit-button {
+  transition:
+    background 160ms ease,
+    color 160ms ease,
+    border-color 160ms ease,
+    transform 160ms ease;
+}
+
+.start-choice button:hover,
+.workspace-toolbar button:hover:not(:disabled),
+.revision-actions button:hover:not(:disabled),
+.intake-actions button:hover:not(:disabled) {
+  transform: translateY(-1px);
+}
+
+.start-choice--primary button {
+  border-color: var(--ink);
+  background: var(--ink);
+  color: var(--paper);
+}
+
+.start-strata-guide {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  border-top: 1px solid var(--rule-strong);
+  border-bottom: 1px solid var(--rule-strong);
+}
+
+.start-strata-guide > article {
+  min-height: 126px;
+  display: grid;
+  grid-template-columns: 34px 1fr;
+  gap: 14px;
+  align-items: start;
+  padding: 22px 20px;
+  border-right: 1px solid color-mix(in srgb, var(--rule-strong) 65%, transparent);
+}
+
+.start-strata-guide > article:last-child {
+  border-right: 0;
+}
+
+.start-strata-guide > article[data-stratum="claim"] {
+  background: color-mix(in srgb, var(--strata-claim) 58%, var(--paper));
+}
+
+.start-strata-guide > article[data-stratum="evidence"] {
+  background: color-mix(in srgb, var(--strata-evidence) 54%, var(--paper));
+}
+
+.start-strata-guide > article[data-stratum="assumption"] {
+  background: color-mix(in srgb, var(--strata-assumption) 58%, var(--paper));
+}
+
+.start-strata-guide > article[data-stratum="source"] {
+  background: color-mix(in srgb, var(--strata-source) 48%, var(--paper));
+}
+
+.start-strata-guide > article > span {
+  color: color-mix(in srgb, var(--ink) 55%, transparent);
+  font-size: 0.6rem;
+}
+
+.start-strata-guide strong {
+  display: block;
+  font-family: var(--font-serif);
+  font-size: 1rem;
+  font-weight: 700;
+}
+
+.start-strata-guide p {
+  margin: 6px 0 0;
+  color: var(--muted);
+  font-size: 0.76rem;
+  line-height: 1.5;
+}
+
+/* --------------------------------------------------------------------------
+   Intake: descend through the initial reasoning layers
+   -------------------------------------------------------------------------- */
+
+.intake-shell {
+  padding: 50px 0 72px;
+  border-bottom: 0;
+  background:
+    linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--strata-question) 96%, white) 0 18%,
+      color-mix(in srgb, var(--strata-conclusion) 52%, var(--paper)) 18% 42%,
+      color-mix(in srgb, var(--strata-claim) 42%, var(--paper)) 42% 68%,
+      color-mix(in srgb, var(--strata-assumption) 30%, var(--paper)) 68% 100%
+    );
+}
+
+.intake-heading h2 {
+  font-weight: 400;
+}
+
+.intake-progress {
+  border: 1px solid var(--rule-strong);
+  background: transparent;
+}
+
+.intake-progress li {
+  border-right: 1px solid var(--rule);
+  background: color-mix(in srgb, var(--paper) 74%, transparent);
+}
+
+.intake-progress li:nth-child(1) {
+  background: color-mix(in srgb, var(--strata-conclusion) 48%, var(--paper));
+}
+
+.intake-progress li:nth-child(2) {
+  background: color-mix(in srgb, var(--strata-claim) 45%, var(--paper));
+}
+
+.intake-progress li:nth-child(3) {
+  background: color-mix(in srgb, var(--strata-assumption) 40%, var(--paper));
+}
+
+.intake-progress li:nth-child(4) {
+  background: color-mix(in srgb, var(--strata-source) 26%, var(--paper));
+}
+
+.intake-progress li:last-child {
+  border-right: 0;
+}
+
+.intake-progress li.is-current {
+  background: var(--ink);
+  color: var(--paper);
+}
+
+.intake-card {
+  margin-top: 38px;
+  padding: clamp(24px, 4vw, 38px);
+  border-color: var(--rule-strong);
+  background: color-mix(in srgb, var(--paper) 92%, white);
+  box-shadow: 0 22px 65px rgba(51, 43, 34, 0.08);
+}
+
+.intake-field textarea,
+.intake-field input {
+  background: rgba(255, 255, 255, 0.18);
+}
+
+/* --------------------------------------------------------------------------
+   Live review journey: surface -> claim -> evidence -> assumption -> source
+   -------------------------------------------------------------------------- */
+
+.focus-journey {
+  margin: 0;
+  padding: 18px 0;
+  border-bottom-color: var(--rule-strong);
+  background: var(--strata-question);
+}
+
+.focus-journey li {
+  border-color: var(--rule-strong);
+}
+
+.focus-journey li.is-current {
+  background: var(--ink);
+  border-color: var(--ink);
+  color: var(--paper);
+}
+
+.workspace-toolbar {
+  margin: 0;
+  padding: 15px 0;
+  border-top: 0;
+  border-bottom-color: var(--rule-strong);
+  background: color-mix(in srgb, var(--strata-conclusion) 44%, var(--paper));
+}
+
+.workspace-toolbar__label {
+  color: var(--muted);
+}
+
+.workspace-toolbar button {
+  border-color: color-mix(in srgb, var(--ink) 70%, var(--rule));
+  background: rgba(255, 255, 255, 0.12);
+}
+
+.workspace-toolbar button:first-of-type:not(.secondary-button) {
+  border-color: var(--ink);
+}
+
+.focus-decision-strip {
+  margin: 0;
+  padding: 50px 30px 42px;
+  border-bottom-color: var(--rule-strong);
+  background: color-mix(in srgb, var(--strata-conclusion) 58%, var(--paper));
+}
+
+.focus-decision-strip h2 {
+  font-size: clamp(2.5rem, 5vw, 5rem);
+  font-weight: 400;
+  letter-spacing: -0.045em;
+}
+
+.focus-current-conclusion {
+  border-left-color: var(--gold);
+}
+
+.focus-current-conclusion strong {
+  font-family: var(--font-serif);
+  font-size: 1.25rem;
+  font-weight: 400;
+}
+
+.focus-analysis {
+  margin: 0;
+  padding: 54px 30px 58px;
+  border-bottom-color: var(--rule-strong);
+  background: color-mix(in srgb, var(--strata-claim) 52%, var(--paper));
+}
+
+.focus-analysis__heading h3 {
+  max-width: 980px;
+  font-size: clamp(2.25rem, 4.5vw, 4.5rem);
+  font-weight: 400;
+}
+
+.focus-status {
+  border-color: var(--fault);
+  color: var(--fault);
+  background: color-mix(in srgb, var(--paper) 72%, transparent);
+}
+
+.focus-muted {
+  max-width: 1080px;
+  font-size: 0.92rem;
+  line-height: 1.7;
+}
+
+.focus-map-expansion--live {
+  margin-top: 0;
+  padding: 58px 0 0;
+  background: color-mix(in srgb, var(--strata-evidence) 42%, var(--paper));
+}
+
+.focus-map-expansion__heading {
+  padding-inline: 30px;
+}
+
+.focus-map-expansion__heading h3 {
+  max-width: 1000px;
+  font-size: clamp(2.4rem, 4.5vw, 4.8rem);
+  font-weight: 400;
+}
+
+.focus-map-expansion__copy {
+  font-size: 0.9rem;
+  line-height: 1.7;
+}
+
+.focus-map-legend {
+  margin: 28px 30px 14px;
+  border: 1px solid var(--rule-strong);
+  background: transparent;
+}
+
+.focus-map-legend > span {
+  border-right: 1px solid var(--rule);
+  background: color-mix(in srgb, var(--paper) 70%, transparent);
+}
+
+.focus-map-legend > span:nth-child(1) {
+  background: color-mix(in srgb, var(--strata-claim) 34%, var(--paper));
+}
+
+.focus-map-legend > span:nth-child(2) {
+  background: color-mix(in srgb, var(--strata-evidence) 38%, var(--paper));
+}
+
+.focus-map-legend > span:nth-child(3) {
+  background: color-mix(in srgb, var(--strata-assumption) 34%, var(--paper));
+}
+
+.focus-map-legend > span:nth-child(4) {
+  border-right: 0;
+  background: color-mix(in srgb, var(--strata-source) 28%, var(--paper));
+}
+
+.live-review-grid {
+  margin-inline: 30px;
+  border-color: var(--rule-strong);
+  background: var(--paper);
+  box-shadow: 0 28px 80px rgba(57, 48, 38, 0.1);
+}
+
+.live-review-grid__graph,
+.live-review-grid__inspector,
+.live-review-grid__revision,
+.live-review-grid__audit {
+  border-color: var(--rule-strong);
+}
+
+.live-review-grid__inspector {
+  background: color-mix(in srgb, var(--strata-evidence) 24%, var(--paper));
+}
+
+.live-review-grid__revision {
+  background: color-mix(in srgb, var(--strata-assumption) 24%, var(--paper));
+}
+
+.live-review-grid__audit {
+  background: color-mix(in srgb, var(--strata-source) 21%, var(--paper));
+}
+
+.live-review-grid :is(.inspector-panel, .revision-panel, .audit-panel) {
+  background: transparent;
+}
+
+.live-review-epistemic-note {
+  margin: 0;
+  padding: 15px 30px 22px;
+  color: color-mix(in srgb, var(--muted) 88%, transparent);
+}
+
+/* --------------------------------------------------------------------------
+   Reasoning map: thumbnail-derived geological strata
+   -------------------------------------------------------------------------- */
+
+.graph-panel {
+  background:
+    linear-gradient(
+      to bottom,
+      color-mix(in srgb, var(--strata-question) 96%, white) 0% 16.66%,
+      color-mix(in srgb, var(--strata-conclusion) 82%, var(--paper)) 16.66% 33.32%,
+      color-mix(in srgb, var(--strata-claim) 78%, var(--paper)) 33.32% 49.98%,
+      color-mix(in srgb, var(--strata-assumption) 68%, var(--paper)) 49.98% 66.64%,
+      color-mix(in srgb, var(--strata-evidence) 70%, var(--paper)) 66.64% 83.3%,
+      color-mix(in srgb, var(--strata-source) 58%, var(--paper)) 83.3% 100%
+    );
+}
+
+.graph-panel::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  opacity: 0.16;
+  background-image:
+    radial-gradient(circle at 15% 24%, rgba(33, 31, 27, 0.13) 0 1px, transparent 1.5px),
+    radial-gradient(circle at 72% 62%, rgba(33, 31, 27, 0.11) 0 1px, transparent 1.5px);
+  background-size: 38px 34px, 51px 44px;
+}
+
+.strata-labels {
+  z-index: 4;
+}
+
+.strata-labels span {
+  color: color-mix(in srgb, var(--ink) 58%, transparent);
+  font-family: var(--font-mono);
+}
+
+.strata-labels span:last-child {
+  color: color-mix(in srgb, var(--paper) 72%, var(--ink));
+}
+
+.react-flow {
+  z-index: 3;
+}
+
+.react-flow__node-default {
+  border-color: color-mix(in srgb, var(--ink) 86%, var(--rule));
+  background: rgba(243, 239, 230, 0.95);
+  box-shadow: 0 9px 24px rgba(49, 40, 31, 0.07);
+}
+
+.react-flow__node-default.reasoning-node--question {
+  background: color-mix(in srgb, var(--strata-question) 94%, white);
+}
+
+.react-flow__node-default.reasoning-node--conclusion {
+  background: color-mix(in srgb, var(--strata-conclusion) 52%, var(--paper));
+}
+
+.react-flow__node-default.reasoning-node--claim,
+.react-flow__node-default.reasoning-node--counterclaim {
+  background: color-mix(in srgb, var(--strata-claim) 42%, var(--paper));
+}
+
+.react-flow__node-default.reasoning-node--assumption {
+  background: color-mix(in srgb, var(--strata-assumption) 38%, var(--paper));
+}
+
+.react-flow__node-default.reasoning-node--evidence {
+  background: color-mix(in srgb, var(--strata-evidence) 42%, var(--paper));
+}
+
+.react-flow__node-default.reasoning-node--source {
+  background: color-mix(in srgb, var(--strata-source) 32%, var(--paper));
+}
+
+.react-flow__node.selected,
+.reasoning-node--app-selected {
+  outline-color: var(--ink);
+  box-shadow:
+    0 0 0 1px var(--gold),
+    0 12px 30px rgba(49, 40, 31, 0.12);
+}
+
+.react-flow__node-default.reasoning-node--faulted {
+  border-left-color: var(--fault);
+}
+
+.reasoning-node--focused {
+  box-shadow:
+    0 0 0 5px color-mix(in srgb, var(--fault) 18%, transparent),
+    0 12px 30px rgba(49, 40, 31, 0.1);
+}
+
+.reasoning-node__meta,
+.reasoning-node__footer,
+.reasoning-edge .react-flow__edge-text {
+  font-family: var(--font-mono);
+}
+
+.reasoning-node__text {
+  font-size: 0.94rem;
+  line-height: 1.42;
+}
+
+.graph-help {
+  border-color: var(--rule-strong);
+  background: color-mix(in srgb, var(--paper) 88%, transparent);
+  backdrop-filter: blur(8px);
+}
+
+/* --------------------------------------------------------------------------
+   Panels and decisions
+   -------------------------------------------------------------------------- */
+
+.inspector-panel,
+.revision-panel,
+.audit-panel {
+  color: var(--ink);
+}
+
+.inspector-panel h2,
+.revision-panel h2,
+.audit-panel h2 {
+  font-weight: 400;
+}
+
+.inspector-section,
+.relation-list li,
+.audit-list li,
+.authority-note {
+  border-color: color-mix(in srgb, var(--rule-strong) 58%, transparent);
+}
+
+.metric-grid,
+.source-meta,
+.revision-compare {
+  background: color-mix(in srgb, var(--rule-strong) 62%, transparent);
+}
+
+.metric-grid div,
+.source-meta div,
+.revision-compare article {
+  background: color-mix(in srgb, var(--paper) 88%, transparent);
+}
+
+.revision-actions button:first-child {
+  background: var(--ink);
+  color: var(--paper);
+}
+
+.p117-review-panel {
+  border-color: var(--gold);
+  background: color-mix(in srgb, var(--paper) 96%, white);
+  box-shadow: 0 28px 80px rgba(45, 37, 28, 0.18);
+}
+
+/* --------------------------------------------------------------------------
+   Bedrock footer
+   -------------------------------------------------------------------------- */
+
+.product-footnote {
+  position: relative;
+  margin-top: 0;
+  min-height: 92px;
+  align-items: center;
+  padding: 24px 26px;
+  color: color-mix(in srgb, var(--bedrock-ink) 82%, transparent);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.025), transparent),
+    var(--bedrock);
+  border-top: 1px solid color-mix(in srgb, var(--bedrock-ink) 20%, transparent);
+  font-family: var(--font-mono);
+}
+
+.product-footnote::before {
+  content: "BEDROCK / AUDITABLE RECORD";
+  color: var(--gold-soft);
+  font-size: 0.58rem;
+  letter-spacing: 0.13em;
+}
+
+.product-footnote span {
+  font-size: 0.58rem;
+}
+
+/* --------------------------------------------------------------------------
+   Responsive behavior
+   -------------------------------------------------------------------------- */
+
+@media (max-width: 1050px) {
+  .masthead--compact,
+  .start-screen__lead-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .masthead--compact {
+    gap: 34px;
+    min-height: 0;
+  }
+
+  .status-block {
+    max-width: 620px;
+    align-self: auto;
+  }
+
+  .live-review-grid {
+    margin-inline: 22px;
+  }
+
+  .focus-map-expansion__heading {
+    padding-inline: 22px;
+  }
+
+  .focus-map-legend {
+    margin-inline: 22px;
+  }
+}
+
+@media (max-width: 820px) {
+  .app-shell--unified {
+    width: min(100% - 30px, 1500px);
+  }
+
+  .masthead--compact,
+  .app-shell--demo .masthead--compact,
+  .app-shell--custom .masthead--compact,
+  .app-shell--intake .masthead--compact {
+    padding: 28px 0 34px;
+  }
+
+  .groundline-lockup {
+    margin-bottom: 26px;
+  }
+
+  .groundline-mark {
+    width: 42px;
+    height: 42px;
+  }
+
+  .masthead--compact h1,
+  .app-shell--demo .masthead--compact h1,
+  .app-shell--custom .masthead--compact h1,
+  .app-shell--intake .masthead--compact h1 {
+    font-size: clamp(3.4rem, 16vw, 6.5rem);
+  }
+
+  .status-block {
+    padding-left: 18px;
+  }
+
+  .start-screen {
+    padding-block: 48px 58px;
+  }
+
+  .start-screen__copy h2 {
+    max-width: 13ch;
+    font-size: clamp(2.7rem, 11vw, 4.8rem);
+  }
+
+  .start-choice-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .start-choice + .start-choice {
+    border-left: 0;
+    border-top: 1px solid var(--rule-strong);
+  }
+
+  .start-choice {
+    min-height: 0;
+  }
+
+  .start-strata-guide {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .start-strata-guide > article:nth-child(2) {
+    border-right: 0;
+  }
+
+  .start-strata-guide > article:nth-child(-n + 2) {
+    border-bottom: 1px solid var(--rule-strong);
+  }
+
+  .intake-progress {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .intake-progress li:nth-child(2) {
+    border-right: 0;
+  }
+
+  .intake-progress li:nth-child(-n + 2) {
+    border-bottom: 1px solid var(--rule);
+  }
+
+  .focus-decision-strip,
+  .focus-analysis {
+    padding-inline: 20px;
+  }
+
+  .focus-map-expansion__heading {
+    padding-inline: 18px;
+  }
+
+  .focus-map-legend {
+    margin-inline: 18px;
+  }
+
+  .live-review-grid {
+    margin-inline: 18px;
+  }
+
+  .live-review-epistemic-note {
+    padding-inline: 18px;
+  }
+
+  .product-footnote {
+    margin-inline: -15px;
+    padding-inline: 18px;
+  }
+}
+
+@media (max-width: 560px) {
+  .groundline-lockup__word {
+    font-size: 0.68rem;
+    letter-spacing: 0.16em;
+  }
+
+  .status-block__principle {
+    font-size: 0.82rem;
+  }
+
+  .start-strata-guide {
+    grid-template-columns: 1fr;
+  }
+
+  .start-strata-guide > article {
+    border-right: 0;
+    border-bottom: 1px solid var(--rule-strong);
+  }
+
+  .start-strata-guide > article:last-child {
+    border-bottom: 0;
+  }
+
+  .intake-progress {
+    grid-template-columns: 1fr;
+  }
+
+  .intake-progress li {
+    border-right: 0;
+    border-bottom: 1px solid var(--rule);
+  }
+
+  .intake-progress li:last-child {
+    border-bottom: 0;
+  }
+
+  .focus-map-legend {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .focus-map-legend > span {
+    min-width: 0;
+    border-right: 0;
+    border-bottom: 1px solid var(--rule);
+  }
+
+  .focus-map-legend > span:nth-last-child(-n + 2) {
+    border-bottom: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .start-choice button,
+  .workspace-toolbar button,
+  .revision-actions button,
+  .intake-actions button,
+  .intake-exit-button {
+    transition: none;
+  }
+}
