@@ -1,9 +1,68 @@
 import type { WebMCPToolDefinition } from "../modelContext";
+import { GroundlineError } from "../../domain/errors";
 import {
   getDownstreamDependencies,
   getUpstreamDependencies,
 } from "../../domain/dependencies";
 import { assertActiveGroundlineWorkspace } from "../activeWorkspace";
+
+const DEFAULT_MAX_DEPTH = 8;
+const DEFAULT_MAX_NODES = 25;
+const MAX_DEPTH = 20;
+const MAX_NODES = 50;
+
+function requireItemId(input: any): string {
+  const value = input?.item_id;
+
+  if (typeof value !== "string" || !value.trim()) {
+    throw new GroundlineError(
+      "INVALID_INPUT",
+      "trace_dependencies requires a non-empty item_id.",
+    );
+  }
+
+  return value.trim();
+}
+
+function requireDirection(
+  input: any,
+): "UPSTREAM" | "DOWNSTREAM" {
+  const value = input?.direction;
+
+  if (value !== "UPSTREAM" && value !== "DOWNSTREAM") {
+    throw new GroundlineError(
+      "INVALID_INPUT",
+      "trace_dependencies direction must be UPSTREAM or DOWNSTREAM.",
+    );
+  }
+
+  return value;
+}
+
+function parseBoundedInteger(
+  value: unknown,
+  fallback: number,
+  max: number,
+  field: string,
+): number {
+  if (value == null) {
+    return fallback;
+  }
+
+  if (
+    typeof value !== "number" ||
+    !Number.isInteger(value) ||
+    value < 1 ||
+    value > max
+  ) {
+    throw new GroundlineError(
+      "INVALID_INPUT",
+      `${field} must be an integer between 1 and ${max}.`,
+    );
+  }
+
+  return value;
+}
 
 export function createTraceDependenciesTool(): WebMCPToolDefinition {
   return {
@@ -16,6 +75,7 @@ export function createTraceDependenciesTool(): WebMCPToolDefinition {
       properties: {
         item_id: {
           type: "string",
+          minLength: 1,
           description:
             "Existing Groundline knowledge item ID.",
         },
@@ -28,14 +88,14 @@ export function createTraceDependenciesTool(): WebMCPToolDefinition {
         max_depth: {
           type: "integer",
           minimum: 1,
-          maximum: 20,
-          default: 8,
+          maximum: MAX_DEPTH,
+          default: DEFAULT_MAX_DEPTH,
         },
         max_nodes: {
           type: "integer",
           minimum: 1,
-          maximum: 50,
-          default: 25,
+          maximum: MAX_NODES,
+          default: DEFAULT_MAX_NODES,
         },
       },
       required: ["item_id", "direction"],
@@ -49,22 +109,33 @@ export function createTraceDependenciesTool(): WebMCPToolDefinition {
       const workspace =
         assertActiveGroundlineWorkspace()
           .workspace;
+      const itemId = requireItemId(input);
+      const direction =
+        requireDirection(input);
       const options = {
-        maxDepth:
-          Number(input.max_depth) || 8,
-        maxNodes:
-          Number(input.max_nodes) || 25,
+        maxDepth: parseBoundedInteger(
+          input?.max_depth,
+          DEFAULT_MAX_DEPTH,
+          MAX_DEPTH,
+          "max_depth",
+        ),
+        maxNodes: parseBoundedInteger(
+          input?.max_nodes,
+          DEFAULT_MAX_NODES,
+          MAX_NODES,
+          "max_nodes",
+        ),
       };
 
-      return input.direction === "UPSTREAM"
+      return direction === "UPSTREAM"
         ? getUpstreamDependencies(
             workspace,
-            String(input.item_id),
+            itemId,
             options,
           )
         : getDownstreamDependencies(
             workspace,
-            String(input.item_id),
+            itemId,
             options,
           );
     },
