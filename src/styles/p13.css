@@ -456,3 +456,54 @@ pre,
     scroll-behavior: auto !important;
   }
 }
+
+/* P14 action anchoring: navigation explains the flow; controls drive it. */
+.app-shell--demo .focus-journey,
+.app-shell--custom .focus-journey {
+  position: relative !important;
+  top: auto !important;
+  z-index: auto !important;
+}
+
+.app-shell--demo .workspace-toolbar,
+.app-shell--custom .workspace-toolbar {
+  position: sticky;
+  top: 84px;
+  z-index: 105;
+  isolation: isolate;
+  border-bottom: 1px solid var(--rule-strong);
+  background: color-mix(in srgb, var(--paper) 96%, transparent);
+  box-shadow: 0 10px 24px rgba(33, 31, 27, 0.06);
+  backdrop-filter: blur(14px);
+}
+
+.app-shell--demo .workspace-toolbar::before,
+.app-shell--custom .workspace-toolbar::before {
+  content: "";
+  position: absolute;
+  inset: 0 50%;
+  width: 100vw;
+  transform: translateX(-50%);
+  z-index: -1;
+  background: color-mix(in srgb, var(--paper) 96%, transparent);
+  border-bottom: 1px solid var(--rule-strong);
+}
+
+/* P13 makes the site header non-sticky on tablet, so controls can use the viewport edge. */
+@media (max-width: 980px) {
+  .app-shell--demo .workspace-toolbar,
+  .app-shell--custom .workspace-toolbar {
+    top: 0;
+  }
+}
+
+/* A stacked mobile action sheet would consume too much of the viewport. */
+@media (max-width: 680px) {
+  .app-shell--demo .workspace-toolbar,
+  .app-shell--custom .workspace-toolbar {
+    position: relative;
+    top: auto;
+    box-shadow: none;
+    backdrop-filter: none;
+  }
+}
