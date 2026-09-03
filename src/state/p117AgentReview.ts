@@ -7,17 +7,31 @@ export type P117RelationProposalType = Extract<
   "SUPPORTS" | "CHALLENGES" | "DEPENDS_ON" | "QUALIFIES"
 >;
 
-export interface P117ConnectionProposal {
+export type P117ProposalSource =
+  | "WEBMCP_AGENT"
+  | "LOCAL_DETERMINISTIC";
+
+export interface P117ConnectionProposal<
+  TType extends P117RelationProposalType | null = P117RelationProposalType,
+> {
   from_id: string;
   to_id: string;
-  type: P117RelationProposalType;
+  type: TType;
   rationale: string;
+  source?: P117ProposalSource;
+  candidate_score?: number;
+  matched_terms?: string[];
 }
+
+export type P117AnyConnectionProposal =
+  | P117ConnectionProposal
+  | P117ConnectionProposal<null>;
 
 export interface P117RelationProposalBatch {
   reviewToken: string;
   proposedAt: string;
-  proposals: P117ConnectionProposal[];
+  proposals: P117AnyConnectionProposal[];
+  source?: P117ProposalSource;
 }
 
 interface P117AgentReviewState {

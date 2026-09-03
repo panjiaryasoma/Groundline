@@ -34,7 +34,7 @@ describe("P11 geological UI pass", () => {
 
     expect(
       screen.getByText(
-        "Rust mark = critical review fault; dashed rust = challenge.",
+        "Dashed gold = suggested connection; dashed rust = challenge.",
       ),
     ).toBeInTheDocument();
 

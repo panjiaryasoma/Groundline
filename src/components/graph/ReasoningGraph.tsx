@@ -30,6 +30,10 @@ import {
   type P114AddReasoningItemInput,
 } from "../../state/p114AddReasoningItem";
 import {
+  useP117AgentReviewStore,
+  type P117AnyConnectionProposal,
+} from "../../state/p117AgentReview";
+import {
   deleteSelectedReasoningItem,
   getDeleteSelectedItemBlockReason,
 } from "../../state/deleteReasoningItem";
@@ -37,6 +41,7 @@ import {
   useWorkspaceStore,
   type GraphSelectionRequest,
 } from "../../state/workspaceStore";
+import { buildSemanticReviewToken } from "../../webmcp/semanticReviewContract";
 import {
   applyGraphNodeChanges,
   getSelectedNodeIds,
@@ -201,6 +206,30 @@ function buildEdges(workspace: Workspace): Edge[] {
   }));
 }
 
+function buildSuggestedEdges(
+  proposals: P117AnyConnectionProposal[],
+): Edge[] {
+  return proposals.map((proposal, index) => ({
+    id: `P15-SUGGESTED-${index}-${proposal.from_id}-${proposal.to_id}`,
+    source: proposal.from_id,
+    target: proposal.to_id,
+    label: proposal.type ?? "SUGGESTED",
+    type: "smoothstep",
+    markerEnd: {
+      type: MarkerType.ArrowClosed,
+      width: 16,
+      height: 16,
+    },
+    selectable: false,
+    focusable: false,
+    className: "reasoning-edge reasoning-edge--suggested",
+    labelStyle: {
+      fontSize: 10,
+      letterSpacing: "0.08em",
+    },
+  }));
+}
+
 export function ReasoningGraph({
   workspace,
   selectedItemId,
@@ -210,6 +239,9 @@ export function ReasoningGraph({
 }: ReasoningGraphProps) {
   const experienceMode = useWorkspaceStore(
     (state) => state.experienceMode,
+  );
+  const proposalBatch = useP117AgentReviewStore(
+    (state) => state.proposalBatch,
   );
   const [addComposerOpen, setAddComposerOpen] = useState(false);
   const [addType, setAddType] = useState<
@@ -257,7 +289,24 @@ export function ReasoningGraph({
     effectiveGraphSelectionRequest.itemId,
   ]);
 
-  const edges = useMemo(() => buildEdges(workspace), [workspace]);
+  const currentReviewToken = useMemo(
+    () => buildSemanticReviewToken(workspace),
+    [workspace],
+  );
+  const pendingProposals = useMemo(
+    () =>
+      proposalBatch?.reviewToken === currentReviewToken
+        ? proposalBatch.proposals
+        : [],
+    [proposalBatch, currentReviewToken],
+  );
+  const edges = useMemo(
+    () => [
+      ...buildEdges(workspace),
+      ...buildSuggestedEdges(pendingProposals),
+    ],
+    [workspace, pendingProposals],
+  );
 
   const handleNodesChange = useCallback(
     (changes: NodeChange<Node>[]) => {
@@ -346,7 +395,7 @@ export function ReasoningGraph({
           <span>Drag one card to move only that card.</span>
           <span>Ctrl/Shift-click selects multiple.</span>
           <span>Drag any selected card to move the group.</span>
-          <span>Rust mark = critical review fault; dashed rust = challenge.</span>
+          <span>Dashed gold = suggested connection; dashed rust = challenge.</span>
         </div>
 
         <div className="graph-help__actions">
@@ -465,16 +514,18 @@ export function ReasoningGraph({
             <p>
               Add as many cards as you need. Groundline will not guess SUPPORTS,
               CHALLENGES, DEPENDS_ON, or QUALIFIES while you are mapping the
-              reasoning.
+              reasoning. Run analysis can surface likely attachment points as
+              dashed candidates without committing semantic meaning.
             </p>
           </div>
 
           <div className="graph-add-composer__footer">
             <p>
               New cards are selected immediately for inspection. They remain
-              explicit UNLINKED reasoning until an AI agent proposes defensible
-              relationships and you approve them. Any previous semantic triage is
-              discarded when the accepted reasoning changes.
+              explicit UNLINKED reasoning until you approve a connection. A local
+              candidate matcher may suggest where a card belongs, while a WebMCP
+              agent may propose typed semantic relations; neither changes the
+              canonical graph without your approval.
             </p>
             <div className="graph-add-composer__actions">
               <button type="submit" disabled={!addText.trim()}>

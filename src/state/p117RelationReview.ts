@@ -6,7 +6,7 @@ import { WorkspaceSchema } from "../domain/schema";
 import { buildSemanticReviewToken } from "../webmcp/semanticReviewContract";
 import { getP114UnlinkedReasoningItemIds } from "./p114AddReasoningItem";
 import {
-  type P117ConnectionProposal,
+  type P117AnyConnectionProposal,
 } from "./p117AgentReview";
 import { useWorkspaceStore } from "./workspaceStore";
 
@@ -59,7 +59,7 @@ function validateWorkspace(workspace: Workspace): Workspace {
 }
 
 export function applyP117ApprovedRelations(
-  proposals: P117ConnectionProposal[],
+  proposals: P117AnyConnectionProposal[],
   expectedReviewToken: string,
 ): string[] {
   const state = useWorkspaceStore.getState();
@@ -82,7 +82,7 @@ export function applyP117ApprovedRelations(
 
   if (!expectedReviewToken.trim()) {
     throw new Error(
-      "Semantic connection proposals are missing the review token that produced them. Ask the agent to inspect the current workspace again.",
+      "Semantic connection proposals are missing the review token that produced them. Inspect the current workspace again before accepting connections.",
     );
   }
 
@@ -91,7 +91,7 @@ export function applyP117ApprovedRelations(
 
   if (currentToken !== expectedReviewToken) {
     throw new Error(
-      "The reasoning changed after these semantic connections were proposed. Ask the agent to inspect the current workspace again before accepting connections.",
+      "The reasoning changed after these connections were proposed. Inspect the current workspace again before accepting connections.",
     );
   }
 
@@ -133,9 +133,10 @@ export function applyP117ApprovedRelations(
       throw new Error("Self-relations are not allowed.");
     }
 
-    if (!ALLOWED_TYPES.has(proposal.type)) {
+    const semanticType = proposal.type;
+    if (!semanticType || !ALLOWED_TYPES.has(semanticType)) {
       throw new Error(
-        `Relation type "${proposal.type}" cannot be accepted from a P11.7 semantic proposal.`,
+        "Every accepted connection must have a human-reviewed semantic relation type.",
       );
     }
 
@@ -144,11 +145,16 @@ export function applyP117ApprovedRelations(
       !currentlyUnlinked.has(proposal.to_id)
     ) {
       throw new Error(
-        "A P11.7 semantic connection must involve at least one currently UNLINKED human-authored card.",
+        "A reviewed semantic connection must involve at least one currently UNLINKED human-authored card.",
       );
     }
 
-    const key = relationKey(proposal);
+    const semanticProposal = {
+      from_id: proposal.from_id,
+      to_id: proposal.to_id,
+      type: semanticType,
+    };
+    const key = relationKey(semanticProposal);
     if (
       existingRelationKeys.has(key) ||
       seen.has(key)
@@ -164,7 +170,7 @@ export function applyP117ApprovedRelations(
       id: relationId,
       from_id: proposal.from_id,
       to_id: proposal.to_id,
-      type: proposal.type,
+      type: semanticType,
       created_at: timestamp,
       created_by: "HUMAN",
     });
@@ -210,6 +216,9 @@ export function applyP117ApprovedRelations(
   next.evaluations = [];
   next.triage_records = [];
 
+  const localCandidateApproval = proposals.every(
+    (proposal) => proposal.source === "LOCAL_DETERMINISTIC",
+  );
   const auditId = nextUniqueId("AUD-CREATE-REL-USER", ids);
   next.audit_events.push({
     event_id: auditId,
@@ -218,14 +227,22 @@ export function applyP117ApprovedRelations(
     actor_type: "HUMAN",
     entity_ids: created.map((relation) => relation.id),
     metadata: {
-      requested_action: "ACCEPT_AGENT_RELATION_PROPOSALS",
-      proposal_source: "WEBMCP_AGENT",
+      requested_action: localCandidateApproval
+        ? "ACCEPT_LOCAL_CONNECTION_CANDIDATES"
+        : "ACCEPT_AGENT_RELATION_PROPOSALS",
+      proposal_source: localCandidateApproval
+        ? "LOCAL_DETERMINISTIC_MATCHER"
+        : "WEBMCP_AGENT",
+      semantic_relation_type_assigned_by: localCandidateApproval
+        ? "HUMAN"
+        : "AGENT_PROPOSED_HUMAN_APPROVED",
       proposal_review_token: expectedReviewToken,
       human_approved: true,
       relation_count: created.length,
       semantic_analysis_invalidated: true,
       semantic_relations_inherited: false,
       p11_7_relation_review: true,
+      p15_local_connection_candidate: localCandidateApproval,
     },
   });
 
