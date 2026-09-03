@@ -82,7 +82,7 @@ export function applyP117ApprovedRelations(
 
   if (!expectedReviewToken.trim()) {
     throw new Error(
-      "Semantic connection proposals are missing the review token that produced them. Run analysis again.",
+      "Semantic connection proposals are missing the review token that produced them. Ask the agent to inspect the current workspace again.",
     );
   }
 
@@ -91,7 +91,7 @@ export function applyP117ApprovedRelations(
 
   if (currentToken !== expectedReviewToken) {
     throw new Error(
-      "The reasoning changed after these semantic connections were proposed. Run analysis again before accepting connections.",
+      "The reasoning changed after these semantic connections were proposed. Ask the agent to inspect the current workspace again before accepting connections.",
     );
   }
 
