@@ -67,7 +67,7 @@ describe("P11.2 custom semantic gate with P08.8 interaction parity", () => {
       .createCustomWorkspace(input);
   });
 
-  it("allows one deterministic structural first pass without fabricating semantic triage", () => {
+  it("allows a deterministic structural first pass without fabricating semantic triage", () => {
     const before =
       useWorkspaceStore.getState().workspace;
 
@@ -191,7 +191,7 @@ describe("P11.2 custom semantic gate with P08.8 interaction parity", () => {
     );
   });
 
-  it("blocks another structural fallback cycle after accepted knowledge changes until fresh semantic triage arrives", () => {
+  it("allows Run analysis to start a fresh structural cycle after an accepted repair invalidates old triage", () => {
     useWorkspaceStore
       .getState()
       .focusCustomPrimaryRisk();
@@ -204,34 +204,37 @@ describe("P11.2 custom semantic gate with P08.8 interaction parity", () => {
 
     const afterAcceptance =
       useWorkspaceStore.getState().workspace;
-    const revisionCount =
-      afterAcceptance.revisions.length;
+    const replacementId =
+      afterAcceptance.accepted_conclusion_id;
 
     expect(
       isP112CustomSemanticAnalysisFresh(
         afterAcceptance,
       ),
     ).toBe(false);
+    expect(afterAcceptance.triage_records).toEqual([]);
     expect(
       isP112CustomStructuralFallbackAllowed(
         afterAcceptance,
       ),
-    ).toBe(false);
-    expect(
+    ).toBe(true);
+
+    const next =
       useWorkspaceStore
         .getState()
-        .focusCustomPrimaryRisk(),
-    ).toBeNull();
+        .focusCustomPrimaryRisk();
+
+    expect(next).toEqual(
+      expect.objectContaining({
+        targetId: replacementId,
+        basis: "STRUCTURAL_FALLBACK",
+      }),
+    );
     expect(
-      useWorkspaceStore
-        .getState()
-        .proposeCustomRepair(),
-    ).toBeNull();
-    expect(
-      useWorkspaceStore
-        .getState()
-        .workspace.revisions,
-    ).toHaveLength(revisionCount);
+      getP112CustomStructuralReviewTarget(
+        useWorkspaceStore.getState().workspace,
+      ),
+    ).toBe(replacementId);
   });
 
   it("continues through semantic triage after a fresh agent pass", () => {

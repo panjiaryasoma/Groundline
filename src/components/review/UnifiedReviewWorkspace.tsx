@@ -480,7 +480,7 @@ export function UnifiedReviewWorkspace({
                 ? "This target came from Groundline's deterministic structural first pass, not an AI semantic risk judgment. It does not invent CRITICAL or REVIEW labels. Focus primary risk returns to this exact card; Propose repair creates a clearly marked local deterministic draft that you still decide on."
                 : reviewNeedsRefresh
                   ? mode === "CUSTOM"
-                    ? "Accepted reasoning changed, so Groundline will not start another structural fallback cycle. A fresh WebMCP semantic review can continue from the current graph."
+                    ? "Accepted reasoning changed, so stale semantic labels were invalidated. Run analysis again to start the next structural review cycle, or let a connected WebMCP agent provide fresh semantic triage over the revised workspace."
                     : "The example reasoning changed. Run analysis again to refresh the seeded review before continuing."
                   : mode === "CUSTOM"
                     ? "Run analysis performs a deterministic first pass over the mapped structure so the real decision flow can continue in the browser. It does not pretend to be a WebMCP semantic review; a connected agent can later provide richer triage over this same workspace."

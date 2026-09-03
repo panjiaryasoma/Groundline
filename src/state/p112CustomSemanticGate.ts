@@ -122,13 +122,18 @@ export function isP112CustomStructuralFallbackAllowed(
     "TRIAGE",
   );
 
-  // Direct-browser parity is allowed only while accepted knowledge has not
-  // changed since the last semantic review. After an accepted repair, a fresh
-  // semantic pass must happen before Groundline starts another review cycle.
-  return (
-    lastAcceptedRevisionIndex < 0 ||
-    lastTriageIndex > lastAcceptedRevisionIndex
-  );
+  // Direct-browser parity remains available after an accepted repair once
+  // stale semantic labels have been fully invalidated. This lets the human
+  // explicitly Run analysis again without reusing pre-revision triage as if
+  // it still described the newly accepted knowledge.
+  if (
+    lastAcceptedRevisionIndex >= 0 &&
+    lastAcceptedRevisionIndex > lastTriageIndex
+  ) {
+    return workspace.triage_records.length === 0;
+  }
+
+  return true;
 }
 
 export function getP112CustomNextTarget(
@@ -226,6 +231,33 @@ function focusResultForTarget(
     targetId,
     focusedItemIds,
     basis: "SEMANTIC_TRIAGE",
+  };
+}
+
+function structuralConclusionFallback(
+  workspace: Workspace,
+): FocusResult | null {
+  const targetId = workspace.accepted_conclusion_id;
+
+  if (!targetId || reviewedTargetIds(workspace).has(targetId)) {
+    return null;
+  }
+
+  const target = workspace.items.find(
+    (item) => item.id === targetId && item.state === "ACCEPTED",
+  );
+
+  if (!target) return null;
+
+  const trace = getDownstreamDependencies(workspace, targetId);
+  const focusedItemIds = [targetId, ...trace.node_ids].filter(
+    (id, index, values) => values.indexOf(id) === index,
+  );
+
+  return {
+    targetId,
+    focusedItemIds,
+    basis: "STRUCTURAL_FALLBACK",
   };
 }
 
@@ -329,8 +361,8 @@ export function installP112CustomSemanticGate(): void {
 
   // P11.1 already provides the direct-browser structural fallback lifecycle.
   // P11.2 wraps those actions so semantic triage wins when present, while the
-  // fallback remains available for the first custom review cycle instead of
-  // disappearing from the real-user experience.
+  // fallback remains available for custom review cycles without being mislabeled
+  // as semantic judgment.
   const previousFocusCustomPrimaryRisk =
     useWorkspaceStore.getState().focusCustomPrimaryRisk;
   const previousPrepareCustomRepairTarget =
@@ -352,7 +384,34 @@ export function installP112CustomSemanticGate(): void {
           return null;
         }
 
-        return previousFocusCustomPrimaryRisk();
+        const existingFallback = previousFocusCustomPrimaryRisk();
+        if (existingFallback) {
+          return existingFallback;
+        }
+
+        // A prior structural target may now be SUPERSEDED. In that case the
+        // legacy selector can legitimately return null even though the revised
+        // workspace is ready for another explicit pass. Fall back to the current
+        // accepted conclusion instead of trapping the user after Accept.
+        const refreshed = useWorkspaceStore.getState();
+        const conclusionFallback = structuralConclusionFallback(
+          refreshed.workspace,
+        );
+
+        if (!conclusionFallback) return null;
+
+        refreshed.focusItemsWithAudit(
+          conclusionFallback.focusedItemIds,
+          conclusionFallback.targetId,
+          "HUMAN",
+          {
+            requested_action: "FOCUS_PRIMARY_RISK",
+            basis: "STRUCTURAL_FALLBACK",
+            p11_2_reanalysis_after_acceptance: true,
+          },
+        );
+
+        return conclusionFallback;
       }
 
       const targetId = getP112CustomNextTarget(current);
