@@ -1,0 +1,31 @@
+/* P12.4 Full-bleed bedrock + smooth section navigation.
+ * Visual/navigation polish only. No P11 interaction or state behavior changes.
+ */
+
+html {
+  scroll-behavior: smooth;
+}
+
+#groundline-start,
+#groundline-method,
+#groundline-entry {
+  scroll-margin-top: 96px;
+}
+
+.product-footnote {
+  position: relative !important;
+  isolation: isolate;
+  background: var(--strata-bedrock) !important;
+  box-shadow: 0 0 0 100vmax var(--strata-bedrock) !important;
+  clip-path: inset(0 -100vmax);
+}
+
+.product-footnote::before {
+  content: none !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+}

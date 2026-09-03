@@ -14,6 +14,7 @@ import "../styles/p11.css";
 import "../styles/p12.css";
 import "../styles/p12-2.css";
 import "../styles/p12-3.css";
+import "../styles/p12-4.css";
 
 installP111RepairLifecycle();
 installP112CustomSemanticGate();
