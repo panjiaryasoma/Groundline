@@ -246,11 +246,7 @@ export function ReasoningGraph({
         focusedItemIds,
         selectedItemId,
       ),
-    [
-      workspace,
-      focusedItemIds,
-      selectedItemId,
-    ],
+    [workspace, focusedItemIds, selectedItemId],
   );
 
   const [nodes, setNodes] = useState<Node[]>(
@@ -268,10 +264,7 @@ export function ReasoningGraph({
 
   useEffect(() => {
     setNodes((current) =>
-      mergePreservedPositions(
-        current,
-        structuralNodes,
-      ),
+      mergePreservedPositions(current, structuralNodes),
     );
   }, [structuralNodes]);
 
@@ -358,19 +351,19 @@ export function ReasoningGraph({
     setAddText("");
   }
 
-  function runAnalysisAgain() {
+  function recheckStructure() {
     setAddComposerOpen(false);
 
     window.requestAnimationFrame(() => {
-      const analysisButton = document.querySelector<HTMLButtonElement>(
+      const structureButton = document.querySelector<HTMLButtonElement>(
         ".custom-analysis-action .focus-primary-action",
       );
 
-      if (!analysisButton) return;
+      if (!structureButton) return;
 
-      analysisButton.click();
-      analysisButton.focus();
-      analysisButton.scrollIntoView({
+      structureButton.click();
+      structureButton.focus();
+      structureButton.scrollIntoView({
         behavior: "smooth",
         block: "center",
       });
@@ -412,10 +405,10 @@ export function ReasoningGraph({
             <button
               type="button"
               className="graph-analysis-again"
-              onClick={runAnalysisAgain}
-              title="Request a fresh WebMCP agent review for the expanded reasoning. Groundline does not run a hidden local model or infer accepted relations by itself."
+              onClick={recheckStructure}
+              title="Re-check the current reasoning structure. UNLINKED cards remain explicit until an AI agent proposes semantic connections for human approval."
             >
-              Run analysis again · {unlinkedItemIds.length} unlinked
+              Re-check structure · {unlinkedItemIds.length} unlinked
             </button>
           ) : null}
 
@@ -504,13 +497,18 @@ export function ReasoningGraph({
           <div className="graph-add-composer__notice">
             <span>UNLINKED UNTIL REVIEW</span>
             <p>
-              Add as many cards as you need. Groundline will not guess SUPPORTS, CHALLENGES, DEPENDS_ON, or QUALIFIES while you are still mapping the reasoning.
+              Add as many cards as you need. Groundline will not guess SUPPORTS,
+              CHALLENGES, DEPENDS_ON, or QUALIFIES while you are mapping the
+              reasoning.
             </p>
           </div>
 
           <div className="graph-add-composer__footer">
             <p>
-              New cards are selected immediately for inspection. When you are done, run analysis again to create a fresh WebMCP review request. The agent may propose connections for your approval, then it must submit fresh semantic triage for the current graph.
+              New cards are selected immediately for inspection. Re-check the
+              structure when you are done. Semantic connections are proposed only
+              during AI agent review and still require your approval before any
+              line becomes part of the graph.
             </p>
             <div className="graph-add-composer__actions">
               <button
@@ -521,10 +519,10 @@ export function ReasoningGraph({
               </button>
               <button
                 type="button"
-                onClick={runAnalysisAgain}
+                onClick={recheckStructure}
                 disabled={unlinkedItemIds.length === 0}
               >
-                Done · Run analysis again
+                Done · Re-check structure
               </button>
             </div>
           </div>

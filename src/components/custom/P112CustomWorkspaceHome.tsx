@@ -24,8 +24,7 @@ function safeScrollIntoView(
 ) {
   if (!element) return;
 
-  const scrollIntoView =
-    (element as HTMLElement).scrollIntoView;
+  const scrollIntoView = (element as HTMLElement).scrollIntoView;
 
   if (typeof scrollIntoView === "function") {
     scrollIntoView.call(element, options);
@@ -33,9 +32,7 @@ function safeScrollIntoView(
 }
 
 const ExpandedReasoningMap = lazy(async () => {
-  const module = await import(
-    "../focus/ExpandedReasoningMap"
-  );
+  const module = await import("../focus/ExpandedReasoningMap");
 
   return {
     default: module.ExpandedReasoningMap,
@@ -75,14 +72,11 @@ function tagged(
       .reverse()
       .find(
         (item) =>
-          item.state === "ACCEPTED" &&
-          item.tags?.includes(tag),
+          item.state === "ACCEPTED" && item.tags?.includes(tag),
       ) ??
     [...workspace.items]
       .reverse()
-      .find((item) =>
-        item.tags?.includes(tag),
-      )
+      .find((item) => item.tags?.includes(tag))
   );
 }
 
@@ -126,8 +120,7 @@ export function P112CustomWorkspaceHome({
   const [agentActionNotice, setAgentActionNotice] =
     useState<"FOCUS" | "REPAIR" | null>(null);
 
-  const analysisResultRef =
-    useRef<HTMLDivElement | null>(null);
+  const analysisResultRef = useRef<HTMLDivElement | null>(null);
 
   const question = tagged(workspace, "decision-question");
   const conclusion = tagged(workspace, "current-answer");
@@ -145,26 +138,21 @@ export function P112CustomWorkspaceHome({
     (item) => item.code !== "READY_FOR_AGENT_REVIEW",
   );
 
-  const proposedRevision =
-    [...workspace.revisions]
-      .reverse()
-      .find(
-        (revision) => revision.state === "PROPOSED",
-      );
+  const proposedRevision = [...workspace.revisions]
+    .reverse()
+    .find((revision) => revision.state === "PROPOSED");
 
   const eventTypes = workspace.audit_events.map(
     (event) => event.event_type,
   );
-  const lastTriageIndex =
-    eventTypes.lastIndexOf("TRIAGE");
+  const lastTriageIndex = eventTypes.lastIndexOf("TRIAGE");
   const lastAcceptedRevisionIndex =
     eventTypes.lastIndexOf("ACCEPT_REVISION");
 
   const semanticAnalysisStale =
     lastAcceptedRevisionIndex >= 0 &&
     lastAcceptedRevisionIndex > lastTriageIndex;
-  const hasSemanticTriage =
-    workspace.triage_records.length > 0;
+  const hasSemanticTriage = workspace.triage_records.length > 0;
   const semanticReviewReady =
     hasSemanticTriage && !semanticAnalysisStale;
 
@@ -174,33 +162,30 @@ export function P112CustomWorkspaceHome({
   const reviewCount = workspace.triage_records.filter(
     (record) => record.state === "REVIEW",
   ).length;
+  const stableCount = workspace.triage_records.filter(
+    (record) => record.state === "STABLE",
+  ).length;
 
-  const latestPrimaryFocusEvent =
-    [...workspace.audit_events]
-      .reverse()
-      .find(
-        (event) =>
-          event.event_type === "FOCUS" &&
-          event.metadata?.requested_action ===
-            "FOCUS_PRIMARY_RISK",
-      );
+  const latestPrimaryFocusEvent = [...workspace.audit_events]
+    .reverse()
+    .find(
+      (event) =>
+        event.event_type === "FOCUS" &&
+        event.metadata?.requested_action === "FOCUS_PRIMARY_RISK",
+    );
 
   const latestPrimaryRiskId =
-    typeof latestPrimaryFocusEvent?.metadata
-      ?.primary_item_id === "string"
+    typeof latestPrimaryFocusEvent?.metadata?.primary_item_id === "string"
       ? latestPrimaryFocusEvent.metadata.primary_item_id
       : null;
 
   const latestPrimaryRisk = latestPrimaryRiskId
-    ? workspace.items.find(
-        (item) => item.id === latestPrimaryRiskId,
-      )
+    ? workspace.items.find((item) => item.id === latestPrimaryRiskId)
     : undefined;
 
   const latestPrimaryRiskTriage = latestPrimaryRiskId
     ? workspace.triage_records.find(
-        (record) =>
-          record.item_id === latestPrimaryRiskId,
+        (record) => record.item_id === latestPrimaryRiskId,
       )
     : undefined;
 
@@ -210,18 +195,14 @@ export function P112CustomWorkspaceHome({
           return false;
         }
 
-        const proposalEvent =
-          workspace.audit_events.find(
-            (event) =>
-              event.event_type === "PROPOSE_REVISION" &&
-              event.entity_ids.includes(
-                revision.revision_id,
-              ),
-          );
+        const proposalEvent = workspace.audit_events.find(
+          (event) =>
+            event.event_type === "PROPOSE_REVISION" &&
+            event.entity_ids.includes(revision.revision_id),
+        );
 
         return (
-          proposalEvent?.metadata?.primary_risk_id ===
-          latestPrimaryRiskId
+          proposalEvent?.metadata?.primary_risk_id === latestPrimaryRiskId
         );
       })
     : false;
@@ -240,13 +221,10 @@ export function P112CustomWorkspaceHome({
     setMapOpen(true);
 
     window.requestAnimationFrame(() => {
-      safeScrollIntoView(
-        analysisResultRef.current,
-        {
-          behavior: "smooth",
-          block: "start",
-        },
-      );
+      safeScrollIntoView(analysisResultRef.current, {
+        behavior: "smooth",
+        block: "start",
+      });
     });
   }
 
@@ -289,9 +267,7 @@ export function P112CustomWorkspaceHome({
 
     window.requestAnimationFrame(() => {
       safeScrollIntoView(
-        document.querySelector(
-          '[aria-label="Revision proposal"]',
-        ),
+        document.querySelector('[aria-label="Revision proposal"]'),
         {
           behavior: "smooth",
           block: "center",
@@ -333,17 +309,11 @@ export function P112CustomWorkspaceHome({
     <>
       <section className="custom-workspace-heading">
         <div>
-          <p className="eyebrow">
-            Your reasoning workspace
-          </p>
-          <h2>
-            Groundline put your answers in the
-            right places.
-          </h2>
+          <p className="eyebrow">Your reasoning workspace</p>
+          <h2>Groundline put your answers in the right places.</h2>
           <p>
-            You do not need to organize a graph.
-            Start by checking whether anything
-            important is missing.
+            You do not need to organize a graph. Start by checking whether
+            anything important is missing.
           </p>
         </div>
 
@@ -358,12 +328,10 @@ export function P112CustomWorkspaceHome({
 
       <section className="custom-mapped">
         <div className="custom-mapped__heading">
-          <p className="eyebrow">
-            What happened to your input
-          </p>
+          <p className="eyebrow">What happened to your input</p>
           <h3>
-            Nothing disappeared. Groundline mapped
-            each answer to a role in the reasoning.
+            Nothing disappeared. Groundline mapped each answer to a role in the
+            reasoning.
           </h3>
         </div>
 
@@ -371,10 +339,7 @@ export function P112CustomWorkspaceHome({
           {mappedRows.map((row) => (
             <article key={row.label}>
               <span>{row.label}</span>
-              <p>
-                {row.value ||
-                  "You did not add this yet."}
-              </p>
+              <p>{row.value || "You did not add this yet."}</p>
             </article>
           ))}
         </div>
@@ -390,18 +355,12 @@ export function P112CustomWorkspaceHome({
 
       <section className="custom-next">
         <div>
-          <p className="eyebrow">
-            What do I do now?
-          </p>
-          <h3>
-            Run the first check on what you entered.
-          </h3>
+          <p className="eyebrow">What do I do now?</p>
+          <h3>Check the reasoning structure first.</h3>
           <p>
-            Groundline first checks whether the
-            reasoning structure has the minimum
-            pieces needed for a useful review. That
-            structural check does not invent semantic
-            risk labels.
+            This check only verifies that the minimum reasoning pieces exist and
+            opens the workspace. It does not pretend to understand meaning or
+            assign semantic risk labels.
           </p>
         </div>
 
@@ -411,16 +370,13 @@ export function P112CustomWorkspaceHome({
             className="focus-primary-action"
             onClick={runReadinessAnalysis}
           >
-            Run analysis
-            <small>
-              Check structure and open the workspace
-            </small>
+            Check reasoning structure
+            <small>Verify minimum pieces and open the workspace</small>
           </button>
 
           <span>
-            CRITICAL and REVIEW appear only after a
-            WebMCP agent supplies semantic evaluations
-            and Groundline deterministically triages them.
+            CRITICAL, REVIEW, and STABLE appear only after an AI agent reviews
+            the current graph through WebMCP and Groundline validates the result.
           </span>
         </div>
 
@@ -431,17 +387,11 @@ export function P112CustomWorkspaceHome({
             tabIndex={-1}
           >
             <div className="custom-analysis-result__heading">
-              <p className="eyebrow">
-                Analysis result
-              </p>
-              <h4>
-                Your reasoning is structurally ready
-                for the next stage.
-              </h4>
+              <p className="eyebrow">Structure check</p>
+              <h4>Your reasoning map is ready.</h4>
               <p>
-                Decision, current answer, and main
-                reason are present. Missing optional
-                context does not block semantic review.
+                Decision, current answer, and main reason are present. Missing
+                optional context does not block mapping or later semantic review.
               </p>
             </div>
 
@@ -449,20 +399,16 @@ export function P112CustomWorkspaceHome({
               <section className="custom-optional-improvements">
                 <div className="custom-optional-improvements__heading">
                   <span>Optional improvements</span>
-                  <p>
-                    Useful context, not prerequisites.
-                  </p>
+                  <p>Useful context, not prerequisites.</p>
                 </div>
 
                 <div className="custom-diagnostics">
-                  {optionalDiagnostics.map(
-                    (diagnostic) => (
-                      <DiagnosticCard
-                        key={diagnostic.code}
-                        diagnostic={diagnostic}
-                      />
-                    ),
-                  )}
+                  {optionalDiagnostics.map((diagnostic) => (
+                    <DiagnosticCard
+                      key={diagnostic.code}
+                      diagnostic={diagnostic}
+                    />
+                  ))}
                 </div>
 
                 <button
@@ -477,25 +423,27 @@ export function P112CustomWorkspaceHome({
 
             <section className="custom-semantic-actions">
               <div>
-                <p className="eyebrow">
-                  Next · Semantic review
-                </p>
+                <p className="eyebrow">Semantic review</p>
                 <span className="custom-agent-ready">
                   {semanticReviewReady
-                    ? "Semantic triage ready"
+                    ? "Semantic review complete"
                     : semanticAnalysisStale
-                      ? "Re-analysis required"
-                      : "Ready for agent review"}
+                      ? "Semantic review needs refresh"
+                      : "Semantic review not run yet"}
                 </span>
                 <h5>
                   {semanticReviewReady
-                    ? "Now review the highest-priority unresolved risk."
-                    : "Let the agent evaluate meaning before Groundline calls anything a risk."}
+                    ? "Review the highest-priority unresolved risk."
+                    : semanticAnalysisStale
+                      ? "The reasoning changed after the last semantic review."
+                      : "No semantic risk labels yet."}
                 </h5>
                 <p>
                   {semanticReviewReady
                     ? "Focus selects one CRITICAL or REVIEW item from the current semantic triage. Repair targets that exact accepted item."
-                    : "Ask a WebMCP-aware agent to inspect this workspace and run semantic triage. Groundline will not manufacture CRITICAL labels from structural completeness alone."}
+                    : semanticAnalysisStale
+                      ? "Groundline discarded stale semantic results. A WebMCP agent must review the current graph again before risk labels or repair can continue."
+                      : "Groundline has not received an AI semantic review for this graph. You can keep mapping here. When a WebMCP agent reviews this workspace, the resulting CRITICAL, REVIEW, and STABLE labels will appear automatically."}
                 </p>
               </div>
 
@@ -504,14 +452,13 @@ export function P112CustomWorkspaceHome({
                   type="button"
                   onClick={focusPrimaryRisk}
                   disabled={
-                    !semanticReviewReady ||
-                    Boolean(proposedRevision)
+                    !semanticReviewReady || Boolean(proposedRevision)
                   }
                   title={
                     semanticAnalysisStale
-                      ? "Accepted knowledge changed. The WebMCP agent must triage the workspace again."
+                      ? "Reasoning changed after the last semantic review. Review the current graph again first."
                       : !hasSemanticTriage
-                        ? "No semantic triage exists yet. Ask the WebMCP agent to evaluate and triage this workspace first."
+                        ? "No semantic triage exists yet."
                         : proposedRevision
                           ? "Finish the current human review first."
                           : activePrimaryRisk
@@ -535,54 +482,41 @@ export function P112CustomWorkspaceHome({
                 </button>
               </div>
 
-              {!hasSemanticTriage &&
-              !semanticAnalysisStale ? (
+              {!hasSemanticTriage && !semanticAnalysisStale ? (
                 <aside className="custom-analysis-stale">
-                  <span>Agent review required</span>
-                  <strong>
-                    No semantic triage exists yet.
-                  </strong>
+                  <span>Semantic review</span>
+                  <strong>Not reviewed by an AI agent yet.</strong>
                   <p>
-                    Use the WebMCP agent to inspect the
-                    workspace, evaluate the relevant
-                    accepted items, and call
-                    {" "}<code>triage_workspace</code>.
-                    Only then can Groundline show
-                    CRITICAL or REVIEW and enable repair.
+                    No risk labels are available yet. Keep mapping the reasoning,
+                    or review this workspace from a WebMCP-capable agent session.
+                    Groundline will update this page when agent results arrive.
                   </p>
                 </aside>
               ) : null}
 
               {semanticAnalysisStale ? (
                 <aside className="custom-analysis-stale">
-                  <span>Re-analysis required</span>
-                  <strong>
-                    Accepted knowledge changed.
-                  </strong>
+                  <span>Semantic review required again</span>
+                  <strong>Reasoning changed since the last review.</strong>
                   <p>
-                    Groundline discarded the affected
-                    semantic analysis. The WebMCP agent
-                    must evaluate and triage the current
-                    accepted reasoning again before the
-                    next risk can be focused.
+                    Old semantic labels were discarded so they cannot describe a
+                    graph that no longer exists. Review the current reasoning
+                    again before focusing or repairing another risk.
                   </p>
                 </aside>
               ) : null}
 
               {semanticReviewReady ? (
-                <aside
-                  className="custom-agent-handoff"
-                  role="status"
-                >
+                <aside className="custom-agent-handoff" role="status">
                   <span>Semantic triage</span>
                   <strong>
-                    {criticalCount} CRITICAL · {reviewCount} REVIEW
+                    {criticalCount} CRITICAL · {reviewCount} REVIEW · {stableCount}{" "}
+                    STABLE
                   </strong>
                   <p>
-                    These are operational review
-                    priorities, not truth or confidence
-                    scores. Groundline will handle one
-                    unresolved accepted item at a time.
+                    These are operational review priorities, not truth or
+                    confidence scores. Groundline handles one unresolved accepted
+                    item at a time.
                   </p>
                 </aside>
               ) : null}
@@ -593,19 +527,14 @@ export function P112CustomWorkspaceHome({
                     Focused risk · {latestPrimaryRiskTriage?.state}
                   </span>
                   <strong>
-                    {activePrimaryRisk.type}
-                    {" · "}
-                    {activePrimaryRisk.id}
+                    {activePrimaryRisk.type} · {activePrimaryRisk.id}
                   </strong>
                   <p>{activePrimaryRisk.text}</p>
                 </article>
               ) : null}
 
               {agentActionNotice ? (
-                <aside
-                  className="custom-agent-handoff"
-                  role="status"
-                >
+                <aside className="custom-agent-handoff" role="status">
                   <span>
                     {agentActionNotice === "FOCUS"
                       ? "Focus primary risk"
@@ -640,9 +569,7 @@ export function P112CustomWorkspaceHome({
             workspace={workspace}
             selectedItemId={selectedItemId}
             focusedItemIds={focusedItemIds}
-            graphSelectionRequest={
-              graphSelectionRequest
-            }
+            graphSelectionRequest={graphSelectionRequest}
             onSelectItem={onSelectItem}
             onCollapse={() => {
               setMapOpen(false);
@@ -651,7 +578,7 @@ export function P112CustomWorkspaceHome({
             onEditAndAccept={onEditAndAccept}
             onReject={onReject}
             onDefer={onDefer}
-            heading="Inspect what Groundline is reviewing right now."
+            heading="Inspect the reasoning workspace."
             showCollapse
           />
         </Suspense>

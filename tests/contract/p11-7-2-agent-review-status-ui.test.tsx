@@ -1,4 +1,5 @@
 import {
+  act,
   fireEvent,
   render,
   screen,
@@ -15,8 +16,11 @@ import {
 import { P117CustomWorkspaceHome } from "../../src/components/custom/P117CustomWorkspaceHome";
 import {
   clearP117AgentReviewState,
+  setP117RelationProposalBatch,
+  useP117AgentReviewStore,
 } from "../../src/state/p117AgentReview";
 import { useWorkspaceStore } from "../../src/state/workspaceStore";
+import { semanticReviewContract } from "../../src/webmcp/semanticReviewContract";
 
 const customInput = {
   question: "Should we change our release process?",
@@ -48,79 +52,90 @@ function renderWorkspace() {
   );
 }
 
-describe("P11.7.2 agent review status UX", () => {
+describe("P11 final custom semantic-review UX", () => {
   beforeEach(() => {
     clearP117AgentReviewState();
     useWorkspaceStore.getState().createCustomWorkspace(customInput);
-
-    Object.defineProperty(document, "modelContext", {
-      configurable: true,
-      value: {
-        registerTool: vi.fn(),
-      },
-    });
   });
 
   afterEach(() => {
-    delete (document as Document & { modelContext?: unknown }).modelContext;
     clearP117AgentReviewState();
   });
 
-  it("shows a passive WebMCP handoff status after Run analysis and exposes no fake refresh control", async () => {
+  it("keeps protocol handoff invisible after the structural check", () => {
     renderWorkspace();
 
     fireEvent.click(
       screen.getByRole("button", {
-        name: /Run analysis/i,
+        name: /Check reasoning structure/i,
       }),
     );
 
     expect(
-      await screen.findByText("Waiting for agent review"),
+      screen.getByText("Your reasoning map is ready."),
     ).toBeInTheDocument();
     expect(
-      screen.getByText("AGENT HANDOFF READY"),
+      screen.getByText("Semantic review not run yet"),
     ).toBeInTheDocument();
     expect(
-      screen.getByText(/This page does not start an AI agent by itself/i),
-    ).toBeInTheDocument();
-    expect(
-      screen.getByText(/No action is required in this panel/i),
+      screen.getByText("Not reviewed by an AI agent yet."),
     ).toBeInTheDocument();
 
     expect(
-      screen.queryByRole("button", {
-        name: /Refresh review request/i,
-      }),
+      useP117AgentReviewStore.getState().request,
+    ).not.toBeNull();
+
+    expect(
+      screen.queryByText(/Waiting for agent review/i),
     ).not.toBeInTheDocument();
     expect(
-      screen.queryByRole("button", {
-        name: /Create current review request/i,
-      }),
+      screen.queryByText(/AGENT HANDOFF READY/i),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByText(/SRV-[a-z0-9]+/i),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByLabelText(/Groundline semantic review/i),
     ).not.toBeInTheDocument();
   });
 
-  it("explains that repeated page clicks cannot run semantic review when WebMCP is unavailable", async () => {
-    delete (document as Document & { modelContext?: unknown }).modelContext;
-
+  it("shows a panel only when the agent has produced connections that need a human decision", async () => {
     renderWorkspace();
 
-    fireEvent.click(
-      screen.getByRole("button", {
-        name: /Run analysis/i,
-      }),
-    );
+    const workspace = useWorkspaceStore.getState().workspace;
+    const reviewToken = semanticReviewContract(workspace).review_token;
+
+    act(() => {
+      setP117RelationProposalBatch({
+        reviewToken,
+        proposedAt: "2026-09-03T12:00:00+07:00",
+        proposals: [
+          {
+            from_id: "A-USER-001",
+            to_id: "CONC-USER-001",
+            type: "QUALIFIES",
+            rationale:
+              "The stated assumption constrains how strongly the conclusion can be applied.",
+          },
+        ],
+      });
+    });
 
     expect(
-      await screen.findByText("WebMCP not detected in this tab"),
+      await screen.findByLabelText(
+        "Review suggested semantic connections",
+      ),
     ).toBeInTheDocument();
     expect(
-      screen.getByText(/No semantic result will appear here by repeatedly clicking the page/i),
+      screen.getByText("Review suggested connections"),
     ).toBeInTheDocument();
     expect(
-      screen.queryByRole("button", {
-        name: /Refresh|Create current review request/i,
+      screen.getByRole("button", {
+        name: "Accept selected connections",
       }),
-    ).not.toBeInTheDocument();
+    ).toBeEnabled();
+    expect(
+      screen.getByRole("button", { name: "Reject all" }),
+    ).toBeEnabled();
   });
 });
