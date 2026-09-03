@@ -1,6 +1,5 @@
 import {
   act,
-  fireEvent,
   render,
   screen,
 } from "@testing-library/react";
@@ -40,19 +39,17 @@ function renderWorkspace() {
       focusedItemIds={[]}
       graphSelectionRequest={{ itemId: null, version: 0 }}
       onSelectItem={vi.fn()}
-      onFocusPrimaryRisk={vi.fn(() => null)}
-      onProposeRepair={vi.fn(() => null)}
       onAccept={vi.fn()}
       onEditAndAccept={vi.fn()}
       onReject={vi.fn()}
       onDefer={vi.fn()}
-      onEdit={vi.fn()}
-      onBackToStart={vi.fn()}
+      onExit={vi.fn()}
+      onEditInput={vi.fn()}
     />,
   );
 }
 
-describe("P11 final custom semantic-review UX", () => {
+describe("P11 consolidated custom semantic-review UX", () => {
   beforeEach(() => {
     clearP117AgentReviewState();
     useWorkspaceStore.getState().createCustomWorkspace(customInput);
@@ -62,29 +59,21 @@ describe("P11 final custom semantic-review UX", () => {
     clearP117AgentReviewState();
   });
 
-  it("keeps protocol handoff invisible after the structural check", () => {
+  it("enters the mapped workspace directly without a fake structure or request step", () => {
     renderWorkspace();
 
-    fireEvent.click(
-      screen.getByRole("button", {
-        name: /Check reasoning structure/i,
+    expect(screen.getByText("Not reviewed yet")).toBeInTheDocument();
+    expect(
+      screen.getByText(
+        "Your reasoning is mapped and ready for agent review.",
+      ),
+    ).toBeInTheDocument();
+
+    expect(
+      screen.queryByRole("button", {
+        name: /Check reasoning structure|Run analysis/i,
       }),
-    );
-
-    expect(
-      screen.getByText("Your reasoning map is ready."),
-    ).toBeInTheDocument();
-    expect(
-      screen.getByText("Semantic review not run yet"),
-    ).toBeInTheDocument();
-    expect(
-      screen.getByText("Not reviewed by an AI agent yet."),
-    ).toBeInTheDocument();
-
-    expect(
-      useP117AgentReviewStore.getState().request,
-    ).not.toBeNull();
-
+    ).not.toBeInTheDocument();
     expect(
       screen.queryByText(/Waiting for agent review/i),
     ).not.toBeInTheDocument();
@@ -97,6 +86,9 @@ describe("P11 final custom semantic-review UX", () => {
     expect(
       screen.queryByLabelText(/Groundline semantic review/i),
     ).not.toBeInTheDocument();
+    expect(
+      useP117AgentReviewStore.getState().proposalBatch,
+    ).toBeNull();
   });
 
   it("shows a panel only when the agent has produced connections that need a human decision", async () => {
