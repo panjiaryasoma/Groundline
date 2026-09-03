@@ -13,9 +13,9 @@ The current P11 product model is a **live reasoning workspace**:
 - plain-language decision intake for humans;
 - graph-based reasoning objects with shared selection state;
 - Inspector synchronized to the selected card;
-- deterministic review/triage mechanics;
-- WebMCP semantic review tools;
-- sequential primary-risk review;
+- direct-browser structural first-pass review;
+- WebMCP semantic review and triage tools;
+- `Run analysis -> Focus primary risk -> Propose repair -> Decide` parity for DEMO and CUSTOM;
 - human-reviewed revision proposals;
 - `SUPERSEDES` lineage without silent semantic-link inheritance;
 - add-card workflow with explicit `UNLINKED` state;
@@ -35,24 +35,24 @@ plain-language intake
         ↓
 live reasoning workspace
         ↓
-agent review / triage
+Run analysis
         ↓
-exact primary risk focused
+provisional structural target OR fresh WebMCP triage
         ↓
-graph + Inspector + audit stay synchronized
+Focus primary risk
         ↓
-agent revision proposal
+Propose repair
         ↓
 human Accept / Edit / Reject / Defer
         ↓
 accepted replacement + SUPERSEDES lineage
         ↓
-fresh review when reasoning changed
+fresh semantic review after accepted knowledge changes
 ```
 
 DEMO uses deterministic seeded semantic results.
 
-CUSTOM uses the same canonical workspace and receives semantic review from a WebMCP-capable external agent.
+CUSTOM can perform a clearly labeled deterministic structural first pass so the browser experience remains interactive. This first pass does **not** invent semantic CRITICAL/REVIEW/STABLE labels. Fresh WebMCP agent triage supersedes the provisional structural target when available.
 
 ## Setup
 

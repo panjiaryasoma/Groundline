@@ -13,8 +13,10 @@ import {
 import { installP111RepairLifecycle } from "../../src/state/p111RepairLifecycle";
 import {
   getP112CustomNextTarget,
+  getP112CustomStructuralReviewTarget,
   installP112CustomSemanticGate,
   isP112CustomSemanticAnalysisFresh,
+  isP112CustomStructuralFallbackAllowed,
 } from "../../src/state/p112CustomSemanticGate";
 import { useWorkspaceStore } from "../../src/state/workspaceStore";
 
@@ -53,7 +55,7 @@ function evaluation(
   });
 }
 
-describe("P11.2 custom semantic gate", () => {
+describe("P11.2 custom semantic gate with P08.8 interaction parity", () => {
   beforeAll(() => {
     installP111RepairLifecycle();
     installP112CustomSemanticGate();
@@ -65,7 +67,7 @@ describe("P11.2 custom semantic gate", () => {
       .createCustomWorkspace(input);
   });
 
-  it("does not invent a primary risk or repair from structural readiness alone", () => {
+  it("allows one deterministic structural first pass without fabricating semantic triage", () => {
     const before =
       useWorkspaceStore.getState().workspace;
 
@@ -74,28 +76,63 @@ describe("P11.2 custom semantic gate", () => {
       isP112CustomSemanticAnalysisFresh(before),
     ).toBe(false);
     expect(
+      isP112CustomStructuralFallbackAllowed(before),
+    ).toBe(true);
+
+    const focus =
       useWorkspaceStore
         .getState()
-        .focusCustomPrimaryRisk(),
-    ).toBeNull();
+        .focusCustomPrimaryRisk();
+
+    expect(focus).toEqual(
+      expect.objectContaining({
+        basis: "STRUCTURAL_FALLBACK",
+      }),
+    );
+
+    const focusedWorkspace =
+      useWorkspaceStore.getState().workspace;
+
+    expect(focusedWorkspace.triage_records).toHaveLength(0);
     expect(
+      getP112CustomStructuralReviewTarget(
+        focusedWorkspace,
+      ),
+    ).toBe(focus?.targetId);
+
+    const repair =
       useWorkspaceStore
         .getState()
-        .proposeCustomRepair(),
-    ).toBeNull();
+        .proposeCustomRepair();
+
+    expect(repair?.targetId).toBe(focus?.targetId);
 
     const after =
       useWorkspaceStore.getState().workspace;
+    const proposal = after.revisions.at(-1);
 
-    expect(after.revisions).toHaveLength(0);
+    expect(after.triage_records).toHaveLength(0);
+    expect(proposal).toEqual(
+      expect.objectContaining({
+        state: "PROPOSED",
+        target_item_id: focus?.targetId,
+        reason_codes: ["STRUCTURAL_REVIEW_TARGET"],
+      }),
+    );
+
+    const proposalEvent = [...after.audit_events]
+      .reverse()
+      .find(
+        (event) =>
+          event.event_type === "PROPOSE_REVISION",
+      );
+
     expect(
-      after.audit_events.filter(
-        (event) => event.event_type === "FOCUS",
-      ),
-    ).toHaveLength(0);
+      proposalEvent?.metadata?.proposal_source,
+    ).toBe("LOCAL_DETERMINISTIC_PER_RISK_REPAIR");
   });
 
-  it("focuses and repairs only a CRITICAL or REVIEW item from fresh agent triage", () => {
+  it("uses fresh semantic CRITICAL or REVIEW triage instead of the structural fallback when agent results exist", () => {
     useWorkspaceStore
       .getState()
       .applyAgentEvaluations([
@@ -116,6 +153,9 @@ describe("P11.2 custom semantic gate", () => {
       isP112CustomSemanticAnalysisFresh(analyzed),
     ).toBe(true);
     expect(
+      isP112CustomStructuralFallbackAllowed(analyzed),
+    ).toBe(false);
+    expect(
       getP112CustomNextTarget(analyzed),
     ).toBe("C-USER-001");
 
@@ -124,7 +164,12 @@ describe("P11.2 custom semantic gate", () => {
         .getState()
         .focusCustomPrimaryRisk();
 
-    expect(focus?.targetId).toBe("C-USER-001");
+    expect(focus).toEqual(
+      expect.objectContaining({
+        targetId: "C-USER-001",
+        basis: "SEMANTIC_TRIAGE",
+      }),
+    );
 
     const repair =
       useWorkspaceStore
@@ -146,20 +191,7 @@ describe("P11.2 custom semantic gate", () => {
     );
   });
 
-  it("blocks another focus or repair after acceptance until fresh semantic triage arrives", () => {
-    useWorkspaceStore
-      .getState()
-      .applyAgentEvaluations([
-        evaluation(
-          "C-USER-001",
-          ["OVERGENERALIZATION"],
-        ),
-        evaluation(
-          "CONC-USER-001",
-          ["DEPENDENCY_ON_UNASSESSED_NODE"],
-        ),
-      ]);
-
+  it("blocks another structural fallback cycle after accepted knowledge changes until fresh semantic triage arrives", () => {
     useWorkspaceStore
       .getState()
       .focusCustomPrimaryRisk();
@@ -181,6 +213,11 @@ describe("P11.2 custom semantic gate", () => {
       ),
     ).toBe(false);
     expect(
+      isP112CustomStructuralFallbackAllowed(
+        afterAcceptance,
+      ),
+    ).toBe(false);
+    expect(
       useWorkspaceStore
         .getState()
         .focusCustomPrimaryRisk(),
@@ -197,20 +234,7 @@ describe("P11.2 custom semantic gate", () => {
     ).toHaveLength(revisionCount);
   });
 
-  it("moves to another unresolved item only after a new semantic triage pass", () => {
-    useWorkspaceStore
-      .getState()
-      .applyAgentEvaluations([
-        evaluation(
-          "C-USER-001",
-          ["OVERGENERALIZATION"],
-        ),
-        evaluation(
-          "CONC-USER-001",
-          ["DEPENDENCY_ON_UNASSESSED_NODE"],
-        ),
-      ]);
-
+  it("continues through semantic triage after a fresh agent pass", () => {
     useWorkspaceStore
       .getState()
       .focusCustomPrimaryRisk();
@@ -225,15 +249,20 @@ describe("P11.2 custom semantic gate", () => {
       .getState()
       .applyAgentEvaluations([
         evaluation(
-          "CONC-USER-001",
+          "C-USER-001",
           ["OVERGENERALIZATION"],
+        ),
+        evaluation(
+          "CONC-USER-001",
+          ["DEPENDENCY_ON_UNASSESSED_NODE"],
         ),
       ]);
 
+    const refreshed =
+      useWorkspaceStore.getState().workspace;
+
     expect(
-      isP112CustomSemanticAnalysisFresh(
-        useWorkspaceStore.getState().workspace,
-      ),
+      isP112CustomSemanticAnalysisFresh(refreshed),
     ).toBe(true);
 
     const next =
@@ -241,6 +270,7 @@ describe("P11.2 custom semantic gate", () => {
         .getState()
         .focusCustomPrimaryRisk();
 
-    expect(next?.targetId).toBe("CONC-USER-001");
+    expect(next?.basis).toBe("SEMANTIC_TRIAGE");
+    expect(next?.targetId).toBe("C-USER-001");
   });
 });

@@ -16,8 +16,9 @@ const handlers = {
   onDefer: vi.fn(),
   onExit: vi.fn(),
   onEditInput: vi.fn(),
+  onRunAnalysis: vi.fn(),
   onFocusPrimaryRisk: vi.fn(),
-  onPrepareRepairTarget: vi.fn(),
+  onProposeRepair: vi.fn(),
 };
 
 function renderWorkspace(
@@ -46,7 +47,7 @@ function renderWorkspace(
 }
 
 describe("custom workspace live reasoning journey", () => {
-  it("opens directly into the live reasoning workspace without a fake local analysis step", () => {
+  it("opens directly into the live workspace and exposes the real-user Run analysis action", () => {
     renderWorkspace();
 
     expect(
@@ -57,7 +58,7 @@ describe("custom workspace live reasoning journey", () => {
     ).toBeInTheDocument();
     expect(
       screen.getByText(
-        "Your reasoning is mapped and ready for agent review.",
+        "Run analysis to select a first review target.",
       ),
     ).toBeInTheDocument();
 
@@ -68,14 +69,14 @@ describe("custom workspace live reasoning journey", () => {
     ).toBeInTheDocument();
 
     expect(
-      screen.queryByRole("button", {
-        name: /Check reasoning structure|Inspect full reasoning map/i,
+      screen.getByRole("button", {
+        name: "Run analysis",
       }),
-    ).not.toBeInTheDocument();
+    ).toBeInTheDocument();
 
     expect(
       screen.queryByRole("button", {
-        name: /Run analysis/i,
+        name: /Check reasoning structure|Inspect full reasoning map|Prepare repair/i,
       }),
     ).not.toBeInTheDocument();
   });
@@ -100,7 +101,7 @@ describe("custom workspace live reasoning journey", () => {
     ).toBeInTheDocument();
   });
 
-  it("shows human decision controls in the same workspace when a real proposal exists", () => {
+  it("shows human decision controls in the same workspace when a proposal exists", () => {
     const base = buildCustomWorkspace({
       question:
         "Should we change our release process?",

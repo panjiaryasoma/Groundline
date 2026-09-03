@@ -22,7 +22,6 @@ const handlers = {
   onDefer: vi.fn(),
   onExit: vi.fn(),
   onFocusPrimaryRisk: vi.fn(),
-  onPrepareRepairTarget: vi.fn(),
   onRunAnalysis: vi.fn(),
   onProposeRepair: vi.fn(),
 };
@@ -38,7 +37,7 @@ function analyzedExample() {
 }
 
 describe("P11 live unified review workspace", () => {
-  it("maps custom reasoning directly into the visible graph without exposing a fake page-side analysis step", () => {
+  it("gives a custom decision the same visible Run analysis entry action as the example", () => {
     const workspace = buildCustomWorkspace({
       question:
         "Should we change our release process?",
@@ -65,27 +64,23 @@ describe("P11 live unified review workspace", () => {
     );
 
     expect(
-      screen.getByText("Not reviewed yet"),
-    ).toBeInTheDocument();
-    expect(
-      screen.getByText(
-        "Your reasoning is mapped and ready for agent review.",
-      ),
-    ).toBeInTheDocument();
-    expect(
       screen.getByLabelText(
         "Live reasoning workspace",
       ),
     ).toBeInTheDocument();
-
+    expect(
+      screen.getByRole("button", {
+        name: "Run analysis",
+      }),
+    ).toBeInTheDocument();
     expect(
       screen.queryByRole("button", {
-        name: /Run analysis|Check reasoning structure/i,
+        name: "Check reasoning structure",
       }),
     ).not.toBeInTheDocument();
   });
 
-  it("uses the same live graph-and-Inspector surface for reviewed demo and custom workspaces", () => {
+  it("uses the same Focus primary risk and Propose repair actions for reviewed demo and custom workspaces", () => {
     const workspace = analyzedExample();
 
     const first = render(
@@ -103,11 +98,6 @@ describe("P11 live unified review workspace", () => {
     );
 
     expect(
-      screen.getByLabelText(
-        "Live reasoning workspace",
-      ),
-    ).toBeInTheDocument();
-    expect(
       screen.getByText(
         /A-001 is the current primary risk/i,
       ),
@@ -115,6 +105,11 @@ describe("P11 live unified review workspace", () => {
     expect(
       screen.getByRole("button", {
         name: "Focus primary risk",
+      }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", {
+        name: "Propose repair",
       }),
     ).toBeInTheDocument();
 
@@ -135,11 +130,6 @@ describe("P11 live unified review workspace", () => {
     );
 
     expect(
-      screen.getByLabelText(
-        "Live reasoning workspace",
-      ),
-    ).toBeInTheDocument();
-    expect(
       screen.getByText(
         /A-001 is the current primary risk/i,
       ),
@@ -151,20 +141,25 @@ describe("P11 live unified review workspace", () => {
     ).toBeInTheDocument();
     expect(
       screen.getByRole("button", {
-        name: "Prepare repair",
+        name: "Propose repair",
       }),
     ).toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", {
+        name: "Prepare repair",
+      }),
+    ).not.toBeInTheDocument();
   });
 
-  it("keeps DECIDE inside the same workspace when a real agent proposal exists", () => {
+  it("keeps DECIDE inside the same workspace when a proposal exists", () => {
     const analyzed = analyzedExample();
     const workspace = proposeRevision({
       workspace: analyzed,
       revisionId: "REV-UNIFIED-001",
-      targetItemId: "CONC-001",
+      targetItemId: "A-001",
       proposedText:
-        "Use face recognition only with evaluated deployment conditions and an alternative review path.",
-      reasonCodes: ["OVERGENERALIZATION"],
+        "Treat the assumption as conditional until it is directly supported across the intended deployment conditions.",
+      reasonCodes: ["UNSUPPORTED_ASSUMPTION"],
       affectedItemIds: [
         "A-001",
         "C-001",
@@ -180,7 +175,7 @@ describe("P11 live unified review workspace", () => {
       <UnifiedReviewWorkspace
         mode="CUSTOM"
         workspace={workspace}
-        selectedItemId="CONC-001"
+        selectedItemId="A-001"
         focusedItemIds={[
           "A-001",
           "C-001",

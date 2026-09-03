@@ -133,7 +133,7 @@ describe("P11.5 add unlinked reasoning items", () => {
     ).toEqual([claimId, evidenceId, assumptionId]);
   });
 
-  it("invalidates semantic evaluation and triage when accepted reasoning expands", () => {
+  it("invalidates stale semantic evaluation and triage when accepted reasoning expands while keeping the structural first pass available", () => {
     useWorkspaceStore.getState().applyAgentEvaluations([
       evaluation("C-USER-001", ["OVERGENERALIZATION"]),
       evaluation("CONC-USER-001", [
@@ -150,12 +150,29 @@ describe("P11.5 add unlinked reasoning items", () => {
       text: "Additional outcomes from the next phase should be reviewed before expansion.",
     });
 
-    const state = useWorkspaceStore.getState();
+    const afterExpansion = useWorkspaceStore.getState();
 
-    expect(state.workspace.evaluations).toEqual([]);
-    expect(state.workspace.triage_records).toEqual([]);
-    expect(state.focusCustomPrimaryRisk()).toBeNull();
-    expect(state.proposeCustomRepair()).toBeNull();
+    expect(afterExpansion.workspace.evaluations).toEqual([]);
+    expect(afterExpansion.workspace.triage_records).toEqual([]);
+
+    const focus = afterExpansion.focusCustomPrimaryRisk();
+
+    expect(focus).toEqual(
+      expect.objectContaining({
+        basis: "STRUCTURAL_FALLBACK",
+      }),
+    );
+    expect(
+      useWorkspaceStore.getState().workspace.triage_records,
+    ).toEqual([]);
+
+    const repair =
+      useWorkspaceStore.getState().proposeCustomRepair();
+
+    expect(repair?.targetId).toBe(focus?.targetId);
+    expect(
+      useWorkspaceStore.getState().workspace.triage_records,
+    ).toEqual([]);
   });
 
   it("blocks graph expansion while a human revision decision is pending", () => {

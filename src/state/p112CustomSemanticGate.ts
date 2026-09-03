@@ -106,6 +106,31 @@ export function isP112CustomSemanticAnalysisFresh(
   );
 }
 
+export function isP112CustomStructuralFallbackAllowed(
+  workspace: Workspace,
+): boolean {
+  if (isP112CustomSemanticAnalysisFresh(workspace)) {
+    return false;
+  }
+
+  const lastAcceptedRevisionIndex = lastEventIndex(
+    workspace,
+    "ACCEPT_REVISION",
+  );
+  const lastTriageIndex = lastEventIndex(
+    workspace,
+    "TRIAGE",
+  );
+
+  // Direct-browser parity is allowed only while accepted knowledge has not
+  // changed since the last semantic review. After an accepted repair, a fresh
+  // semantic pass must happen before Groundline starts another review cycle.
+  return (
+    lastAcceptedRevisionIndex < 0 ||
+    lastTriageIndex > lastAcceptedRevisionIndex
+  );
+}
+
 export function getP112CustomNextTarget(
   workspace: Workspace,
 ): string | null {
@@ -132,6 +157,44 @@ export function getP112CustomNextTarget(
         );
       })?.item_id ?? null
   );
+}
+
+export function getP112CustomStructuralReviewTarget(
+  workspace: Workspace,
+): string | null {
+  if (!isP112CustomStructuralFallbackAllowed(workspace)) {
+    return null;
+  }
+
+  const reviewed = reviewedTargetIds(workspace);
+  const event = [...workspace.audit_events]
+    .reverse()
+    .find(
+      (candidate) =>
+        candidate.event_type === "FOCUS" &&
+        candidate.metadata?.requested_action ===
+          "FOCUS_PRIMARY_RISK" &&
+        candidate.metadata?.basis ===
+          "STRUCTURAL_FALLBACK",
+    );
+
+  const targetId = event?.metadata?.primary_item_id;
+
+  if (typeof targetId !== "string") {
+    return null;
+  }
+
+  if (reviewed.has(targetId)) {
+    return null;
+  }
+
+  return workspace.items.some(
+    (item) =>
+      item.id === targetId &&
+      item.state === "ACCEPTED",
+  )
+    ? targetId
+    : null;
 }
 
 function latestPrimaryRiskFocus(
@@ -264,16 +327,32 @@ export function installP112CustomSemanticGate(): void {
   if (installed) return;
   installed = true;
 
+  // P11.1 already provides the direct-browser structural fallback lifecycle.
+  // P11.2 wraps those actions so semantic triage wins when present, while the
+  // fallback remains available for the first custom review cycle instead of
+  // disappearing from the real-user experience.
+  const previousFocusCustomPrimaryRisk =
+    useWorkspaceStore.getState().focusCustomPrimaryRisk;
+  const previousPrepareCustomRepairTarget =
+    useWorkspaceStore.getState().prepareCustomRepairTarget;
+  const previousProposeCustomRepair =
+    useWorkspaceStore.getState().proposeCustomRepair;
+
   useWorkspaceStore.setState({
     focusCustomPrimaryRisk: () => {
       const state = useWorkspaceStore.getState();
       const current = state.workspace;
 
-      if (
-        latestProposedRevision(current) ||
-        !isP112CustomSemanticAnalysisFresh(current)
-      ) {
+      if (latestProposedRevision(current)) {
         return null;
+      }
+
+      if (!isP112CustomSemanticAnalysisFresh(current)) {
+        if (!isP112CustomStructuralFallbackAllowed(current)) {
+          return null;
+        }
+
+        return previousFocusCustomPrimaryRisk();
       }
 
       const targetId = getP112CustomNextTarget(current);
@@ -305,11 +384,16 @@ export function installP112CustomSemanticGate(): void {
       let state = useWorkspaceStore.getState();
       let current = state.workspace;
 
-      if (
-        latestProposedRevision(current) ||
-        !isP112CustomSemanticAnalysisFresh(current)
-      ) {
+      if (latestProposedRevision(current)) {
         return null;
+      }
+
+      if (!isP112CustomSemanticAnalysisFresh(current)) {
+        if (!isP112CustomStructuralFallbackAllowed(current)) {
+          return null;
+        }
+
+        return previousPrepareCustomRepairTarget();
       }
 
       const targetId = getP112CustomNextTarget(current);
@@ -350,11 +434,16 @@ export function installP112CustomSemanticGate(): void {
       let state = useWorkspaceStore.getState();
       let current = state.workspace;
 
-      if (
-        latestProposedRevision(current) ||
-        !isP112CustomSemanticAnalysisFresh(current)
-      ) {
+      if (latestProposedRevision(current)) {
         return null;
+      }
+
+      if (!isP112CustomSemanticAnalysisFresh(current)) {
+        if (!isP112CustomStructuralFallbackAllowed(current)) {
+          return null;
+        }
+
+        return previousProposeCustomRepair();
       }
 
       const targetId = getP112CustomNextTarget(current);

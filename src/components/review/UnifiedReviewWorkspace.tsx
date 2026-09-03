@@ -7,6 +7,10 @@ import type {
   Workspace,
 } from "../../domain/schema";
 import { rankTriageRecords } from "../../domain/workspaceAnalysis";
+import {
+  getP112CustomStructuralReviewTarget,
+  isP112CustomStructuralFallbackAllowed,
+} from "../../state/p112CustomSemanticGate";
 import type { GraphSelectionRequest } from "../../state/workspaceStore";
 import { ExpandedReasoningMap } from "../focus/ExpandedReasoningMap";
 
@@ -29,7 +33,6 @@ export interface UnifiedReviewWorkspaceProps {
   onRunAnalysis?: () => void;
   onFocusPrimaryRisk?: () => unknown;
   onProposeRepair?: () => unknown;
-  onPrepareRepairTarget?: () => unknown;
 }
 
 function itemById(
@@ -48,19 +51,42 @@ function latestProposedRevision(
     .find((revision) => revision.state === "PROPOSED");
 }
 
+function lastEventIndex(
+  workspace: Workspace,
+  eventType: Workspace["audit_events"][number]["event_type"],
+): number {
+  return workspace.audit_events
+    .map((event) => event.event_type)
+    .lastIndexOf(eventType);
+}
+
 function semanticReviewIsFresh(workspace: Workspace): boolean {
   if (workspace.triage_records.length === 0) return false;
 
-  const eventTypes = workspace.audit_events.map(
-    (event) => event.event_type,
+  const lastTriageIndex = lastEventIndex(workspace, "TRIAGE");
+  const lastAcceptedRevisionIndex = lastEventIndex(
+    workspace,
+    "ACCEPT_REVISION",
   );
-  const lastTriageIndex = eventTypes.lastIndexOf("TRIAGE");
-  const lastAcceptedRevisionIndex =
-    eventTypes.lastIndexOf("ACCEPT_REVISION");
 
   return (
     lastTriageIndex >= 0 &&
     lastTriageIndex > lastAcceptedRevisionIndex
+  );
+}
+
+function acceptedKnowledgeChangedAfterLastTriage(
+  workspace: Workspace,
+): boolean {
+  const lastAcceptedRevisionIndex = lastEventIndex(
+    workspace,
+    "ACCEPT_REVISION",
+  );
+
+  return (
+    lastAcceptedRevisionIndex >= 0 &&
+    lastAcceptedRevisionIndex >
+      lastEventIndex(workspace, "TRIAGE")
   );
 }
 
@@ -121,35 +147,6 @@ function latestTriageEventId(workspace: Workspace): string {
   );
 }
 
-function hasPreparedRepair(workspace: Workspace): boolean {
-  const events = workspace.audit_events;
-  const lastRepairIndex = events
-    .map((event) =>
-      event.event_type === "FOCUS" &&
-      event.metadata?.requested_action === "PROPOSE_REPAIR"
-        ? 1
-        : 0,
-    )
-    .lastIndexOf(1);
-
-  if (lastRepairIndex < 0) return false;
-
-  const lifecycleTypes = new Set([
-    "PROPOSE_REVISION",
-    "ACCEPT_REVISION",
-    "REJECT_REVISION",
-  ]);
-
-  let lastLifecycleIndex = -1;
-  events.forEach((event, index) => {
-    if (lifecycleTypes.has(event.event_type)) {
-      lastLifecycleIndex = index;
-    }
-  });
-
-  return lastRepairIndex > lastLifecycleIndex;
-}
-
 export function UnifiedReviewWorkspace({
   mode,
   workspace,
@@ -167,14 +164,23 @@ export function UnifiedReviewWorkspace({
   onRunAnalysis,
   onFocusPrimaryRisk,
   onProposeRepair,
-  onPrepareRepairTarget,
 }: UnifiedReviewWorkspaceProps) {
   const proposed = latestProposedRevision(workspace);
   const reviewFresh = semanticReviewIsFresh(workspace);
-  const nextTargetId = reviewFresh
+  const semanticTargetId = reviewFresh
     ? nextReviewTargetId(workspace)
     : null;
-  const nextTarget = itemById(workspace, nextTargetId);
+  const structuralTargetId =
+    mode === "CUSTOM" && !reviewFresh
+      ? getP112CustomStructuralReviewTarget(workspace)
+      : null;
+  const currentTargetId = semanticTargetId ?? structuralTargetId;
+  const currentTarget = itemById(workspace, currentTargetId);
+  const structuralFirstPass = Boolean(
+    mode === "CUSTOM" &&
+      structuralTargetId &&
+      !reviewFresh,
+  );
   const acceptedConclusion = itemById(
     workspace,
     workspace.accepted_conclusion_id,
@@ -193,10 +199,16 @@ export function UnifiedReviewWorkspace({
     item.tags?.includes("unlinked"),
   ).length;
 
-  const repairPrepared = hasPreparedRepair(workspace);
+  const customStructuralFallbackAllowed =
+    mode === "CUSTOM" &&
+    isP112CustomStructuralFallbackAllowed(workspace);
+  const reviewNeedsRefresh =
+    acceptedKnowledgeChangedAfterLastTriage(workspace) ||
+    (workspace.triage_records.length > 0 && !reviewFresh);
+
   const autoFocusKey =
-    reviewFresh && nextTargetId
-      ? `${latestTriageEventId(workspace)}:${nextTargetId}`
+    reviewFresh && semanticTargetId
+      ? `${latestTriageEventId(workspace)}:${semanticTargetId}`
       : null;
   const lastAutoFocusKey = useRef<string | null>(null);
 
@@ -212,63 +224,50 @@ export function UnifiedReviewWorkspace({
 
     lastAutoFocusKey.current = autoFocusKey;
     onFocusPrimaryRisk();
-  }, [
-    autoFocusKey,
-    onFocusPrimaryRisk,
-    proposed,
-  ]);
+  }, [autoFocusKey, onFocusPrimaryRisk, proposed]);
 
   const focusedForMap = useMemo(() => {
     if (focusedItemIds.length > 0) {
       return focusedItemIds;
     }
 
-    if (!nextTargetId) {
+    if (!currentTargetId) {
       return [];
     }
 
     const trace = getDownstreamDependencies(
       workspace,
-      nextTargetId,
+      currentTargetId,
     );
 
-    return [nextTargetId, ...trace.node_ids].filter(
+    return [currentTargetId, ...trace.node_ids].filter(
       (id, index, values) =>
         values.indexOf(id) === index,
     );
-  }, [focusedItemIds, nextTargetId, workspace]);
+  }, [focusedItemIds, currentTargetId, workspace]);
 
   const effectiveSelectedItemId =
     selectedItemId ??
-    nextTargetId ??
+    currentTargetId ??
     workspace.question_id;
 
   const showRunAnalysis =
-    mode === "DEMO" &&
     !reviewFresh &&
     !proposed &&
-    Boolean(onRunAnalysis);
+    Boolean(onRunAnalysis) &&
+    (mode === "DEMO" ||
+      (customStructuralFallbackAllowed &&
+        !structuralTargetId));
 
   const showFocus =
-    reviewFresh &&
-    Boolean(nextTarget) &&
+    Boolean(currentTarget) &&
     !proposed &&
     Boolean(onFocusPrimaryRisk);
 
-  const showDemoRepair =
-    mode === "DEMO" &&
-    reviewFresh &&
-    Boolean(nextTarget) &&
+  const showRepair =
+    Boolean(currentTarget) &&
     !proposed &&
     Boolean(onProposeRepair);
-
-  const showCustomRepairPrep =
-    mode === "CUSTOM" &&
-    reviewFresh &&
-    Boolean(nextTarget) &&
-    !proposed &&
-    !repairPrepared &&
-    Boolean(onPrepareRepairTarget);
 
   const understandComplete = Boolean(proposed);
   const decideComplete =
@@ -337,7 +336,7 @@ export function UnifiedReviewWorkspace({
           <span className="workspace-toolbar__label">
             {mode === "DEMO"
               ? "Example controls"
-              : "Workspace"}
+              : "Workspace controls"}
           </span>
 
           {showRunAnalysis ? (
@@ -358,30 +357,13 @@ export function UnifiedReviewWorkspace({
             </button>
           ) : null}
 
-          {showDemoRepair ? (
+          {showRepair ? (
             <button
               type="button"
               onClick={() => onProposeRepair?.()}
             >
               Propose repair
             </button>
-          ) : null}
-
-          {showCustomRepairPrep ? (
-            <button
-              type="button"
-              onClick={() => onPrepareRepairTarget?.()}
-            >
-              Prepare repair
-            </button>
-          ) : null}
-
-          {mode === "CUSTOM" &&
-          repairPrepared &&
-          !proposed ? (
-            <span className="focus-muted">
-              Repair target prepared for the agent.
-            </span>
           ) : null}
 
           {mode === "CUSTOM" && onEditInput ? (
@@ -447,23 +429,27 @@ export function UnifiedReviewWorkspace({
                 ? "Agent proposal"
                 : reviewFresh
                   ? `${criticalCount} CRITICAL · ${reviewCount} REVIEW · ${stableCount} STABLE`
-                  : workspace.triage_records.length > 0
-                    ? "Review needs refresh"
-                    : "Not reviewed yet"}
+                  : structuralFirstPass
+                    ? "Structural first pass"
+                    : reviewNeedsRefresh
+                      ? "Review needs refresh"
+                      : "Not reviewed yet"}
             </p>
 
             <h3>
               {proposed
                 ? "Review the proposal without leaving the reasoning workspace."
-                : reviewFresh && nextTarget
-                  ? `${nextTarget.id} is the current primary risk.`
+                : reviewFresh && currentTarget
+                  ? `${currentTarget.id} is the current primary risk.`
                   : reviewFresh
                     ? "No unresolved CRITICAL or REVIEW item remains."
-                    : workspace.triage_records.length > 0
-                      ? "The reasoning changed after the last semantic review."
-                      : mode === "DEMO"
-                        ? "Run the seeded analysis, then inspect the selected risk in the graph."
-                        : "Your reasoning is mapped and ready for agent review."}
+                    : structuralFirstPass && currentTarget
+                      ? `${currentTarget.id} is the current review target.`
+                      : reviewNeedsRefresh
+                        ? "The reasoning changed after the last accepted review."
+                        : mode === "DEMO"
+                          ? "Run the seeded analysis, then inspect the selected risk in the graph."
+                          : "Run analysis to select a first review target."}
             </h3>
           </div>
 
@@ -471,12 +457,16 @@ export function UnifiedReviewWorkspace({
             <span className="focus-status">
               Human decision required
             </span>
-          ) : reviewFresh && nextTarget ? (
+          ) : reviewFresh && currentTarget ? (
             <span className="focus-status">
               {workspace.triage_records.find(
                 (record) =>
-                  record.item_id === nextTarget.id,
+                  record.item_id === currentTarget.id,
               )?.state ?? "REVIEW"}
+            </span>
+          ) : structuralFirstPass ? (
+            <span className="focus-status">
+              STRUCTURAL
             </span>
           ) : null}
         </div>
@@ -484,13 +474,17 @@ export function UnifiedReviewWorkspace({
         <p className="focus-muted">
           {proposed
             ? "The graph, Inspector, Revision Proposal, and Decision History below are still the same shared state. Accept, edit, reject, or defer from the proposal panel."
-            : reviewFresh && nextTarget
-              ? "Groundline keeps the current risk and its downstream reasoning highlighted. Click any other card to inspect it; Focus primary risk returns to this exact item."
-              : workspace.triage_records.length > 0
-                ? "Old semantic labels are not reused after accepted reasoning changes. The current graph stays visible while a fresh WebMCP review is obtained."
-                : mode === "CUSTOM"
-                  ? "Keep mapping, add reasoning cards, and inspect any card now. A WebMCP agent can review this same canonical workspace; when fresh triage arrives, Groundline focuses the highest-priority unresolved risk here automatically."
-                  : "The example uses deterministic seeded results so you can see the full interaction loop without an external agent."}
+            : reviewFresh && currentTarget
+              ? "Groundline keeps the current risk and its downstream reasoning highlighted. Click any other card to inspect it; Focus primary risk returns to this exact item. Propose repair creates a reviewable draft for this item."
+              : structuralFirstPass && currentTarget
+                ? "This target came from Groundline's deterministic structural first pass, not an AI semantic risk judgment. It does not invent CRITICAL or REVIEW labels. Focus primary risk returns to this exact card; Propose repair creates a clearly marked local deterministic draft that you still decide on."
+                : reviewNeedsRefresh
+                  ? mode === "CUSTOM"
+                    ? "Accepted reasoning changed, so Groundline will not start another structural fallback cycle. A fresh WebMCP semantic review can continue from the current graph."
+                    : "The example reasoning changed. Run analysis again to refresh the seeded review before continuing."
+                  : mode === "CUSTOM"
+                    ? "Run analysis performs a deterministic first pass over the mapped structure so the real decision flow can continue in the browser. It does not pretend to be a WebMCP semantic review; a connected agent can later provide richer triage over this same workspace."
+                    : "The example uses deterministic seeded results so you can see the full interaction loop without an external agent."}
         </p>
 
         {mode === "CUSTOM" &&

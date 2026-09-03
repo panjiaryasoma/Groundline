@@ -59,8 +59,8 @@ export function App() {
   const focusCustomPrimaryRisk = useWorkspaceStore(
     (state) => state.focusCustomPrimaryRisk,
   );
-  const prepareCustomRepairTarget = useWorkspaceStore(
-    (state) => state.prepareCustomRepairTarget,
+  const proposeCustomRepair = useWorkspaceStore(
+    (state) => state.proposeCustomRepair,
   );
 
   const acceptLatestRevision = useWorkspaceStore(
@@ -161,12 +161,11 @@ export function App() {
             graphSelectionRequest
           }
           onSelectItem={selectItem}
+          onRunAnalysis={focusCustomPrimaryRisk}
           onFocusPrimaryRisk={
             focusCustomPrimaryRisk
           }
-          onPrepareRepairTarget={
-            prepareCustomRepairTarget
-          }
+          onProposeRepair={proposeCustomRepair}
           onAccept={acceptLatestRevision}
           onEditAndAccept={
             editAndAcceptLatestRevision

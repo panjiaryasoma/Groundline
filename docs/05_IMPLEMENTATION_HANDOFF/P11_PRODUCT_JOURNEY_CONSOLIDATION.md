@@ -2,7 +2,7 @@
 
 Status: **AUTHORITATIVE PRODUCT CONTRACT**
 
-This document defines the current Groundline interaction model. It supersedes earlier P11 decisions that either treated the page as a self-contained AI analyzer or hid the reasoning graph behind a report-style summary.
+This document defines the current Groundline interaction model. It supersedes earlier P11 decisions that either treated the page as a self-contained AI analyzer, hid the reasoning graph behind a report-style summary, or removed the real-user review controls that had already been accepted in the P08.8 interaction baseline.
 
 ## Product model
 
@@ -10,7 +10,7 @@ Groundline is a **live human-agent reasoning workspace**.
 
 The website owns:
 - canonical reasoning state;
-- deterministic validation and triage mechanics;
+- deterministic structural review mechanics;
 - the reasoning graph;
 - Inspector state;
 - revision and human-approval surfaces;
@@ -55,9 +55,27 @@ REASONING GRAPH  <->  INSPECTOR
 
 Graph, Inspector, Revision Proposal, and Decision History share the same state.
 
-The graph is not an optional power-user report hidden behind `Inspect full reasoning map`. It is the place where the represented reasoning lives.
+The graph is not an optional power-user report. It is the place where the represented reasoning lives.
 
 Plain-language guidance may sit above the workspace, but it must not replace the workspace with a static AI report.
+
+## Interaction baseline
+
+The accepted direct interaction loop is:
+
+```text
+Run analysis
+    ↓
+Focus primary risk
+    ↓
+Propose repair
+    ↓
+Accept / Accept edited / Reject / Defer
+```
+
+This control lifecycle applies to both the seeded example and `Check my own decision`.
+
+The source of the review may differ, but the human interaction must not collapse into two different products again.
 
 ## Selection contract
 
@@ -68,9 +86,9 @@ Clicking one reasoning card:
 
 Programmatic focus must behave the same way.
 
-When a fresh semantic triage identifies the highest-priority unresolved CRITICAL or REVIEW item:
-- Groundline focuses that exact risk;
-- its downstream reasoning remains highlighted;
+When a review target is active:
+- Groundline selects that exact card;
+- related downstream reasoning remains highlighted where represented;
 - the selected item and Inspector stay synchronized.
 
 The user may inspect another card manually.
@@ -79,79 +97,74 @@ The user may inspect another card manually.
 
 This interaction is the baseline established by the P08.8 state-machine fixes and must not regress into label-only focus.
 
-## Review status
+## Run analysis in CUSTOM
 
-CUSTOM does not fabricate semantic risk from structural completeness.
+A normal page button cannot invoke an external WebMCP agent. Therefore `Run analysis` in CUSTOM has two honest modes.
 
-Before agent triage exists:
+### Deterministic structural first pass
 
-> **Not reviewed yet**  
-> Your reasoning is mapped and ready for agent review.
+Before fresh semantic triage exists, `Run analysis` may select a provisional review target using deterministic structure already represented in the workspace.
 
-The graph is still fully usable:
-- cards can be inspected;
-- new reasoning items can be added;
-- human-authored state remains visible.
+This first pass:
+- may select and focus a review target;
+- may unlock `Focus primary risk` and `Propose repair`;
+- must not create semantic CRITICAL, REVIEW, or STABLE labels;
+- must not claim an LLM or external agent ran;
+- must be visibly described as structural/local rather than semantic judgment.
 
-Internal review tokens, handshake IDs, and tool-call instructions are protocol state, not normal product UI.
+`Propose repair` may create the constrained deterministic local draft already established by the P08.7/P08.8 interaction parity work. Its provenance must remain explicit in audit metadata and the Revision Proposal UI.
 
-DEMO may use deterministic seeded analysis to demonstrate the same workspace interaction.
+### Fresh WebMCP semantic triage
 
-## Understanding a risk
+When a WebMCP agent commits fresh evaluations and triage, semantic CRITICAL/REVIEW ordering supersedes the provisional structural target.
 
-Groundline may summarize why a risk matters, but explanation stays attached to the selected reasoning object rather than replacing the graph.
+Groundline then focuses the highest-priority unresolved semantic review target and uses the same visible `Focus primary risk` and `Propose repair` controls.
 
-The product response to fresh triage is:
-1. exact risk card selected;
-2. Inspector updated;
-3. affected reasoning highlighted;
-4. triage state visible on the card and Inspector;
-5. audit state updated by the actual review actions.
+Priority scores remain review mechanics, never truth, confidence, or factuality scores.
 
-Priority scores are review mechanics, never truth, confidence, or factuality scores.
+## Accepted revision guard
 
-## Repair preparation and proposal
+A deterministic structural first pass is not an infinite local reasoning loop.
 
-For DEMO, a seeded repair proposal may be produced directly.
-
-For CUSTOM, the page cannot invoke an external WebMCP agent. Groundline may prepare a repair target by:
-- keeping the primary risk focused;
-- selecting the accepted item that would be revised;
-- recording the prepared target in canonical workspace/audit state.
-
-The UI must describe this honestly as preparation, not pretend that an agent is running in the background.
-
-When a real agent revision arrives, the Revision Proposal panel in the same live workspace displays:
-
-- Accepted now
-- Proposed revision
-- editable draft
-- Accept proposal
-- Accept edited
-- Reject
-- Defer
-
-There is no separate report page for the proposal.
-
-## Accepted revision behavior
-
-When a human accepts a revision:
-- the old accepted item remains traceable as `SUPERSEDED`;
+After a human accepts or edits-and-accepts a repair:
+- the old item becomes `SUPERSEDED`;
 - the replacement becomes the new accepted item;
 - the replacement is selected;
-- Inspector follows the new item;
-- graph and audit update together;
-- the replacement remains unassessed until fresh review.
+- Inspector, graph, and audit update together;
+- semantic relations are not inherited automatically;
+- the replacement remains unassessed;
+- another structural fallback cycle is blocked until fresh semantic triage arrives.
 
-Semantic relations are not inherited automatically from the superseded item.
+This preserves direct-browser usability without pretending that repeated local drafts are fresh semantic analysis.
+
+Reject or Defer does not change accepted knowledge.
+
+## Repair proposal
+
+For both DEMO and CUSTOM, `Propose repair` operates on the active review target and creates a proposal object in the same live workspace.
+
+A deterministic local proposal must be labeled as local deterministic and must not be presented as an LLM judgment.
+
+A WebMCP agent may also provide a richer proposal through the existing tool surface when no proposal is pending.
+
+When a proposal exists, the Revision Proposal panel displays:
+- Accepted now;
+- Proposed revision;
+- editable draft;
+- Accept proposal;
+- Accept edited;
+- Reject;
+- Defer.
+
+Accepted knowledge changes only through explicit HUMAN review actions.
 
 ## Multi-risk review
 
-A triage may contain multiple CRITICAL or REVIEW items.
+A semantic triage may contain multiple CRITICAL or REVIEW items.
 
 Groundline reviews them sequentially rather than hiding all but one permanently.
 
-After a proposal receives a human outcome, the next unresolved review target can become primary.
+After a proposal receives a human outcome, the next unresolved review target may become primary when the current review state permits it.
 
 Accepted reasoning changes invalidate stale semantic review where required.
 
@@ -180,19 +193,21 @@ Until approval:
 
 If approved relations change the graph, stale semantic review is invalidated and the agent must inspect the current canonical workspace again.
 
+Internal review tokens, handshake IDs, and tool-call instructions are protocol state, not normal product UI.
+
 ## Runtime authority
 
 The authoritative review surface is:
 
 `src/components/review/UnifiedReviewWorkspace.tsx`
 
-It must keep the live workspace visible rather than demoting it to an optional expansion.
+It must keep the live workspace visible and preserve the `Run analysis -> Focus primary risk -> Propose repair -> Decide` lifecycle for real custom decisions.
 
 CUSTOM reaches this surface through:
 
 `src/components/custom/P117CustomWorkspaceHome.tsx`
 
-P117 remains responsible only for real relation-proposal approval overlays and then delegates to the same live workspace.
+P117 remains responsible for real relation-proposal approval overlays and delegates the normal review experience to the same live workspace.
 
 DEMO reaches the same review surface directly from `src/app/App.tsx`.
 

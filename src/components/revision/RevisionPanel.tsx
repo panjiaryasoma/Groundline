@@ -170,8 +170,10 @@ export function RevisionPanel({
     proposalEvent?.metadata?.proposal_source;
 
   const localDeterministic =
-    proposalSource ===
-    "LOCAL_DETERMINISTIC_REPAIR_AGENT";
+    typeof proposalSource === "string" &&
+    proposalSource.startsWith(
+      "LOCAL_DETERMINISTIC_",
+    );
 
   return (
     <section

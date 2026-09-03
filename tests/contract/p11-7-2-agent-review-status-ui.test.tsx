@@ -38,6 +38,9 @@ function renderWorkspace() {
       focusedItemIds={[]}
       graphSelectionRequest={{ itemId: null, version: 0 }}
       onSelectItem={vi.fn()}
+      onRunAnalysis={vi.fn()}
+      onFocusPrimaryRisk={vi.fn()}
+      onProposeRepair={vi.fn()}
       onAccept={vi.fn()}
       onEditAndAccept={vi.fn()}
       onReject={vi.fn()}
@@ -48,25 +51,30 @@ function renderWorkspace() {
   );
 }
 
-describe("P11 consolidated custom semantic-review UX", () => {
+describe("P11 custom semantic-review UX", () => {
   beforeEach(() => {
     clearP117AgentReviewState();
     useWorkspaceStore.getState().createCustomWorkspace(customInput);
   });
 
-  it("enters the mapped workspace directly without a fake structure or request step", () => {
+  it("keeps protocol state hidden while exposing the direct-browser review entry action", () => {
     renderWorkspace();
 
     expect(screen.getByText("Not reviewed yet")).toBeInTheDocument();
     expect(
       screen.getByText(
-        "Your reasoning is mapped and ready for agent review.",
+        "Run analysis to select a first review target.",
       ),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", {
+        name: "Run analysis",
+      }),
     ).toBeInTheDocument();
 
     expect(
       screen.queryByRole("button", {
-        name: /Check reasoning structure|Run analysis/i,
+        name: "Check reasoning structure",
       }),
     ).not.toBeInTheDocument();
     expect(
@@ -106,6 +114,7 @@ describe("P11 consolidated custom semantic-review UX", () => {
           },
         ],
       });
+      await Promise.resolve();
     });
 
     expect(
