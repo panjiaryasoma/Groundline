@@ -1,0 +1,171 @@
+/* P12.9 Structural review overview
+ * Replaces the P12.7/P12.8 overlay treatment with a real 50/50 review band.
+ * The reasoning map starts in normal flow immediately below the band.
+ */
+
+.focus-review-overview {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  width: 100%;
+  margin: 0;
+  align-items: stretch;
+}
+
+.focus-review-overview .focus-analysis,
+.focus-workspace-summary {
+  min-height: 390px;
+  margin: 0 !important;
+  padding: 38px clamp(34px, 4vw, 56px) 36px !important;
+  border: 0 !important;
+}
+
+.focus-review-overview .focus-analysis {
+  position: relative;
+  display: flex !important;
+  flex-direction: column;
+  align-items: stretch !important;
+  background:
+    linear-gradient(
+      to bottom,
+      color-mix(in srgb, var(--strata-claim) 64%, var(--paper)) 0%,
+      color-mix(in srgb, var(--strata-claim) 64%, var(--paper)) 88%,
+      color-mix(in srgb, var(--strata-evidence) 68%, var(--paper)) 100%
+    ) !important;
+  border-right: 1px solid
+    color-mix(in srgb, var(--rule-strong) 42%, transparent) !important;
+  isolation: auto !important;
+}
+
+.focus-review-overview .focus-analysis::before,
+.focus-review-overview .focus-analysis::after {
+  content: none !important;
+}
+
+.focus-analysis__section-label,
+.focus-workspace-summary > div > .eyebrow,
+.focus-analysis__review-focus > .eyebrow {
+  margin: 0 !important;
+  color: var(--gold) !important;
+  font-family: var(--font-mono);
+  font-size: 0.62rem !important;
+  font-weight: 600;
+  letter-spacing: 0.13em !important;
+  text-transform: uppercase;
+}
+
+.focus-review-overview .focus-analysis__heading {
+  display: block !important;
+  min-height: 0 !important;
+  margin: 18px 0 0 !important;
+  padding: 0 !important;
+  border: 0 !important;
+}
+
+.focus-review-overview .focus-analysis__heading::before {
+  content: none !important;
+}
+
+.focus-review-overview .focus-analysis__heading > div {
+  width: 100%;
+}
+
+.focus-review-overview .focus-analysis__heading .eyebrow {
+  margin: 0 0 12px !important;
+  color: color-mix(in srgb, var(--gold) 78%, var(--ink)) !important;
+  font-size: 0.58rem !important;
+}
+
+.focus-review-overview .focus-analysis__heading h3,
+.focus-workspace-summary h3 {
+  max-width: 15ch !important;
+  margin: 0 !important;
+  font-family: var(--font-serif);
+  font-size: clamp(2.15rem, 3.1vw, 3.6rem) !important;
+  line-height: 1.02 !important;
+  letter-spacing: -0.035em !important;
+  font-weight: 400 !important;
+}
+
+.focus-analysis__review-focus,
+.focus-workspace-summary__shared {
+  margin-top: 30px;
+}
+
+.focus-analysis__review-focus .focus-muted,
+.focus-workspace-summary__shared > p:last-child {
+  max-width: 38rem !important;
+  margin: 14px 0 0 !important;
+  padding: 0 !important;
+  color: var(--muted) !important;
+  font-family: var(--font-sans);
+  font-size: 0.82rem !important;
+  line-height: 1.62 !important;
+}
+
+.focus-review-overview .focus-analysis__unlinked-note {
+  max-width: 38rem !important;
+  margin: 18px 0 0 !important;
+  padding: 14px 0 0 !important;
+  border-top: 1px solid
+    color-mix(in srgb, var(--rule-strong) 24%, transparent);
+  color: var(--muted) !important;
+  font-size: 0.7rem !important;
+  line-height: 1.55 !important;
+}
+
+.focus-review-overview .focus-status {
+  position: static !important;
+  align-self: flex-start;
+  margin: auto 0 0 !important;
+}
+
+.focus-workspace-summary {
+  display: flex;
+  flex-direction: column;
+  background:
+    color-mix(in srgb, var(--strata-evidence) 72%, var(--paper));
+}
+
+.focus-workspace-summary__shared {
+  margin-top: 30px;
+}
+
+.focus-map-expansion--no-heading {
+  margin-top: 0 !important;
+  padding-top: 0 !important;
+}
+
+.focus-map-expansion--no-heading .focus-map-legend {
+  margin-top: 0 !important;
+}
+
+.focus-map-expansion--no-heading::before {
+  top: 0;
+}
+
+@media (max-width: 900px) {
+  .focus-review-overview {
+    grid-template-columns: 1fr;
+  }
+
+  .focus-review-overview .focus-analysis,
+  .focus-workspace-summary {
+    min-height: 0;
+    padding: 34px 28px 38px !important;
+  }
+
+  .focus-review-overview .focus-analysis {
+    border-right: 0 !important;
+    border-bottom: 1px solid
+      color-mix(in srgb, var(--rule-strong) 34%, transparent) !important;
+  }
+
+  .focus-review-overview .focus-analysis__heading h3,
+  .focus-workspace-summary h3 {
+    max-width: 18ch !important;
+  }
+
+  .focus-review-overview .focus-status {
+    margin-top: 24px !important;
+  }
+}

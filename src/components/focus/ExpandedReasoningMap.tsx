@@ -24,6 +24,7 @@ interface ExpandedReasoningMapProps {
   onDefer?: () => void;
   heading?: string;
   showCollapse?: boolean;
+  showHeading?: boolean;
 }
 
 const noop = () => undefined;
@@ -44,35 +45,42 @@ export function ExpandedReasoningMap({
   heading =
     "Inspect the live reasoning workspace.",
   showCollapse = false,
+  showHeading = true,
 }: ExpandedReasoningMapProps) {
   return (
     <section
-      className="focus-map-expansion focus-map-expansion--live"
+      className={`focus-map-expansion focus-map-expansion--live${
+        showHeading
+          ? ""
+          : " focus-map-expansion--no-heading"
+      }`}
       aria-label="Live reasoning workspace"
     >
-      <div className="focus-map-expansion__heading">
-        <div>
-          <p className="eyebrow">
-            Reasoning workspace
-          </p>
-          <h3>{heading}</h3>
-          <p className="focus-map-expansion__copy">
-            Selection, inspector, revision proposal,
-            and decision history share the same state.
-            Click any card to inspect it.
-          </p>
-        </div>
+      {showHeading ? (
+        <div className="focus-map-expansion__heading">
+          <div>
+            <p className="eyebrow">
+              Reasoning workspace
+            </p>
+            <h3>{heading}</h3>
+            <p className="focus-map-expansion__copy">
+              Selection, inspector, revision proposal,
+              and decision history share the same state.
+              Click any card to inspect it.
+            </p>
+          </div>
 
-        {showCollapse && onCollapse ? (
-          <button
-            type="button"
-            className="focus-text-action"
-            onClick={onCollapse}
-          >
-            Hide reasoning workspace
-          </button>
-        ) : null}
-      </div>
+          {showCollapse && onCollapse ? (
+            <button
+              type="button"
+              className="focus-text-action"
+              onClick={onCollapse}
+            >
+              Hide reasoning workspace
+            </button>
+          ) : null}
+        </div>
+      ) : null}
 
       <div className="focus-map-legend">
         <span>
