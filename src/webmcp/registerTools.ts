@@ -11,10 +11,15 @@ import { createFindContradictionsTool } from "./tools/findContradictions";
 import { createFindEvidenceGapsTool } from "./tools/findEvidenceGaps";
 import { createFocusItemsTool } from "./tools/focusItems";
 import { createProposeRevisionTool } from "./tools/proposeRevision";
+import { createProposeRelationsTool } from "./tools/proposeRelations";
 import { P0_TOOL_NAMES } from "./toolSchemas";
 
 export const VERTICAL_SLICE_TOOL_NAMES = [
   ...P0_TOOL_NAMES,
+] as const;
+
+export const GROUNDLINE_EXTENSION_TOOL_NAMES = [
+  "propose_relations",
 ] as const;
 
 export function createVerticalSliceTools():
@@ -32,6 +37,11 @@ export function createVerticalSliceTools():
   ];
 }
 
+export function createGroundlineExtensionTools():
+  WebMCPToolDefinition[] {
+  return [createProposeRelationsTool()];
+}
+
 export async function registerGroundlineTools(
   signal?: AbortSignal,
 ): Promise<{
@@ -45,11 +55,17 @@ export async function registerGroundlineTools(
     return {
       webmcpAvailable: false,
       registeredTools: [],
-      pendingTools: [...P0_TOOL_NAMES],
+      pendingTools: [
+        ...P0_TOOL_NAMES,
+        ...GROUNDLINE_EXTENSION_TOOL_NAMES,
+      ],
     };
   }
 
-  const tools = createVerticalSliceTools();
+  const tools = [
+    ...createVerticalSliceTools(),
+    ...createGroundlineExtensionTools(),
+  ];
 
   for (const tool of tools) {
     await modelContext.registerTool(
@@ -66,10 +82,9 @@ export async function registerGroundlineTools(
   return {
     webmcpAvailable: true,
     registeredTools,
-    pendingTools:
-      P0_TOOL_NAMES.filter(
-        (name) =>
-          !registeredTools.includes(name),
-      ),
+    pendingTools: [
+      ...P0_TOOL_NAMES,
+      ...GROUNDLINE_EXTENSION_TOOL_NAMES,
+    ].filter((name) => !registeredTools.includes(name)),
   };
 }

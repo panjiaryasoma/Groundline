@@ -5,8 +5,10 @@ import type {
 import { WorkspaceSchema } from "../domain/schema";
 import { buildSemanticReviewToken } from "../webmcp/semanticReviewContract";
 import { getP114UnlinkedReasoningItemIds } from "./p114AddReasoningItem";
+import {
+  type P117ConnectionProposal,
+} from "./p117AgentReview";
 import { useWorkspaceStore } from "./workspaceStore";
-import type { P117ConnectionProposal } from "../ai/p117LocalSemanticReviewer";
 
 const ALLOWED_TYPES = new Set<Relation["type"]>([
   "SUPPORTS",
@@ -217,7 +219,7 @@ export function applyP117ApprovedRelations(
     entity_ids: created.map((relation) => relation.id),
     metadata: {
       requested_action: "ACCEPT_AGENT_RELATION_PROPOSALS",
-      proposal_source: "ON_DEVICE_AI",
+      proposal_source: "WEBMCP_AGENT",
       proposal_review_token: expectedReviewToken,
       human_approved: true,
       relation_count: created.length,
@@ -228,7 +230,11 @@ export function applyP117ApprovedRelations(
   });
 
   const validated = validateWorkspace(next);
-  const firstNewlyLinkedItem = created[0]?.from_id ?? null;
+  const firstNewlyLinkedItem = created
+    .flatMap((relation) => [relation.from_id, relation.to_id])
+    .find((itemId) => currentlyUnlinked.has(itemId)) ??
+    created[0]?.from_id ??
+    null;
   const ui = state.ui;
 
   useWorkspaceStore.setState({

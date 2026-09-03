@@ -413,7 +413,7 @@ export function ReasoningGraph({
               type="button"
               className="graph-analysis-again"
               onClick={runAnalysisAgain}
-              title="Return the expanded reasoning to semantic review. Groundline's reviewer will propose connections before fresh triage; an external WebMCP agent remains the fallback."
+              title="Request a fresh WebMCP agent review for the expanded reasoning. Groundline does not run a hidden local model or infer accepted relations by itself."
             >
               Run analysis again · {unlinkedItemIds.length} unlinked
             </button>
@@ -510,7 +510,7 @@ export function ReasoningGraph({
 
           <div className="graph-add-composer__footer">
             <p>
-              New cards are selected immediately for inspection. When you are done adding them, run analysis again. Groundline's semantic reviewer can propose connections for human approval before fresh triage.
+              New cards are selected immediately for inspection. When you are done, run analysis again to create a fresh WebMCP review request. The agent may propose connections for your approval, then it must submit fresh semantic triage for the current graph.
             </p>
             <div className="graph-add-composer__actions">
               <button
@@ -562,9 +562,8 @@ export function ReasoningGraph({
         onSelectionChange={handleSelectionChange}
         onNodeClick={(_, node) => onSelectItem(node.id)}
         onPaneClick={() => onSelectItem(null)}
-        proOptions={{ hideAttribution: true }}
       >
-        <Background gap={28} size={1} />
+        <Background gap={18} size={0.8} />
         <Controls showInteractive={false} />
       </ReactFlow>
     </section>

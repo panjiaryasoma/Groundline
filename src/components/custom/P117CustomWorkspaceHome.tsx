@@ -2,155 +2,96 @@ import {
   type ComponentProps,
   useCallback,
   useEffect,
-  useRef,
+  useMemo,
   useState,
 } from "react";
 import { createPortal } from "react-dom";
 
 import {
-  getP117LocalReviewerAvailability,
-  proposeP117Connections,
-  runP117SemanticTriage,
-  type P117ConnectionProposal,
-  type P117Progress,
-  type P117TriageSummary,
-} from "../../ai/p117LocalSemanticReviewer";
-import { getP114UnlinkedReasoningItemIds } from "../../state/p114AddReasoningItem";
+  getP114UnlinkedReasoningItemIds,
+} from "../../state/p114AddReasoningItem";
+import {
+  clearP117AgentReviewState,
+  clearP117RelationProposalBatch,
+  requestP117AgentReview,
+  useP117AgentReviewStore,
+} from "../../state/p117AgentReview";
 import { applyP117ApprovedRelations } from "../../state/p117RelationReview";
-import { useWorkspaceStore } from "../../state/workspaceStore";
-import { buildSemanticReviewToken } from "../../webmcp/semanticReviewContract";
+import { hasWebMCP } from "../../webmcp/modelContext";
+import { semanticReviewContract } from "../../webmcp/semanticReviewContract";
 import { P112CustomWorkspaceHome } from "./P112CustomWorkspaceHome";
 import "../../styles/p11-7.css";
 
 type Props = ComponentProps<typeof P112CustomWorkspaceHome>;
 
-type ReviewStage =
-  | "IDLE"
-  | "CHECKING_MODEL"
-  | "DOWNLOADING_MODEL"
-  | "PROPOSING_CONNECTIONS"
-  | "AWAITING_CONNECTIONS"
-  | "TRIAGING"
-  | "COMPLETE"
-  | "EXTERNAL_REQUIRED"
-  | "ERROR";
-
-function proposalKey(proposal: P117ConnectionProposal): string {
+function proposalKey(proposal: {
+  from_id: string;
+  to_id: string;
+  type: string;
+}): string {
   return `${proposal.from_id}|${proposal.type}|${proposal.to_id}`;
 }
 
-function stageLabel(stage: ReviewStage): string {
-  switch (stage) {
-    case "CHECKING_MODEL":
-      return "Checking local semantic reviewer";
-    case "DOWNLOADING_MODEL":
-      return "Preparing Gemini Nano";
-    case "PROPOSING_CONNECTIONS":
-      return "Reviewing unlinked reasoning";
-    case "AWAITING_CONNECTIONS":
-      return "Human connection review required";
-    case "TRIAGING":
-      return "Evaluating current reasoning";
-    case "COMPLETE":
-      return "Semantic review complete";
-    case "EXTERNAL_REQUIRED":
-      return "External WebMCP agent required";
-    case "ERROR":
-      return "Semantic review stopped";
-    case "IDLE":
-    default:
-      return "Semantic review";
-  }
-}
-
 export function P117CustomWorkspaceHome(props: Props) {
-  const [stage, setStage] = useState<ReviewStage>("IDLE");
-  const [proposals, setProposals] = useState<P117ConnectionProposal[]>([]);
+  const request = useP117AgentReviewStore((state) => state.request);
+  const proposalBatch = useP117AgentReviewStore(
+    (state) => state.proposalBatch,
+  );
+  const [panelOpen, setPanelOpen] = useState(false);
+  const [message, setMessage] = useState<string | null>(null);
   const [selectedProposalKeys, setSelectedProposalKeys] =
     useState<Set<string>>(new Set());
-  const [proposalToken, setProposalToken] = useState<string | null>(null);
-  const [summary, setSummary] = useState<P117TriageSummary | null>(null);
-  const [message, setMessage] = useState<string | null>(null);
-  const busyRef = useRef(false);
 
-  const setProgress = useCallback((progress: P117Progress) => {
-    if (progress === "DOWNLOADING_MODEL") {
-      setStage("DOWNLOADING_MODEL");
-    } else if (progress === "PROPOSING_CONNECTIONS") {
-      setStage("PROPOSING_CONNECTIONS");
-    } else if (progress === "TRIAGING") {
-      setStage("TRIAGING");
+  const semanticReview = useMemo(
+    () => semanticReviewContract(props.workspace),
+    [props.workspace],
+  );
+  const currentToken = semanticReview.review_token;
+  const unlinkedIds = useMemo(
+    () => getP114UnlinkedReasoningItemIds(props.workspace),
+    [props.workspace],
+  );
+
+  const currentRequest =
+    request?.reviewToken === currentToken ? request : null;
+  const currentProposalBatch =
+    proposalBatch?.reviewToken === currentToken
+      ? proposalBatch
+      : null;
+
+  useEffect(() => {
+    const staleRequest = request && request.reviewToken !== currentToken;
+    const staleBatch =
+      proposalBatch && proposalBatch.reviewToken !== currentToken;
+
+    if (staleRequest || staleBatch) {
+      clearP117AgentReviewState();
     }
-  }, []);
+  }, [currentToken, proposalBatch, request]);
 
-  const runTriage = useCallback(async () => {
-    setStage("TRIAGING");
-    setMessage(null);
-    const result = await runP117SemanticTriage(setProgress);
-    setSummary(result);
-    setStage("COMPLETE");
-    setProposals([]);
-    setSelectedProposalKeys(new Set());
-    setProposalToken(null);
-  }, [setProgress]);
+  useEffect(() => {
+    if (!currentProposalBatch) return;
 
-  const startReview = useCallback(async () => {
-    if (busyRef.current || stage === "AWAITING_CONNECTIONS") {
-      return;
-    }
+    setSelectedProposalKeys(
+      new Set(currentProposalBatch.proposals.map(proposalKey)),
+    );
+    setPanelOpen(true);
+  }, [currentProposalBatch]);
 
-    busyRef.current = true;
-    setStage("CHECKING_MODEL");
-    setMessage(null);
-    setSummary(null);
-
+  const requestAgentReview = useCallback(() => {
     try {
-      const availability = await getP117LocalReviewerAvailability();
-
-      if (
-        availability === "unsupported" ||
-        availability === "unavailable"
-      ) {
-        setStage("EXTERNAL_REQUIRED");
-        setMessage(
-          "This browser cannot run Groundline's optional on-device semantic reviewer. The workspace is still fully available to a WebMCP-aware external agent through inspect_workspace and triage_workspace.",
-        );
-        return;
-      }
-
-      const current = useWorkspaceStore.getState().workspace;
-      const unlinkedIds = getP114UnlinkedReasoningItemIds(current);
-
-      if (unlinkedIds.length > 0) {
-        const token = buildSemanticReviewToken(current);
-        const suggested = await proposeP117Connections(
-          current,
-          setProgress,
-        );
-
-        if (suggested.length > 0) {
-          setProposalToken(token);
-          setProposals(suggested);
-          setSelectedProposalKeys(
-            new Set(suggested.map(proposalKey)),
-          );
-          setStage("AWAITING_CONNECTIONS");
-          return;
-        }
-      }
-
-      await runTriage();
+      requestP117AgentReview();
+      setMessage(null);
+      setPanelOpen(true);
     } catch (error) {
-      setStage("ERROR");
       setMessage(
         error instanceof Error
           ? error.message
-          : "Semantic review failed before any result was committed.",
+          : "Groundline could not create the current agent review request.",
       );
-    } finally {
-      busyRef.current = false;
+      setPanelOpen(true);
     }
-  }, [runTriage, setProgress, stage]);
+  }, []);
 
   useEffect(() => {
     const handleAnalysisClick = (event: MouseEvent) => {
@@ -162,70 +103,72 @@ export function P117CustomWorkspaceHome(props: Props) {
       );
       if (!button) return;
 
-      void startReview();
+      requestAgentReview();
     };
 
     document.addEventListener("click", handleAnalysisClick);
-    return () => {
-      document.removeEventListener("click", handleAnalysisClick);
-    };
-  }, [startReview]);
+    return () => document.removeEventListener("click", handleAnalysisClick);
+  }, [requestAgentReview]);
 
-  const finishConnectionReview = useCallback(
-    async (acceptSelected: boolean) => {
-      if (busyRef.current) return;
-      busyRef.current = true;
-      setMessage(null);
+  const acceptSelectedRelations = useCallback(() => {
+    if (!currentProposalBatch) return;
 
-      try {
-        if (acceptSelected) {
-          const selected = proposals.filter((proposal) =>
-            selectedProposalKeys.has(proposalKey(proposal)),
-          );
+    const selected = currentProposalBatch.proposals.filter((proposal) =>
+      selectedProposalKeys.has(proposalKey(proposal)),
+    );
 
-          if (selected.length === 0) {
-            setMessage(
-              "Select at least one suggested connection, or continue without accepting connections.",
-            );
-            return;
-          }
+    if (selected.length === 0) {
+      setMessage(
+        "Select at least one proposed connection or reject the proposal batch.",
+      );
+      return;
+    }
 
-          applyP117ApprovedRelations(
-            selected,
-            proposalToken ?? "",
-          );
-        }
+    try {
+      applyP117ApprovedRelations(
+        selected,
+        currentProposalBatch.reviewToken,
+      );
+      clearP117RelationProposalBatch();
+      requestP117AgentReview();
+      setMessage(
+        "Connections accepted. The graph changed, so Groundline created a fresh review request. Ask the WebMCP agent to continue with the current workspace.",
+      );
+    } catch (error) {
+      setMessage(
+        error instanceof Error
+          ? error.message
+          : "Groundline could not accept the reviewed semantic connections.",
+      );
+    }
+  }, [currentProposalBatch, selectedProposalKeys]);
 
-        setProposals([]);
-        setSelectedProposalKeys(new Set());
-        setProposalToken(null);
-        await runTriage();
-      } catch (error) {
-        setStage("ERROR");
-        setMessage(
-          error instanceof Error
-            ? error.message
-            : "Groundline could not commit the reviewed semantic structure.",
-        );
-      } finally {
-        busyRef.current = false;
-      }
-    },
-    [
-      proposalToken,
-      proposals,
-      runTriage,
-      selectedProposalKeys,
-    ],
-  );
+  const rejectRelationBatch = useCallback(() => {
+    clearP117RelationProposalBatch();
+    setSelectedProposalKeys(new Set());
+    setMessage(
+      "No proposed connections were accepted. The UNLINKED cards remain explicit, and the agent may still evaluate the graph exactly as represented.",
+    );
+  }, []);
 
-  const panelVisible = stage !== "IDLE";
-  const busy = [
-    "CHECKING_MODEL",
-    "DOWNLOADING_MODEL",
-    "PROPOSING_CONNECTIONS",
-    "TRIAGING",
-  ].includes(stage);
+  const triageComplete = semanticReview.coverage_complete;
+  const panelVisible =
+    panelOpen || Boolean(currentProposalBatch);
+
+  let heading = "Agent review requested";
+  if (currentProposalBatch) heading = "Human connection review required";
+  else if (currentRequest && triageComplete) heading = "Semantic review complete";
+  else if (!hasWebMCP()) heading = "WebMCP agent unavailable in this browser";
+
+  const criticalCount = props.workspace.triage_records.filter(
+    (record) => record.state === "CRITICAL",
+  ).length;
+  const reviewCount = props.workspace.triage_records.filter(
+    (record) => record.state === "REVIEW",
+  ).length;
+  const stableCount = props.workspace.triage_records.filter(
+    (record) => record.state === "STABLE",
+  ).length;
 
   return (
     <>
@@ -240,44 +183,26 @@ export function P117CustomWorkspaceHome(props: Props) {
             >
               <div className="p117-review-panel__heading">
                 <div>
-                  <span>GROUNDLINE SEMANTIC REVIEW</span>
-                  <strong>{stageLabel(stage)}</strong>
+                  <span>GROUNDLINE · WEBMCP REVIEW</span>
+                  <strong>{heading}</strong>
                 </div>
-
-                {!busy && stage !== "AWAITING_CONNECTIONS" ? (
-                  <button
-                    type="button"
-                    aria-label="Close semantic review status"
-                    onClick={() => setStage("IDLE")}
-                  >
-                    ×
-                  </button>
-                ) : null}
+                <button
+                  type="button"
+                  aria-label="Close semantic review status"
+                  onClick={() => setPanelOpen(false)}
+                >
+                  ×
+                </button>
               </div>
 
-              {busy ? (
-                <div className="p117-review-panel__working">
-                  <span className="p117-review-panel__pulse" />
-                  <p>
-                    {stage === "DOWNLOADING_MODEL"
-                      ? "Chrome is preparing the on-device Gemini Nano model. No reasoning result is committed while the model is unavailable."
-                      : stage === "PROPOSING_CONNECTIONS"
-                        ? "The on-device agent is looking for defensible links involving the UNLINKED cards. Suggestions still require human approval."
-                        : stage === "TRIAGING"
-                          ? "The on-device agent is evaluating every current review target. Groundline will accept the result only as one fresh, complete batch."
-                          : "Checking whether the optional on-device reviewer is available."}
-                  </p>
-                </div>
-              ) : null}
-
-              {stage === "AWAITING_CONNECTIONS" ? (
+              {currentProposalBatch ? (
                 <div className="p117-connection-review">
                   <p>
-                    The agent proposed these semantic connections. Nothing has been added to the canonical graph yet.
+                    The WebMCP agent proposed these semantic connections. No line has been added to the canonical graph yet.
                   </p>
 
                   <div className="p117-connection-review__list">
-                    {proposals.map((proposal) => {
+                    {currentProposalBatch.proposals.map((proposal) => {
                       const key = proposalKey(proposal);
                       const checked = selectedProposalKeys.has(key);
 
@@ -309,70 +234,88 @@ export function P117CustomWorkspaceHome(props: Props) {
                   <div className="p117-review-panel__actions">
                     <button
                       type="button"
-                      onClick={() => void finishConnectionReview(true)}
+                      onClick={acceptSelectedRelations}
                       disabled={selectedProposalKeys.size === 0}
                     >
-                      Accept selected + continue
+                      Accept selected connections
                     </button>
                     <button
                       type="button"
-                      onClick={() => void finishConnectionReview(false)}
+                      onClick={rejectRelationBatch}
                     >
-                      Continue without connections
+                      Reject all
                     </button>
                   </div>
 
                   <small>
-                    Agent proposes. Human decides. Accepted connections are recorded as HUMAN-approved relations, then semantic triage runs again on the new graph.
+                    Agent proposes. Human decides. Accepted lines invalidate old semantic triage and require a fresh full-batch review.
                   </small>
                 </div>
-              ) : null}
-
-              {stage === "COMPLETE" && summary ? (
+              ) : currentRequest && triageComplete ? (
                 <div className="p117-review-panel__result">
                   <span>FRESH TRIAGE COMMITTED</span>
                   <strong>
-                    {summary.critical} CRITICAL · {summary.review} REVIEW · {summary.stable} STABLE
+                    {criticalCount} CRITICAL · {reviewCount} REVIEW · {stableCount} STABLE
                   </strong>
                   <p>
-                    {summary.primaryRiskId
-                      ? `Primary review target: ${summary.primaryRiskId}. The graph and inspector now use this fresh semantic review.`
-                      : "No CRITICAL or REVIEW item was produced by the current complete review."}
+                    Groundline is now using one complete semantic review for the current accepted graph. Focus primary risk and repair are enabled from this fresh triage.
                   </p>
                 </div>
-              ) : null}
-
-              {stage === "EXTERNAL_REQUIRED" ? (
+              ) : currentRequest ? (
                 <div className="p117-review-panel__fallback">
-                  <span>ON-DEVICE REVIEWER UNAVAILABLE</span>
-                  <p>{message}</p>
+                  <span>WAITING FOR WEBMCP AGENT</span>
+                  <p>
+                    Groundline prepared a current review packet. No model runs inside the page and no CRITICAL label is fabricated locally.
+                  </p>
+                  <p>
+                    In ChatGPT's in-app browser, ask your agent:
+                  </p>
+                  <p>
+                    <code>
+                      Review this Groundline workspace. Propose defensible connections for any UNLINKED cards, wait for my approval, then evaluate every current semantic target and triage the fresh graph.
+                    </code>
+                  </p>
                   <ol>
-                    <li>Agent calls inspect_workspace.</li>
-                    <li>Agent evaluates every semantic_review.target_item_id.</li>
-                    <li>Agent calls triage_workspace once with the current review_token and the full batch.</li>
+                    <li>
+                      Agent calls <code>inspect_workspace</code> and uses the current review token.
+                    </li>
+                    {unlinkedIds.length > 0 ? (
+                      <li>
+                        Agent may call <code>propose_relations</code>. Proposed lines stay pending until you approve them here.
+                      </li>
+                    ) : null}
+                    <li>
+                      After any approved graph change, the agent calls <code>inspect_workspace</code> again.
+                    </li>
+                    <li>
+                      Agent calls <code>triage_workspace</code> once with exactly one evaluation for every current target.
+                    </li>
                   </ol>
                   <small>
-                    Groundline will not invent CRITICAL labels merely because the local model is unavailable.
+                    Current packet: {currentRequest.targetItemIds.length} semantic targets · {currentRequest.unlinkedItemIds.length} unlinked · {currentRequest.reviewToken}
                   </small>
+                  <div className="p117-review-panel__actions">
+                    <button type="button" onClick={requestAgentReview}>
+                      Refresh review request
+                    </button>
+                  </div>
                 </div>
-              ) : null}
-
-              {stage === "ERROR" ? (
+              ) : (
                 <div className="p117-review-panel__error">
-                  <span>NO RESULT COMMITTED</span>
-                  <p>{message}</p>
-                  <button
-                    type="button"
-                    onClick={() => void startReview()}
-                  >
-                    Retry current workspace
+                  <span>NO CURRENT REVIEW PACKET</span>
+                  <p>
+                    {message ??
+                      (hasWebMCP()
+                        ? "Run analysis to create a fresh WebMCP review request for the current workspace."
+                        : "WebMCP is not detected. Open Groundline in ChatGPT's in-app browser or Chrome with WebMCP enabled.")}
+                  </p>
+                  <button type="button" onClick={requestAgentReview}>
+                    Create current review request
                   </button>
                 </div>
-              ) : null}
+              )}
 
-              {message &&
-              stage !== "ERROR" &&
-              stage !== "EXTERNAL_REQUIRED" ? (
+              {message ? (
                 <p className="p117-review-panel__message">{message}</p>
               ) : null}
 
