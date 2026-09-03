@@ -1,0 +1,19 @@
+{
+  "milestone": "P-06.9",
+  "required_commands": [
+    "npm run typecheck",
+    "npm run build",
+    "npm test",
+    "npm run dev"
+  ],
+  "expected_tests": 115,
+  "browser_smoke": [
+    "Create a custom workspace.",
+    "Confirm there is no Run analysis toolbar at the top.",
+    "Scroll to What do I do now?.",
+    "Click Run analysis.",
+    "Confirm Analysis result appears directly below and is automatically brought into view.",
+    "For incomplete input, confirm Add the missing pieces appears.",
+    "For complete input, confirm Ready for agent review appears."
+  ]
+}

@@ -1,0 +1,18 @@
+{
+  "milestone": "P-08.5",
+  "commands": [
+    "npm run typecheck",
+    "npm run build",
+    "npm test",
+    "npm run dev"
+  ],
+  "smoke": [
+    "Open a custom workspace and Run analysis.",
+    "Click one graph card. The app must remain rendered and Inspector must show that card.",
+    "Click several different cards. No blank screen and Inspector follows each card.",
+    "Ctrl/Shift-click multiple cards. Multi-selection remains usable for group drag.",
+    "Click Focus primary risk. Inspector returns to the focused risk.",
+    "Click Propose repair. Inspector moves to the accepted conclusion.",
+    "No redundant Open map button is present."
+  ]
+}

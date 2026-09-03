@@ -1,0 +1,32 @@
+{
+  "milestone": "P-07/P-08",
+  "artifact_status": "PASS_STATIC",
+  "runtime_status": "PENDING_USER_LOCAL_RUN",
+  "expected_total_tests": 128,
+  "contract_change": false,
+  "schema_change_request_required": false,
+  "registered_tools": [
+    "inspect_workspace",
+    "triage_workspace",
+    "trace_dependencies",
+    "focus_items",
+    "propose_revision"
+  ],
+  "pending_tools": [
+    "inspect_item",
+    "evaluate_item",
+    "find_contradictions",
+    "find_evidence_gaps"
+  ],
+  "checks": {
+    "focus_audit_action": true,
+    "structural_fallback": true,
+    "proposal_domain_wiring": true,
+    "programmatic_graph_selection": true,
+    "select_all_preserved": true,
+    "real_decision_only_with_proposal": true,
+    "webmcp_five_tools": true,
+    "webmcp_registered": true,
+    "human_controls_wired": true
+  }
+}

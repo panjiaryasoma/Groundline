@@ -1,0 +1,19 @@
+{
+  "milestone": "P-06.8",
+  "artifact_status": "PASS_STATIC",
+  "runtime_status": "PENDING_USER_LOCAL_RUN",
+  "expected_total_tests": 114,
+  "contract_change": false,
+  "schema_change_request_required": false,
+  "checks": {
+    "exit_example": true,
+    "demo_toolbar_controls": true,
+    "custom_toolbar_controls": true,
+    "visible_reasoning_map": true,
+    "select_all": true,
+    "clear_selection": true,
+    "node_overflow_fix": true,
+    "inspector_copy_fixed": true,
+    "six_new_tests": true
+  }
+}

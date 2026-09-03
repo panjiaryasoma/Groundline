@@ -1,0 +1,17 @@
+{
+  "milestone": "P-06.11",
+  "artifact_status": "PASS_STATIC",
+  "runtime_status": "PENDING_USER_LOCAL_RUN",
+  "expected_total_tests": 119,
+  "contract_change": false,
+  "schema_change_request_required": false,
+  "checks": {
+    "human_decision_stage": true,
+    "waiting_for_agent": true,
+    "use_suggestion": true,
+    "edit_first": true,
+    "keep_current": true,
+    "decide_later": true,
+    "controls_disabled_without_proposal": true
+  }
+}

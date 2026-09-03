@@ -1,0 +1,23 @@
+{
+  "milestone": "P-06.5",
+  "artifact_status": "PASS_STATIC",
+  "runtime_status": "PENDING_USER_LOCAL_RUN",
+  "expected_total_tests": 96,
+  "contract_change": false,
+  "schema_change_request_required": false,
+  "optimization": {
+    "full_map_code_split": true,
+    "exact_chunk_sizes": "VERIFY_WITH_LOCAL_VITE_BUILD"
+  },
+  "checks": {
+    "lazy_map_chunk": true,
+    "no_eager_reasoning_graph_import": true,
+    "definite_graph_height": true,
+    "react_flow_absolute_canvas": true,
+    "completion_conclusion_card": true,
+    "accepted_next_step": true,
+    "reject_semantics": true,
+    "defer_semantics": true,
+    "four_new_regression_tests": true
+  }
+}

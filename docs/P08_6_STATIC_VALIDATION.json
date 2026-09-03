@@ -1,0 +1,28 @@
+{
+  "milestone": "P-08.6",
+  "mode": "PONYTAIL_FULL",
+  "artifact_status": "PASS_STATIC",
+  "runtime_status": "PENDING_USER_LOCAL_RUN",
+  "last_user_runtime": {
+    "test_files_passed": 27,
+    "test_files_failed": 3,
+    "tests_passed": 140,
+    "tests_failed": 5,
+    "unhandled_errors": 4,
+    "typecheck": "FAIL",
+    "build": "FAIL"
+  },
+  "contract_change": false,
+  "checks": {
+    "misleading_waiting_copy_removed": true,
+    "explicit_agent_handoff_present": true,
+    "no_background_claim_present": true,
+    "safe_scroll_guard_present": true,
+    "no_node_api_test_dependency": true,
+    "later_agent_focus_refines_risk": true,
+    "typescript_syntax_transpile": true,
+    "contract_unchanged": true
+  },
+  "syntax_stdout": "syntax-ok",
+  "syntax_stderr": ""
+}

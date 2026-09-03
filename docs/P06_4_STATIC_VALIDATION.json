@@ -1,0 +1,20 @@
+{
+  "milestone": "P-06.4",
+  "artifact_status": "PASS_STATIC",
+  "runtime_status": "PENDING_USER_LOCAL_RUN",
+  "expected_total_tests": 92,
+  "contract_change": false,
+  "schema_change_request_required": false,
+  "checks": {
+    "single_unified_workspace": true,
+    "focused_chain_derived_from_triage": true,
+    "accepted_conclusion_from_workspace": true,
+    "evidence_derived_from_relations": true,
+    "full_map_progressive_expansion": true,
+    "inspector_hidden_until_map_expanded": true,
+    "audit_hidden_until_map_expanded": true,
+    "human_authority_preserved": true,
+    "new_conclusion_not_auto_re_evaluated": true,
+    "seven_new_tests": true
+  }
+}

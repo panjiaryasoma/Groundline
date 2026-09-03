@@ -1,0 +1,22 @@
+{
+  "milestone": "P-08.3",
+  "mode": "PONYTAIL_FULL",
+  "artifact_status": "PASS_STATIC",
+  "runtime_status": "PENDING_USER_LOCAL_RUN",
+  "test_cases_in_artifact": 141,
+  "contract_change": false,
+  "checks": {
+    "four_panel_workspace": true,
+    "inspector_always_visible": true,
+    "run_analysis_invokes_focus": true,
+    "focus_reassert_available": true,
+    "repair_targets_conclusion": true,
+    "repair_preserves_risk_context": true,
+    "proposal_context_in_audit": true,
+    "webmcp_context_exposed": true,
+    "epistemic_warning_restored": true,
+    "no_new_dependency": true,
+    "proposal_auto_surfaces_live_workspace": true,
+    "reviewed_risk_correlates_through_proposal_audit": true
+  }
+}

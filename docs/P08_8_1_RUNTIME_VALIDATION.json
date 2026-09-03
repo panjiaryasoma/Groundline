@@ -1,0 +1,22 @@
+{
+  "milestone": "P-08.8.1",
+  "commands": [
+    "npm run typecheck",
+    "npm run build",
+    "npm test",
+    "npm run dev"
+  ],
+  "expected": {
+    "typecheck": "0 errors",
+    "build": "PASS (existing Zod/Rollup comment warnings are non-fatal)",
+    "tests": "all tests pass; expected source count is now 154 including the new compatibility regression test"
+  },
+  "critical_ui_smoke": [
+    "Custom input -> Run analysis.",
+    "Click a non-risk card.",
+    "Focus primary risk -> exact named risk card becomes the sole selected card.",
+    "Propose repair -> accepted conclusion becomes selected and proposal flow remains intact.",
+    "Accept proposal -> replacement conclusion card is created and selected.",
+    "Manual Ctrl/Shift multi-select still works and does not blank the app."
+  ]
+}

@@ -1,0 +1,27 @@
+{
+  "milestone": "P-08.8.3",
+  "commands": [
+    "npm run typecheck",
+    "npm run build",
+    "npm test",
+    "npm run dev"
+  ],
+  "manual_runtime_precondition": [
+    "Open Groundline in Chrome 149+ with #enable-webmcp-testing enabled.",
+    "Click Try the example so experienceMode is DEMO before executing any WebMCP tool.",
+    "Do not reload, reset, or return to START during the five-tool journey."
+  ],
+  "runtime_acceptance": [
+    "On START or INTAKE, inspect_workspace execution fails explicitly with 'No active Groundline workspace'.",
+    "On DEMO, all five P08 tools remain discoverable.",
+    "triage_workspace preserves 4 evaluations and 4 triage records.",
+    "focus_items(A-001, C-001, CONC-001; primary A-001) selects A-001 in ReactFlow and Inspector.",
+    "inspect_workspace after focus reports primary_focus_id=A-001 and primary_risk_id=A-001.",
+    "propose_revision(CONC-001) creates exactly one PROPOSED revision and does not change accepted knowledge.",
+    "inspect_workspace after proposal reports selected_item_id=CONC-001, primary_risk_id=A-001, repair_target_id=CONC-001.",
+    "Final audit order is EVALUATE, TRIAGE, FOCUS, PROPOSE_REVISION.",
+    "Human decision controls remain required for acceptance."
+  ],
+  "expected_tests": 157,
+  "contract_change": false
+}

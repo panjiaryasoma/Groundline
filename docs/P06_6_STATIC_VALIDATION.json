@@ -1,0 +1,19 @@
+{
+  "milestone": "P-06.6",
+  "artifact_status": "PASS_STATIC",
+  "runtime_status": "PENDING_USER_LOCAL_RUN",
+  "expected_total_tests": 98,
+  "contract_change": false,
+  "schema_change_request_required": false,
+  "checks": {
+    "three_step_journey": true,
+    "seeded_demo_labeled": true,
+    "no_fake_review_evidence_links": true,
+    "main_analysis_has_plain_cta": true,
+    "advanced_map_disclosed": true,
+    "completion_replay_primary": true,
+    "advanced_map_optional_copy": true,
+    "technical_details_hidden_by_default": true,
+    "contract_change": false
+  }
+}

@@ -1,0 +1,21 @@
+{
+  "milestone": "P-08.8",
+  "commands": [
+    "npm run typecheck",
+    "npm run build",
+    "npm test",
+    "npm run dev"
+  ],
+  "critical_smoke": [
+    "Run analysis on custom input.",
+    "Manually click a non-risk card so ReactFlow says 1 selected.",
+    "Click Focus primary risk.",
+    "The exact focused-risk card must become the only ReactFlow-selected card.",
+    "The '1 selected' counter must refer to that same card.",
+    "Inspector must show that same focused-risk ID.",
+    "Click another card, then Focus again; it must return selection to the same unresolved primary risk.",
+    "Click Propose repair; the accepted conclusion must become the selected card and Inspector target while the risk remains focused context.",
+    "Accept proposal; the new replacement card must become selected.",
+    "Ctrl/Shift multi-select still works afterward without blanking the app."
+  ]
+}

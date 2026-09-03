@@ -1,0 +1,21 @@
+{
+  "milestone": "P-06.8",
+  "required_commands": [
+    "npm run typecheck",
+    "npm run build",
+    "npm test",
+    "npm run dev"
+  ],
+  "expected_tests": 114,
+  "browser_smoke": [
+    "Enter the seeded example and confirm Exit example returns to the start screen without refresh.",
+    "Confirm Run analysis / Focus primary risk / Propose repair are visible in the example toolbar.",
+    "Run analysis and confirm Focus primary risk + Propose repair enable.",
+    "Open the reasoning map and confirm long text stays inside every card.",
+    "Click Select all and drag one selected card; confirm the whole graph moves together.",
+    "Click Clear selection and confirm grouped selection clears.",
+    "Create a custom workspace and confirm Run analysis / Focus primary risk / Propose repair are visible.",
+    "Confirm custom Focus primary risk / Propose repair remain disabled until semantic agent analysis exists.",
+    "Confirm the Reasoning map callout is visible without expanding an Advanced disclosure."
+  ]
+}

@@ -1,0 +1,16 @@
+{
+  "milestone": "P-06.3",
+  "status": "PASS_STATIC",
+  "expected_total_tests": 85,
+  "contract_change": false,
+  "schema_change_request_required": false,
+  "checks": {
+    "guided_default": true,
+    "map_preserved": true,
+    "plain_language_critical": true,
+    "existing_triage_used": true,
+    "human_accept_callback": true,
+    "map_explanation_route": true,
+    "six_tests": true
+  }
+}

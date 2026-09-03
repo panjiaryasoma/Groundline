@@ -1,0 +1,17 @@
+{
+  "milestone": "P-08.6",
+  "commands": [
+    "npm run typecheck",
+    "npm run build",
+    "npm test",
+    "npm run dev"
+  ],
+  "browser_smoke": [
+    "Run analysis opens the live workspace.",
+    "Selecting cards updates Inspector without blanking the app.",
+    "Propose repair changes the panel to Ready for WebMCP agent, not a fake background-loading state.",
+    "Use a WebMCP-aware agent / Model Context Tool Inspector and give it the shown agent prompt.",
+    "The agent should inspect, triage, focus, and call propose_revision.",
+    "When propose_revision succeeds, Revision Proposal changes immediately to Agent proposal with human decision controls."
+  ]
+}

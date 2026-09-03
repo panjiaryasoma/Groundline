@@ -1,0 +1,17 @@
+{
+  "milestone": "P-08.8.2",
+  "mode": "PONYTAIL_FULL",
+  "root_cause": [
+    "P-08.8.1 intentionally made graphSelectionRequest optional for legacy UI-state fixture compatibility.",
+    "Two new tests still dereferenced graphSelectionRequest without first proving it exists.",
+    "graph-interaction.test.ts called selectSingleGraphNode without importing it from the graph barrel."
+  ],
+  "fixes": [
+    "Assert graphSelectionRequest is defined before dereferencing in custom-workspace action tests.",
+    "Import selectSingleGraphNode in graph-interaction.test.ts.",
+    "Keep P-08.8 programmatic selection behavior unchanged."
+  ],
+  "contract_change": false,
+  "runtime_status": "PENDING_USER_LOCAL_NPM_RUN",
+  "expected_previous_type_errors_fixed": 8
+}

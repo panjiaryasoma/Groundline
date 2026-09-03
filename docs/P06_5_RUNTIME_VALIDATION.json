@@ -1,0 +1,24 @@
+{
+  "milestone": "P-06.5",
+  "required_commands": [
+    "npm run typecheck",
+    "npm run build",
+    "npm test",
+    "npm run dev"
+  ],
+  "expected_tests": 96,
+  "browser_smoke": [
+    "Run analysis",
+    "Suggest revision",
+    "Accept suggestion",
+    "Click Review evidence links",
+    "Confirm CONC-001 and the new accepted conclusion are both visible in the graph",
+    "Confirm the inspector opens on the new accepted conclusion",
+    "Confirm reject/defer completion states do not say a fresh review is needed"
+  ],
+  "bundle_check": [
+    "Confirm Vite outputs more than one JavaScript chunk",
+    "Record main entry chunk size",
+    "Confirm reasoning-map chunk is loaded only after map expansion"
+  ]
+}

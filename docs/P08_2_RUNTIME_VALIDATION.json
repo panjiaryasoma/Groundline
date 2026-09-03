@@ -1,0 +1,20 @@
+{
+  "milestone": "P-08.2",
+  "required_commands": [
+    "npm run typecheck",
+    "npm run build",
+    "npm test",
+    "npm run dev"
+  ],
+  "expected_test_cases": 136,
+  "browser_smoke": [
+    "Custom workspace -> Run analysis.",
+    "Click Focus primary risk once. Confirm exactly one target is selected in map/inspector.",
+    "Confirm Focus primary risk becomes disabled until the focused target's repair cycle is completed.",
+    "Click Propose repair. Confirm the prepared target is the same focused item, not automatically the conclusion.",
+    "In the WebMCP agent/inspector, ask it to repair the focused risk. Confirm propose_revision creates a proposal for that item.",
+    "Confirm CURRENT vs SUGGESTED and Use suggestion / Edit first / Keep current <type> / Decide later appear.",
+    "Reject or defer the first proposal, then click Focus primary risk again. Confirm the next ranked unresolved risk is selected.",
+    "If Use suggestion/Edit first changes accepted knowledge, do not trust the old semantic triage as fresh; re-run semantic agent analysis before relying on the next priority."
+  ]
+}

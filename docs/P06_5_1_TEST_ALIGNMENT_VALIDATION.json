@@ -1,0 +1,18 @@
+{
+  "milestone": "P-06.5.1",
+  "purpose": "test alignment after P-06.5 lazy loading and completion semantics",
+  "artifact_status": "PASS_STATIC",
+  "runtime_status": "PENDING_USER_LOCAL_RUN",
+  "expected_total_tests": 96,
+  "runtime_logic_changed": false,
+  "contract_change": false,
+  "schema_change_request_required": false,
+  "checks": {
+    "lazy_heading_awaited": true,
+    "old_not_re_evaluated_expectation_removed": true,
+    "fresh_review_expected": true,
+    "evidence_inheritance_semantics_expected": true,
+    "review_evidence_links_expected": true,
+    "test_count_unchanged_96_target": true
+  }
+}

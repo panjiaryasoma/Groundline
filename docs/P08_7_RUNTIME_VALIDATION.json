@@ -1,0 +1,20 @@
+{
+  "milestone": "P-08.7",
+  "commands": [
+    "npm run typecheck",
+    "npm run build",
+    "npm test",
+    "npm run dev"
+  ],
+  "browser_smoke": [
+    "Create a custom workspace.",
+    "Run analysis -> live graph appears and a review target is selected.",
+    "Click another card -> Inspector follows it.",
+    "Focus primary risk -> the focused review card becomes app-selected and Inspector returns to it.",
+    "Propose repair -> a real PROPOSED revision appears immediately; Inspector moves to the accepted conclusion.",
+    "Revision Proposal shows Accepted now, Proposed revision, editable textarea, Accept proposal, Accept edited, Reject, Defer.",
+    "Accept proposal -> old conclusion becomes SUPERSEDED/dim; a NEW accepted conclusion card appears and becomes selected.",
+    "New conclusion has no inherited triage/support edges except SUPERSEDES lineage.",
+    "Reset/exit remains usable."
+  ]
+}

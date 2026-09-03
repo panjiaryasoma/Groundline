@@ -1,0 +1,35 @@
+{
+  "milestone": "P-08.8.1",
+  "mode": "PONYTAIL_FULL",
+  "root_cause": "P-08.8 made graphSelectionRequest a required ephemeral UI field. Older test fixtures replace the entire ui object with the pre-P-08.8 shape, so nextGraphSelectionRequest dereferenced undefined.version and caused cascade failures.",
+  "reported_user_run": {
+    "typecheck_errors": 11,
+    "test_files_failed": 5,
+    "tests_failed": 28,
+    "tests_passed": 125,
+    "tests_total": 153,
+    "unhandled_errors": 1
+  },
+  "fix_strategy": [
+    "Make graphSelectionRequest backwards-compatible in ephemeral state.",
+    "Default missing previous request version to 0.",
+    "Normalize an omitted graph request inside ReasoningGraph.",
+    "Make graph request props optional at component boundaries used by older tests.",
+    "Restore missing GraphSelectionRequest type import.",
+    "Export selectSingleGraphNode from the graph barrel.",
+    "Add a migration regression test using the old UI shape."
+  ],
+  "checks": {
+    "focus_workspace_imports_GraphSelectionRequest": true,
+    "ephemeral_state_is_backwards_compatible": true,
+    "missing_request_starts_at_version_zero": true,
+    "reasoning_graph_has_safe_default": true,
+    "graph_barrel_exports_single_selection_helper": true,
+    "compatibility_regression_test_added": true,
+    "contract_change": false
+  },
+  "static_status": "PASS_STATIC",
+  "typescript_transpile_syntax": "PASS",
+  "runtime_status": "PENDING_USER_LOCAL_NPM_RUN",
+  "contract_change": false
+}

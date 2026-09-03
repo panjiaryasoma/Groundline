@@ -31,7 +31,26 @@ export function AuditTrail({
                 <strong>{event.event_type}</strong>
                 <span>{event.actor_type}</span>
               </div>
-              <code>{event.entity_ids.join(" · ")}</code>
+              <div className="audit-event-detail">
+                <code>
+                  {event.entity_ids.join(" · ")}
+                </code>
+                {event.event_type === "FOCUS" &&
+                event.metadata?.requested_action ? (
+                  <span>
+                    {String(
+                      event.metadata
+                        .requested_action,
+                    )}
+                  </span>
+                ) : null}
+                {event.event_type ===
+                  "PROPOSE_REVISION" ? (
+                  <span>
+                    proposal created
+                  </span>
+                ) : null}
+              </div>
               <time dateTime={event.timestamp}>
                 {new Date(event.timestamp).toLocaleTimeString(
                   [],

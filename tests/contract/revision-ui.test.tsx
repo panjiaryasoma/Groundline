@@ -111,4 +111,126 @@ describe("P-06 revision panel", () => {
       "Human-edited accepted conclusion.",
     );
   });
+
+  it("shows a waiting state after repair is prepared but before the agent proposal exists", () => {
+    const workspace = structuredClone(
+      integration001,
+    );
+
+    workspace.audit_events.push({
+      event_id: "AUD-REPAIR-WAIT",
+      event_type: "FOCUS",
+      timestamp:
+        "2026-09-02T00:01:00+07:00",
+      actor_type: "HUMAN",
+      entity_ids: [
+        "A-001",
+        "C-001",
+        "CONC-001",
+      ],
+      metadata: {
+        requested_action:
+          "PROPOSE_REPAIR",
+        primary_risk_id: "A-001",
+        repair_target_id: "CONC-001",
+        proposal_state:
+          "AWAITING_AGENT",
+      },
+    });
+
+    render(
+      <RevisionPanel
+        workspace={workspace}
+        onAccept={vi.fn()}
+        onEditAndAccept={vi.fn()}
+        onReject={vi.fn()}
+        onDefer={vi.fn()}
+      />,
+    );
+
+    expect(
+      screen.getByText(
+        "Ready for WebMCP agent",
+      ),
+    ).toBeInTheDocument();
+
+    expect(
+      screen.getAllByText("A-001").length,
+    ).toBeGreaterThan(0);
+
+    expect(
+      screen.getAllByText("CONC-001").length,
+    ).toBeGreaterThan(0);
+  });
+
+
+  it("labels the immediate custom draft as a local deterministic agent proposal", () => {
+    const base = structuredClone(
+      integration001,
+    );
+
+    const workspace =
+      proposeRevision({
+        workspace: base,
+        revisionId:
+          "REV-LOCAL-001",
+        targetItemId:
+          "CONC-001",
+        proposedText:
+          "Keep the conclusion provisional until the focused reasoning issue is resolved.",
+        reasonCodes: [
+          "STRUCTURAL_REVIEW_TARGET",
+        ],
+        affectedItemIds: [
+          "A-001",
+          "CONC-001",
+        ],
+        createdBy: "AGENT",
+        createdAt:
+          "2026-09-02T12:00:00+07:00",
+        auditEventId:
+          "AUD-LOCAL-001",
+      });
+
+    const event =
+      workspace.audit_events.at(-1);
+
+    if (event) {
+      event.metadata = {
+        ...(event.metadata ?? {}),
+        proposal_source:
+          "LOCAL_DETERMINISTIC_REPAIR_AGENT",
+      };
+    }
+
+    render(
+      <RevisionPanel
+        workspace={workspace}
+        onAccept={vi.fn()}
+        onEditAndAccept={vi.fn()}
+        onReject={vi.fn()}
+        onDefer={vi.fn()}
+      />,
+    );
+
+    expect(
+      screen.getByText(
+        /Agent proposal · local deterministic/i,
+      ),
+    ).toBeInTheDocument();
+
+    for (const name of [
+      "Accept proposal",
+      "Accept edited",
+      "Reject",
+      "Defer",
+    ]) {
+      expect(
+        screen.getByRole("button", {
+          name,
+        }),
+      ).toBeEnabled();
+    }
+  });
+
 });

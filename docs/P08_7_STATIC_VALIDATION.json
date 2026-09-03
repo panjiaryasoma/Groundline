@@ -1,0 +1,24 @@
+{
+  "milestone": "P-08.7",
+  "mode": "PONYTAIL_FULL",
+  "artifact_status": "PASS_STATIC",
+  "runtime_status": "PENDING_USER_LOCAL_RUN",
+  "test_cases_counted_from_source": 148,
+  "contract_change": false,
+  "p06_state_machine_parity": true,
+  "checks": {
+    "custom_repair_action_exists": true,
+    "custom_repair_creates_revision": true,
+    "repair_selects_conclusion": true,
+    "local_provenance_explicit": true,
+    "revision_controls_present": true,
+    "accept_creates_replacement": true,
+    "supersedes_relation_preserved": true,
+    "current_answer_prefers_accepted": true,
+    "no_auto_semantic_rewire": true,
+    "contract_unchanged": true,
+    "typescript_syntax": true
+  },
+  "syntax_stdout": "syntax-ok",
+  "syntax_stderr": ""
+}

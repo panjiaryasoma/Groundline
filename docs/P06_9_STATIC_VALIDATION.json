@@ -1,0 +1,17 @@
+{
+  "milestone": "P-06.9",
+  "artifact_status": "PASS_STATIC",
+  "runtime_status": "PENDING_USER_LOCAL_RUN",
+  "expected_total_tests": 115,
+  "contract_change": false,
+  "schema_change_request_required": false,
+  "checks": {
+    "run_analysis_in_next_section": true,
+    "top_custom_toolbar_removed": true,
+    "visible_analysis_result": true,
+    "scroll_feedback": true,
+    "missing_pieces_action": true,
+    "ready_for_agent_review": true,
+    "no_fake_custom_focus_repair": true
+  }
+}

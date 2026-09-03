@@ -55,6 +55,18 @@ export function InspectorPanel({
   );
   const relations = relationSummary(workspace, item.id);
 
+  const revisionActivity =
+    workspace.revisions
+      .filter(
+        (revision) =>
+          revision.target_item_id === item.id ||
+          revision.affected_item_ids.includes(
+            item.id,
+          ),
+      )
+      .slice()
+      .reverse();
+
   return (
     <aside className="inspector-panel">
       <div className="inspector-heading">
@@ -116,7 +128,40 @@ export function InspectorPanel({
           </>
         ) : (
           <p className="muted-copy">
-            Run analysis to populate triage.
+            No triage result yet. Semantic analysis must run before a risk status appears.
+          </p>
+        )}
+      </section>
+
+      <section className="inspector-section">
+        <p className="eyebrow">
+          Revision activity
+        </p>
+        {revisionActivity.length ? (
+          <ul className="relation-list">
+            {revisionActivity.map(
+              (revision) => (
+                <li
+                  key={
+                    revision.revision_id
+                  }
+                >
+                  <span>
+                    {revision.state}
+                  </span>
+                  <code>
+                    {
+                      revision.revision_id
+                    }
+                  </code>
+                </li>
+              ),
+            )}
+          </ul>
+        ) : (
+          <p className="muted-copy">
+            No repair activity for this
+            item yet.
           </p>
         )}
       </section>

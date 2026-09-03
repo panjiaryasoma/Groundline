@@ -1,0 +1,12 @@
+{
+  "milestone": "P-06.4",
+  "runtime_status": "PENDING_USER_LOCAL_RUN",
+  "reason": "The artifact sandbox does not contain the repository's installed node_modules, so npm typecheck/build/test cannot be treated as a valid local runtime gate here.",
+  "required_commands": [
+    "npm run typecheck",
+    "npm run build",
+    "npm test",
+    "npm run dev"
+  ],
+  "expected_tests": 92
+}
