@@ -1,3 +1,5 @@
+import { useEffect, useRef } from "react";
+
 import type { Workspace } from "../../domain/schema";
 import type {
   GraphSelectionRequest,
@@ -47,8 +49,50 @@ export function ExpandedReasoningMap({
   showCollapse = false,
   showHeading = true,
 }: ExpandedReasoningMapProps) {
+  const sectionRef = useRef<HTMLElement | null>(null);
+
+  useEffect(() => {
+    const itemId = graphSelectionRequest?.itemId;
+    const version = graphSelectionRequest?.version ?? 0;
+
+    if (
+      !itemId ||
+      version <= 0 ||
+      typeof window === "undefined" ||
+      typeof document === "undefined"
+    ) {
+      return;
+    }
+
+    const reducedMotion = window.matchMedia?.(
+      "(prefers-reduced-motion: reduce)",
+    ).matches ?? false;
+
+    const timeoutId = window.setTimeout(() => {
+      const escapedId =
+        typeof CSS !== "undefined" && CSS.escape
+          ? CSS.escape(itemId)
+          : itemId.replace(/["\\]/g, "\\$&");
+      const selectedCard = sectionRef.current?.querySelector<HTMLElement>(
+        `[data-item-id="${escapedId}"]`,
+      );
+
+      (selectedCard ?? sectionRef.current)?.scrollIntoView({
+        behavior: reducedMotion ? "auto" : "smooth",
+        block: selectedCard ? "center" : "start",
+        inline: "nearest",
+      });
+    }, 90);
+
+    return () => window.clearTimeout(timeoutId);
+  }, [
+    graphSelectionRequest?.itemId,
+    graphSelectionRequest?.version,
+  ]);
+
   return (
     <section
+      ref={sectionRef}
       className={`focus-map-expansion focus-map-expansion--live${
         showHeading
           ? ""
