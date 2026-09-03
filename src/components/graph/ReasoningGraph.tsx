@@ -164,17 +164,19 @@ function buildNodes(
                 <span className="p115-unlinked-badge">
                   UNLINKED
                 </span>
-              ) : triage ? (
+              ) : null}
+
+              {triage ? (
                 <span
                   className={`triage-badge triage-badge--${triage.state.toLowerCase()}`}
                 >
                   {triage.state}
                 </span>
-              ) : (
+              ) : !unlinked ? (
                 <span className="triage-badge triage-badge--unassessed">
                   UNASSESSED
                 </span>
-              )}
+              ) : null}
             </div>
           </div>
         ),
@@ -411,7 +413,7 @@ export function ReasoningGraph({
               type="button"
               className="graph-analysis-again"
               onClick={runAnalysisAgain}
-              title="Return the expanded reasoning to the analysis stage. The WebMCP agent must review semantic connections and triage again."
+              title="Return the expanded reasoning to semantic review. Groundline's reviewer will propose connections before fresh triage; an external WebMCP agent remains the fallback."
             >
               Run analysis again · {unlinkedItemIds.length} unlinked
             </button>
@@ -508,7 +510,7 @@ export function ReasoningGraph({
 
           <div className="graph-add-composer__footer">
             <p>
-              New cards are selected immediately for inspection. When you are done adding them, run analysis again so the expanded workspace can go through semantic review and fresh triage.
+              New cards are selected immediately for inspection. When you are done adding them, run analysis again. Groundline's semantic reviewer can propose connections for human approval before fresh triage.
             </p>
             <div className="graph-add-composer__actions">
               <button

@@ -1,4 +1,4 @@
-import { P112CustomWorkspaceHome } from "../components/custom/P112CustomWorkspaceHome";
+import { P117CustomWorkspaceHome } from "../components/custom/P117CustomWorkspaceHome";
 import { DecisionIntake } from "../components/intake";
 import { P111FocusWorkspace } from "../components/focus";
 import { StartScreen } from "../components/start";
@@ -162,7 +162,7 @@ export function App() {
       ) : null}
 
       {experienceMode === "CUSTOM" ? (
-        <P112CustomWorkspaceHome
+        <P117CustomWorkspaceHome
           workspace={workspace}
           selectedItemId={ui.selectedItemId}
           focusedItemIds={ui.focusedItemIds}
