@@ -12,16 +12,39 @@ html {
   scroll-margin-top: 96px;
 }
 
+/*
+ * Keep the footer's original contained layout and BEDROCK label, while making
+ * only its dark field extend edge-to-edge across the viewport.
+ */
 .product-footnote {
   position: relative !important;
   isolation: isolate;
-  background: var(--strata-bedrock) !important;
-  box-shadow: 0 0 0 100vmax var(--strata-bedrock) !important;
+  color: color-mix(in srgb, var(--bedrock-ink) 82%, transparent) !important;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.025), transparent),
+    var(--bedrock) !important;
+  box-shadow: 0 0 0 100vmax var(--bedrock) !important;
   clip-path: inset(0 -100vmax);
 }
 
 .product-footnote::before {
-  content: none !important;
+  content: "BEDROCK / AUDITABLE RECORD" !important;
+  position: static !important;
+  inset: auto !important;
+  width: auto !important;
+  transform: none !important;
+  z-index: auto !important;
+  background: none !important;
+  border: 0 !important;
+  color: var(--gold-soft) !important;
+  font-size: 0.58rem !important;
+  letter-spacing: 0.13em !important;
+}
+
+.product-footnote span {
+  position: relative;
+  z-index: 1;
+  color: inherit;
 }
 
 @media (prefers-reduced-motion: reduce) {
