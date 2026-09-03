@@ -1,93 +1,88 @@
-import { CustomWorkspaceHome } from "../components/custom";
+import { P117CustomWorkspaceHome } from "../components/custom/P117CustomWorkspaceHome";
 import { DecisionIntake } from "../components/intake";
-import { FocusWorkspace } from "../components/focus";
+import { UnifiedReviewWorkspace } from "../components/review/UnifiedReviewWorkspace";
 import { StartScreen } from "../components/start";
 import { hasWebMCP } from "../webmcp/modelContext";
 import { useGroundlineWebMCP } from "../webmcp/useGroundlineWebMCP";
+import { installP111RepairLifecycle } from "../state/p111RepairLifecycle";
+import { installP112CustomSemanticGate } from "../state/p112CustomSemanticGate";
+import { installP113StructuralCycleGuard } from "../state/p113StructuralCycleGuard";
 import { useWorkspaceStore } from "../state/workspaceStore";
 import "../styles/app.css";
+import "../styles/p11.css";
+
+installP111RepairLifecycle();
+installP112CustomSemanticGate();
+installP113StructuralCycleGuard();
 
 export function App() {
   useGroundlineWebMCP();
 
-  const experienceMode =
-    useWorkspaceStore(
-      (state) => state.experienceMode,
-    );
-  const customInput =
-    useWorkspaceStore(
-      (state) => state.customInput,
-    );
+  const experienceMode = useWorkspaceStore(
+    (state) => state.experienceMode,
+  );
+  const customInput = useWorkspaceStore(
+    (state) => state.customInput,
+  );
   const workspace = useWorkspaceStore(
     (state) => state.workspace,
   );
-  const ui = useWorkspaceStore(
-    (state) => state.ui,
+  const ui = useWorkspaceStore((state) => state.ui);
+
+  const startIntake = useWorkspaceStore(
+    (state) => state.startIntake,
   );
-
-  const startIntake =
-    useWorkspaceStore(
-      (state) => state.startIntake,
-    );
-  const startDemo =
-    useWorkspaceStore(
-      (state) => state.startDemo,
-    );
-  const backToStart =
-    useWorkspaceStore(
-      (state) => state.backToStart,
-    );
-  const createCustomWorkspace =
-    useWorkspaceStore(
-      (state) =>
-        state.createCustomWorkspace,
-    );
-
+  const startDemo = useWorkspaceStore(
+    (state) => state.startDemo,
+  );
+  const backToStart = useWorkspaceStore(
+    (state) => state.backToStart,
+  );
+  const createCustomWorkspace = useWorkspaceStore(
+    (state) => state.createCustomWorkspace,
+  );
   const resetDemo = useWorkspaceStore(
     (state) => state.resetDemo,
   );
   const selectItem = useWorkspaceStore(
     (state) => state.selectItem,
   );
-  const runSeededAnalysis =
-    useWorkspaceStore(
-      (state) => state.runSeededAnalysis,
-    );
-  const focusPrimaryRisk =
-    useWorkspaceStore(
-      (state) => state.focusPrimaryRisk,
-    );
-  const proposeSeededRevision =
-    useWorkspaceStore(
-      (state) => state.proposeSeededRevision,
-    );
-  const acceptLatestRevision =
-    useWorkspaceStore(
-      (state) => state.acceptLatestRevision,
-    );
-  const editAndAcceptLatestRevision =
-    useWorkspaceStore(
-      (state) =>
-        state.editAndAcceptLatestRevision,
-    );
-  const rejectLatestRevision =
-    useWorkspaceStore(
-      (state) => state.rejectLatestRevision,
-    );
-  const deferLatestRevision =
-    useWorkspaceStore(
-      (state) => state.deferLatestRevision,
-    );
-  const focusCustomPrimaryRisk =
-    useWorkspaceStore(
-      (state) =>
-        state.focusCustomPrimaryRisk,
-    );
-  const proposeCustomRepair =
-    useWorkspaceStore(
-      (state) =>
-        state.proposeCustomRepair,
-    );
+
+  const runSeededAnalysis = useWorkspaceStore(
+    (state) => state.runSeededAnalysis,
+  );
+  const focusPrimaryRisk = useWorkspaceStore(
+    (state) => state.focusPrimaryRisk,
+  );
+  const proposeSeededRevision = useWorkspaceStore(
+    (state) => state.proposeSeededRevision,
+  );
+
+  const focusCustomPrimaryRisk = useWorkspaceStore(
+    (state) => state.focusCustomPrimaryRisk,
+  );
+  const proposeCustomRepair = useWorkspaceStore(
+    (state) => state.proposeCustomRepair,
+  );
+
+  const acceptLatestRevision = useWorkspaceStore(
+    (state) => state.acceptLatestRevision,
+  );
+  const editAndAcceptLatestRevision = useWorkspaceStore(
+    (state) => state.editAndAcceptLatestRevision,
+  );
+  const rejectLatestRevision = useWorkspaceStore(
+    (state) => state.rejectLatestRevision,
+  );
+  const deferLatestRevision = useWorkspaceStore(
+    (state) => state.deferLatestRevision,
+  );
+
+  const graphSelectionRequest =
+    ui.graphSelectionRequest ?? {
+      itemId: null,
+      version: 0,
+    };
 
   return (
     <main className="app-shell app-shell--unified">
@@ -136,61 +131,51 @@ export function App() {
       ) : null}
 
       {experienceMode === "DEMO" ? (
-        <FocusWorkspace
+        <UnifiedReviewWorkspace
+          mode="DEMO"
           workspace={workspace}
           selectedItemId={ui.selectedItemId}
           focusedItemIds={ui.focusedItemIds}
           graphSelectionRequest={
-            ui.graphSelectionRequest ?? {
-              itemId: null,
-              version: 0,
-            }
+            graphSelectionRequest
           }
           onSelectItem={selectItem}
           onRunAnalysis={runSeededAnalysis}
-          onFocusPrimaryRisk={
-            focusPrimaryRisk
-          }
-          onProposeRevision={
-            proposeSeededRevision
-          }
+          onFocusPrimaryRisk={focusPrimaryRisk}
+          onProposeRepair={proposeSeededRevision}
           onAccept={acceptLatestRevision}
           onEditAndAccept={
             editAndAcceptLatestRevision
           }
           onReject={rejectLatestRevision}
           onDefer={deferLatestRevision}
-          onReset={resetDemo}
-          onExitExample={backToStart}
+          onExit={backToStart}
+          onResetDemo={resetDemo}
         />
       ) : null}
 
       {experienceMode === "CUSTOM" ? (
-        <CustomWorkspaceHome
+        <P117CustomWorkspaceHome
           workspace={workspace}
           selectedItemId={ui.selectedItemId}
           focusedItemIds={ui.focusedItemIds}
           graphSelectionRequest={
-            ui.graphSelectionRequest ?? {
-              itemId: null,
-              version: 0,
-            }
+            graphSelectionRequest
           }
           onSelectItem={selectItem}
+          onRunAnalysis={focusCustomPrimaryRisk}
           onFocusPrimaryRisk={
             focusCustomPrimaryRisk
           }
-          onProposeRepair={
-            proposeCustomRepair
-          }
+          onProposeRepair={proposeCustomRepair}
           onAccept={acceptLatestRevision}
           onEditAndAccept={
             editAndAcceptLatestRevision
           }
           onReject={rejectLatestRevision}
           onDefer={deferLatestRevision}
-          onEdit={startIntake}
-          onBackToStart={backToStart}
+          onExit={backToStart}
+          onEditInput={startIntake}
         />
       ) : null}
 

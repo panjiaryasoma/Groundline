@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+
 import type { Workspace } from "../../domain/schema";
 
 interface RevisionPanelProps {
@@ -7,6 +8,38 @@ interface RevisionPanelProps {
   onEditAndAccept: (editedText: string) => void;
   onReject: () => void;
   onDefer: () => void;
+}
+
+function latestActiveRepairRequest(
+  workspace: Workspace,
+) {
+  const events = workspace.audit_events;
+  let repairIndex = -1;
+  let lifecycleIndex = -1;
+
+  events.forEach((event, index) => {
+    if (
+      event.event_type === "FOCUS" &&
+      event.metadata?.requested_action ===
+        "PROPOSE_REPAIR"
+    ) {
+      repairIndex = index;
+    }
+
+    if (
+      event.event_type === "PROPOSE_REVISION" ||
+      event.event_type === "ACCEPT_REVISION" ||
+      event.event_type === "REJECT_REVISION"
+    ) {
+      lifecycleIndex = index;
+    }
+  });
+
+  if (repairIndex < 0 || repairIndex <= lifecycleIndex) {
+    return undefined;
+  }
+
+  return events[repairIndex];
 }
 
 export function RevisionPanel({
@@ -20,7 +53,10 @@ export function RevisionPanel({
     () =>
       [...workspace.revisions]
         .reverse()
-        .find((candidate) => candidate.state === "PROPOSED"),
+        .find(
+          (candidate) =>
+            candidate.state === "PROPOSED",
+        ),
     [workspace.revisions],
   );
 
@@ -29,33 +65,28 @@ export function RevisionPanel({
   );
 
   useEffect(() => {
-    setEditedText(revision?.proposed_text ?? "");
-  }, [revision?.revision_id, revision?.proposed_text]);
+    setEditedText(
+      revision?.proposed_text ?? "",
+    );
+  }, [
+    revision?.revision_id,
+    revision?.proposed_text,
+  ]);
 
   if (!revision) {
     const repairRequest =
-      [...workspace.audit_events]
-        .reverse()
-        .find(
-          (event) =>
-            event.event_type === "FOCUS" &&
-            event.metadata
-              ?.requested_action ===
-              "PROPOSE_REPAIR",
-        );
+      latestActiveRepairRequest(workspace);
 
     const primaryRiskId =
       typeof repairRequest?.metadata
         ?.primary_risk_id === "string"
-        ? repairRequest.metadata
-            .primary_risk_id
+        ? repairRequest.metadata.primary_risk_id
         : null;
 
     const repairTargetId =
       typeof repairRequest?.metadata
         ?.repair_target_id === "string"
-        ? repairRequest.metadata
-            .repair_target_id
+        ? repairRequest.metadata.repair_target_id
         : null;
 
     return (
@@ -69,29 +100,14 @@ export function RevisionPanel({
 
         {repairRequest ? (
           <>
-            <h2>
-              Ready for WebMCP agent
-            </h2>
+            <h2>Repair target prepared</h2>
             <p className="muted-copy">
-              Groundline prepared the repair target.
-              Nothing is running in the background.
-              A WebMCP-aware agent must inspect this
-              page and call{" "}
-              <code>propose_revision</code>.
+              Groundline moved the Inspector to
+              the accepted item that may be revised
+              while keeping the current reasoning risk
+              in focus. No accepted knowledge has
+              changed.
             </p>
-
-            <div className="revision-agent-instruction">
-              <span>Ask your agent</span>
-              <p>
-                Review this Groundline workspace.
-                Inspect and triage the reasoning,
-                focus the highest-priority unresolved
-                risk, trace how it affects the accepted
-                conclusion, then propose a revision for
-                the prepared repair target. Do not
-                accept it.
-              </p>
-            </div>
 
             <dl className="revision-waiting-meta">
               <div>
@@ -102,21 +118,30 @@ export function RevisionPanel({
                 </dd>
               </div>
               <div>
-                <dt>Repair target</dt>
+                <dt>Revision target</dt>
                 <dd>
                   {repairTargetId ??
                     "Not recorded"}
                 </dd>
               </div>
             </dl>
+
+            <p className="authority-note">
+              A WebMCP agent can now propose a
+              revision for this prepared target.
+              The proposal will appear in this same
+              panel. Nothing becomes accepted until
+              you review it.
+            </p>
           </>
         ) : (
           <>
             <h2>No pending proposal</h2>
             <p className="muted-copy">
-              The agent may propose a repair.
-              Accepted knowledge does not change
-              until a human reviews it.
+              When an agent proposes a revision,
+              the current text, suggested replacement,
+              editable draft, and human decision
+              controls appear here.
             </p>
           </>
         )}
@@ -125,7 +150,8 @@ export function RevisionPanel({
   }
 
   const target = workspace.items.find(
-    (item) => item.id === revision.target_item_id,
+    (item) =>
+      item.id === revision.target_item_id,
   );
 
   const proposalEvent =
@@ -141,12 +167,13 @@ export function RevisionPanel({
       );
 
   const proposalSource =
-    proposalEvent?.metadata
-      ?.proposal_source;
+    proposalEvent?.metadata?.proposal_source;
 
   const localDeterministic =
-    proposalSource ===
-    "LOCAL_DETERMINISTIC_REPAIR_AGENT";
+    typeof proposalSource === "string" &&
+    proposalSource.startsWith(
+      "LOCAL_DETERMINISTIC_",
+    );
 
   return (
     <section
@@ -170,12 +197,19 @@ export function RevisionPanel({
 
       <div className="revision-compare">
         <article>
-          <p className="eyebrow">Accepted now</p>
-          <p>{target?.text ?? "Target unavailable."}</p>
+          <p className="eyebrow">
+            Accepted now
+          </p>
+          <p>
+            {target?.text ??
+              "Target unavailable."}
+          </p>
         </article>
 
         <article>
-          <p className="eyebrow">Proposed revision</p>
+          <p className="eyebrow">
+            Proposed revision
+          </p>
           <p>{revision.proposed_text}</p>
         </article>
       </div>
@@ -192,20 +226,31 @@ export function RevisionPanel({
       </label>
 
       <div className="revision-actions">
-        <button type="button" onClick={onAccept}>
+        <button
+          type="button"
+          onClick={onAccept}
+        >
           Accept proposal
         </button>
         <button
           type="button"
-          onClick={() => onEditAndAccept(editedText)}
+          onClick={() =>
+            onEditAndAccept(editedText)
+          }
           disabled={!editedText.trim()}
         >
           Accept edited
         </button>
-        <button type="button" onClick={onReject}>
+        <button
+          type="button"
+          onClick={onReject}
+        >
           Reject
         </button>
-        <button type="button" onClick={onDefer}>
+        <button
+          type="button"
+          onClick={onDefer}
+        >
           Defer
         </button>
       </div>
@@ -214,8 +259,8 @@ export function RevisionPanel({
         {localDeterministic
           ? "This draft came from Groundline's deterministic local repair agent. It is not an LLM judgment. "
           : ""}
-        Agent proposes. Human decides what becomes accepted
-        knowledge.
+        Agent proposes. Human decides what becomes
+        accepted knowledge.
       </p>
     </section>
   );

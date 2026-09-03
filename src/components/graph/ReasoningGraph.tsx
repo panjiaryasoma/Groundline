@@ -15,6 +15,7 @@ import {
   useState,
 } from "react";
 import "@xyflow/react/dist/style.css";
+import "../../styles/p11-4.css";
 
 import type {
   KnowledgeItem,
@@ -22,15 +23,27 @@ import type {
   Workspace,
 } from "../../domain/schema";
 import {
+  P114_ADDABLE_KNOWLEDGE_TYPES,
+  addP114ReasoningItem,
+  getP114UnlinkedReasoningItemIds,
+  isP114ReasoningItemUnlinked,
+  type P114AddReasoningItemInput,
+} from "../../state/p114AddReasoningItem";
+import {
+  deleteSelectedReasoningItem,
+  getDeleteSelectedItemBlockReason,
+} from "../../state/deleteReasoningItem";
+import {
+  useWorkspaceStore,
+  type GraphSelectionRequest,
+} from "../../state/workspaceStore";
+import {
   applyGraphNodeChanges,
   getSelectedNodeIds,
   mergePreservedPositions,
   setAllGraphNodesSelected,
   selectSingleGraphNode,
 } from "./graphInteraction";
-import type {
-  GraphSelectionRequest,
-} from "../../state/workspaceStore";
 
 interface ReasoningGraphProps {
   workspace: Workspace;
@@ -60,6 +73,16 @@ const TYPE_LABEL: Record<KnowledgeItem["type"], string> = {
   CONCLUSION: "CONCLUSION",
 };
 
+const ADD_TYPE_LABEL: Record<
+  P114AddReasoningItemInput["type"],
+  string
+> = {
+  CLAIM: "Claim",
+  COUNTERCLAIM: "Counterclaim",
+  ASSUMPTION: "Assumption",
+  EVIDENCE: "Evidence",
+};
+
 function getTriageRecord(
   records: TriageRecord[],
   itemId: string,
@@ -72,24 +95,19 @@ function getLayeredPosition(
   index: number,
 ): { x: number; y: number } {
   const layer = TYPE_LAYER[item.type];
-
   const baseX =
     item.type === "QUESTION"
       ? 220
       : item.type === "CONCLUSION"
         ? 350
         : 120;
-
   const horizontalGap =
     item.type === "SOURCE" || item.type === "EVIDENCE"
       ? 300
       : 330;
 
   return {
-    x:
-      baseX +
-      index * horizontalGap +
-      (layer % 2 === 0 ? 0 : 90),
+    x: baseX + index * horizontalGap + (layer % 2 === 0 ? 0 : 90),
     y: 32 + layer * 170,
   };
 }
@@ -106,35 +124,30 @@ function buildNodes(
     const index = countsByLayer.get(layer) ?? 0;
     countsByLayer.set(layer, index + 1);
 
-    const triage = getTriageRecord(
-      workspace.triage_records,
-      item.id,
-    );
-
+    const triage = getTriageRecord(workspace.triage_records, item.id);
     const focused = focusedItemIds.includes(item.id);
+    const faulted = triage?.state === "CRITICAL";
+    const unlinked = isP114ReasoningItemUnlinked(workspace, item.id);
 
     return {
       id: item.id,
       position: getLayeredPosition(item, index),
       data: {
         label: (
-          <div
-            className="reasoning-node__inner"
-            data-item-id={item.id}
-          >
+          <div className="reasoning-node__inner" data-item-id={item.id}>
             <div className="reasoning-node__meta">
               <span>{TYPE_LABEL[item.type]}</span>
               <span>{item.id}</span>
             </div>
 
-            <div className="reasoning-node__text">
-              {item.text}
-            </div>
+            <div className="reasoning-node__text">{item.text}</div>
 
             <div className="reasoning-node__footer">
-              <span className="knowledge-state">
-                {item.state}
-              </span>
+              <span className="knowledge-state">{item.state}</span>
+
+              {unlinked ? (
+                <span className="p115-unlinked-badge">UNLINKED</span>
+              ) : null}
 
               {triage ? (
                 <span
@@ -142,11 +155,11 @@ function buildNodes(
                 >
                   {triage.state}
                 </span>
-              ) : (
+              ) : !unlinked ? (
                 <span className="triage-badge triage-badge--unassessed">
                   UNASSESSED
                 </span>
-              )}
+              ) : null}
             </div>
           </div>
         ),
@@ -154,13 +167,11 @@ function buildNodes(
       className: [
         "reasoning-node",
         `reasoning-node--${item.type.toLowerCase()}`,
+        faulted ? "reasoning-node--faulted" : "",
+        unlinked ? "reasoning-node--unlinked" : "",
         focused ? "reasoning-node--focused" : "",
-        item.id === selectedItemId
-          ? "reasoning-node--app-selected"
-          : "",
-        item.state === "SUPERSEDED"
-          ? "reasoning-node--superseded"
-          : "",
+        item.id === selectedItemId ? "reasoning-node--app-selected" : "",
+        item.state === "SUPERSEDED" ? "reasoning-node--superseded" : "",
       ]
         .filter(Boolean)
         .join(" "),
@@ -197,30 +208,34 @@ export function ReasoningGraph({
   graphSelectionRequest,
   onSelectItem,
 }: ReasoningGraphProps) {
+  const experienceMode = useWorkspaceStore(
+    (state) => state.experienceMode,
+  );
+  const [addComposerOpen, setAddComposerOpen] = useState(false);
+  const [addType, setAddType] = useState<
+    P114AddReasoningItemInput["type"]
+  >("CLAIM");
+  const [addText, setAddText] = useState("");
+
   const structuralNodes = useMemo(
-    () =>
-      buildNodes(
-        workspace,
-        focusedItemIds,
-        selectedItemId,
-      ),
-    [
-      workspace,
-      focusedItemIds,
-      selectedItemId,
-    ],
+    () => buildNodes(workspace, focusedItemIds, selectedItemId),
+    [workspace, focusedItemIds, selectedItemId],
   );
 
-  const [nodes, setNodes] = useState<Node[]>(
-    structuralNodes,
+  const [nodes, setNodes] = useState<Node[]>(structuralNodes);
+
+  const hasPendingRevision = workspace.revisions.some(
+    (revision) => revision.state === "PROPOSED",
+  );
+
+  const unlinkedItemIds = useMemo(
+    () => getP114UnlinkedReasoningItemIds(workspace),
+    [workspace],
   );
 
   useEffect(() => {
     setNodes((current) =>
-      mergePreservedPositions(
-        current,
-        structuralNodes,
-      ),
+      mergePreservedPositions(current, structuralNodes),
     );
   }, [structuralNodes]);
 
@@ -242,34 +257,29 @@ export function ReasoningGraph({
     effectiveGraphSelectionRequest.itemId,
   ]);
 
-  const edges = useMemo(
-    () => buildEdges(workspace),
-    [workspace],
-  );
+  const edges = useMemo(() => buildEdges(workspace), [workspace]);
 
   const handleNodesChange = useCallback(
     (changes: NodeChange<Node>[]) => {
-      setNodes((current) =>
-        applyGraphNodeChanges(current, changes),
-      );
+      setNodes((current) => applyGraphNodeChanges(current, changes));
     },
     [],
   );
 
-  const selectedNodeCount = nodes.filter(
-    (node) => node.selected,
-  ).length;
+  const selectedNodeCount = nodes.filter((node) => node.selected).length;
+  const deleteBlockReason =
+    experienceMode === "CUSTOM" &&
+    selectedNodeCount === 1 &&
+    selectedItemId
+      ? getDeleteSelectedItemBlockReason(workspace, selectedItemId)
+      : null;
 
   const selectAllNodes = useCallback(() => {
-    setNodes((current) =>
-      setAllGraphNodesSelected(current, true),
-    );
+    setNodes((current) => setAllGraphNodesSelected(current, true));
   }, []);
 
   const clearNodeSelection = useCallback(() => {
-    setNodes((current) =>
-      setAllGraphNodesSelected(current, false),
-    );
+    setNodes((current) => setAllGraphNodesSelected(current, false));
     onSelectItem(null);
   }, [onSelectItem]);
 
@@ -282,10 +292,7 @@ export function ReasoningGraph({
         return;
       }
 
-      if (
-        selectedItemId &&
-        ids.includes(selectedItemId)
-      ) {
+      if (selectedItemId && ids.includes(selectedItemId)) {
         return;
       }
 
@@ -294,32 +301,100 @@ export function ReasoningGraph({
     [onSelectItem, selectedItemId],
   );
 
+  function submitAddedReasoningItem() {
+    if (!addText.trim()) return;
+
+    addP114ReasoningItem({
+      type: addType,
+      text: addText,
+    });
+
+    setAddText("");
+  }
+
+  function handleDeleteSelectedItem() {
+    if (
+      experienceMode !== "CUSTOM" ||
+      selectedNodeCount !== 1 ||
+      !selectedItemId ||
+      deleteBlockReason
+    ) {
+      return;
+    }
+
+    const selectedItem = workspace.items.find(
+      (item) => item.id === selectedItemId,
+    );
+    if (!selectedItem) return;
+
+    if (
+      typeof window !== "undefined" &&
+      !window.confirm(
+        `Delete ${selectedItem.type.toLowerCase()} ${selectedItem.id}? This removes only this selected card and its represented connections. Decision history remains auditable.`,
+      )
+    ) {
+      return;
+    }
+
+    deleteSelectedReasoningItem();
+  }
+
   return (
-    <section
-      className="graph-panel"
-      aria-label="Groundline reasoning graph"
-    >
+    <section className="graph-panel" aria-label="Groundline reasoning graph">
       <div className="graph-help">
         <div className="graph-help__copy">
           <span>Drag one card to move only that card.</span>
           <span>Ctrl/Shift-click selects multiple.</span>
           <span>Drag any selected card to move the group.</span>
+          <span>Rust mark = critical review fault; dashed rust = challenge.</span>
         </div>
 
         <div className="graph-help__actions">
-          <button
-            type="button"
-            onClick={selectAllNodes}
-          >
+          {experienceMode === "CUSTOM" ? (
+            <button
+              type="button"
+              className="graph-add-trigger"
+              onClick={() => setAddComposerOpen(true)}
+              disabled={hasPendingRevision}
+              title={
+                hasPendingRevision
+                  ? "Finish the pending human revision review first."
+                  : "Add another human-authored reasoning item without inventing a semantic link."
+              }
+            >
+              + Add reasoning item
+            </button>
+          ) : null}
+
+          {experienceMode === "CUSTOM" && unlinkedItemIds.length > 0 ? (
+            <span className="graph-unlinked-status">
+              {unlinkedItemIds.length} unlinked
+            </span>
+          ) : null}
+
+          <button type="button" onClick={selectAllNodes}>
             Select all
           </button>
 
           {selectedNodeCount > 0 ? (
+            <button type="button" onClick={clearNodeSelection}>
+              Clear selection
+            </button>
+          ) : null}
+
+          {experienceMode === "CUSTOM" &&
+          selectedNodeCount === 1 &&
+          selectedItemId ? (
             <button
               type="button"
-              onClick={clearNodeSelection}
+              onClick={handleDeleteSelectedItem}
+              disabled={Boolean(deleteBlockReason)}
+              title={
+                deleteBlockReason ??
+                "Delete only the currently selected reasoning item."
+              }
             >
-              Clear selection
+              Delete selected item
             </button>
           ) : null}
 
@@ -330,6 +405,95 @@ export function ReasoningGraph({
           </span>
         </div>
       </div>
+
+      {experienceMode === "CUSTOM" && addComposerOpen ? (
+        <form
+          className="graph-add-composer"
+          aria-label="Add reasoning item"
+          onSubmit={(event) => {
+            event.preventDefault();
+            submitAddedReasoningItem();
+          }}
+        >
+          <div className="graph-add-composer__heading">
+            <div>
+              <span>Add to this reasoning</span>
+              <strong>New human-authored card</strong>
+            </div>
+            <button
+              type="button"
+              className="graph-add-composer__close"
+              onClick={() => setAddComposerOpen(false)}
+              aria-label="Close add reasoning item"
+            >
+              ×
+            </button>
+          </div>
+
+          <div className="graph-add-composer__fields">
+            <label>
+              <span>Card type</span>
+              <select
+                value={addType}
+                onChange={(event) =>
+                  setAddType(
+                    event.target.value as P114AddReasoningItemInput["type"],
+                  )
+                }
+              >
+                {P114_ADDABLE_KNOWLEDGE_TYPES.map((type) => (
+                  <option key={type} value={type}>
+                    {ADD_TYPE_LABEL[type]}
+                  </option>
+                ))}
+              </select>
+            </label>
+
+            <label className="graph-add-composer__text">
+              <span>Argument / evidence text</span>
+              <textarea
+                value={addText}
+                onChange={(event) => setAddText(event.target.value)}
+                rows={4}
+                placeholder="Add another claim, counterclaim, assumption, or piece of evidence."
+              />
+            </label>
+          </div>
+
+          <div className="graph-add-composer__notice">
+            <span>UNLINKED UNTIL REVIEW</span>
+            <p>
+              Add as many cards as you need. Groundline will not guess SUPPORTS,
+              CHALLENGES, DEPENDS_ON, or QUALIFIES while you are mapping the
+              reasoning.
+            </p>
+          </div>
+
+          <div className="graph-add-composer__footer">
+            <p>
+              New cards are selected immediately for inspection. They remain
+              explicit UNLINKED reasoning until an AI agent proposes defensible
+              relationships and you approve them. Any previous semantic triage is
+              discarded when the accepted reasoning changes.
+            </p>
+            <div className="graph-add-composer__actions">
+              <button type="submit" disabled={!addText.trim()}>
+                Add card
+              </button>
+              <button
+                type="button"
+                onClick={() => setAddComposerOpen(false)}
+              >
+                Done mapping
+              </button>
+            </div>
+          </div>
+
+          <small className="graph-add-composer__resize-hint">
+            Resize this panel from the corner if it covers a card.
+          </small>
+        </form>
+      ) : null}
 
       <div className="strata-labels" aria-hidden="true">
         <span>QUESTION</span>
@@ -358,9 +522,8 @@ export function ReasoningGraph({
         onSelectionChange={handleSelectionChange}
         onNodeClick={(_, node) => onSelectItem(node.id)}
         onPaneClick={() => onSelectItem(null)}
-        proOptions={{ hideAttribution: true }}
       >
-        <Background gap={28} size={1} />
+        <Background gap={18} size={0.8} />
         <Controls showInteractive={false} />
       </ReactFlow>
     </section>

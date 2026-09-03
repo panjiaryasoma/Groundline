@@ -1,0 +1,205 @@
+.p117-review-panel {
+  position: fixed;
+  right: 24px;
+  bottom: 24px;
+  z-index: 80;
+  width: min(460px, calc(100vw - 48px));
+  min-width: 320px;
+  min-height: 180px;
+  max-width: min(720px, calc(100vw - 32px));
+  max-height: min(78vh, 760px);
+  overflow: auto;
+  resize: both;
+  direction: rtl;
+  border: 1px solid var(--ink, #26231f);
+  background: var(--paper, #f3efe5);
+  box-shadow: 0 12px 36px rgb(38 35 31 / 14%);
+}
+
+.p117-review-panel > * {
+  direction: ltr;
+}
+
+.p117-review-panel__heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 20px;
+  padding: 18px 20px;
+  border-bottom: 1px solid var(--line, #c9bea9);
+}
+
+.p117-review-panel__heading div {
+  display: grid;
+  gap: 5px;
+}
+
+.p117-review-panel__heading span,
+.p117-review-panel__result > span,
+.p117-review-panel__fallback > span,
+.p117-review-panel__error > span {
+  font-size: 0.72rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--muted, #786c5d);
+}
+
+.p117-review-panel__heading strong {
+  font-family: var(--font-serif, Georgia, serif);
+  font-size: 1.35rem;
+  font-weight: 500;
+}
+
+.p117-review-panel__heading button {
+  min-width: 36px;
+  min-height: 36px;
+  border: 0;
+  background: transparent;
+  font-size: 1.35rem;
+  cursor: pointer;
+}
+
+.p117-review-panel__working,
+.p117-review-panel__result,
+.p117-review-panel__fallback,
+.p117-review-panel__error,
+.p117-connection-review {
+  padding: 20px;
+}
+
+.p117-review-panel__working {
+  display: grid;
+  grid-template-columns: 10px 1fr;
+  gap: 12px;
+  align-items: start;
+}
+
+.p117-review-panel__pulse {
+  width: 8px;
+  height: 8px;
+  margin-top: 7px;
+  border-radius: 50%;
+  background: var(--rust, #93452f);
+  animation: p117-pulse 1.15s ease-in-out infinite alternate;
+}
+
+@keyframes p117-pulse {
+  from { opacity: 0.3; transform: scale(0.8); }
+  to { opacity: 1; transform: scale(1.15); }
+}
+
+.p117-review-panel p,
+.p117-review-panel li,
+.p117-review-panel small {
+  color: var(--muted, #786c5d);
+  line-height: 1.5;
+}
+
+.p117-connection-review > p {
+  margin: 0 0 14px;
+}
+
+.p117-connection-review__list {
+  display: grid;
+  gap: 10px;
+  max-height: 320px;
+  overflow: auto;
+  padding-right: 4px;
+}
+
+.p117-connection-review__list label {
+  display: grid;
+  grid-template-columns: 20px 1fr;
+  gap: 10px;
+  align-items: start;
+  padding: 12px;
+  border: 1px solid var(--line, #c9bea9);
+  cursor: pointer;
+}
+
+.p117-connection-review__list label span {
+  display: grid;
+  gap: 5px;
+}
+
+.p117-connection-review__list strong {
+  font-size: 0.85rem;
+  letter-spacing: 0.02em;
+}
+
+.p117-connection-review__list small {
+  font-size: 0.78rem;
+}
+
+.p117-review-panel__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin: 16px 0 12px;
+}
+
+.p117-review-panel button {
+  border: 1px solid var(--ink, #26231f);
+  background: transparent;
+  color: var(--ink, #26231f);
+  padding: 10px 14px;
+  font: inherit;
+}
+
+.p117-review-panel button:not(:disabled):hover {
+  background: var(--ink, #26231f);
+  color: var(--paper, #f3efe5);
+}
+
+.p117-review-panel button:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.p117-review-panel__result {
+  display: grid;
+  gap: 8px;
+  border-left: 3px solid var(--rust, #93452f);
+}
+
+.p117-review-panel__result strong {
+  font-family: var(--font-serif, Georgia, serif);
+  font-size: 1.15rem;
+  font-weight: 500;
+}
+
+.p117-review-panel__fallback ol {
+  margin: 12px 0;
+  padding-left: 20px;
+}
+
+.p117-review-panel__error {
+  border-left: 3px solid var(--rust, #93452f);
+}
+
+.p117-review-panel__error button {
+  margin-top: 12px;
+}
+
+.p117-review-panel__message {
+  margin: 0;
+  padding: 0 20px 16px;
+}
+
+.p117-review-panel__resize {
+  display: block;
+  padding: 0 20px 16px;
+  font-size: 0.7rem;
+}
+
+@media (max-width: 720px) {
+  .p117-review-panel {
+    right: 12px;
+    bottom: 12px;
+    width: calc(100vw - 24px);
+    min-width: 0;
+    max-width: calc(100vw - 24px);
+    max-height: 72vh;
+    resize: vertical;
+  }
+}
