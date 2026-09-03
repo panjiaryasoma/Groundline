@@ -132,7 +132,7 @@ export function P117CustomWorkspaceHome(props: Props) {
       clearP117RelationProposalBatch();
       requestP117AgentReview();
       setMessage(
-        "Connections accepted. The graph changed, so Groundline created a fresh review request. Ask the WebMCP agent to continue with the current workspace.",
+        "Connections accepted. The graph changed and Groundline prepared a fresh review packet. Return to the WebMCP agent and continue the review against the current workspace.",
       );
     } catch (error) {
       setMessage(
@@ -147,18 +147,19 @@ export function P117CustomWorkspaceHome(props: Props) {
     clearP117RelationProposalBatch();
     setSelectedProposalKeys(new Set());
     setMessage(
-      "No proposed connections were accepted. The UNLINKED cards remain explicit, and the agent may still evaluate the graph exactly as represented.",
+      "No proposed connections were accepted. The UNLINKED cards remain explicit. Return to the WebMCP agent and continue with the graph exactly as represented.",
     );
   }, []);
 
   const triageComplete = semanticReview.coverage_complete;
-  const panelVisible =
-    panelOpen || Boolean(currentProposalBatch);
+  const panelVisible = panelOpen || Boolean(currentProposalBatch);
+  const webmcpDetected = hasWebMCP();
 
-  let heading = "Agent review requested";
+  let heading = "Waiting for agent review";
   if (currentProposalBatch) heading = "Human connection review required";
   else if (currentRequest && triageComplete) heading = "Semantic review complete";
-  else if (!hasWebMCP()) heading = "WebMCP agent unavailable in this browser";
+  else if (!webmcpDetected) heading = "WebMCP not detected in this tab";
+  else if (!currentRequest) heading = "No current review request";
 
   const criticalCount = props.workspace.triage_records.filter(
     (record) => record.state === "CRITICAL",
@@ -258,60 +259,52 @@ export function P117CustomWorkspaceHome(props: Props) {
                     {criticalCount} CRITICAL · {reviewCount} REVIEW · {stableCount} STABLE
                   </strong>
                   <p>
-                    Groundline is now using one complete semantic review for the current accepted graph. Focus primary risk and repair are enabled from this fresh triage.
+                    Groundline is using one complete semantic review for the current accepted graph. Focus primary risk and repair are now driven by this fresh triage.
                   </p>
+                </div>
+              ) : currentRequest && !webmcpDetected ? (
+                <div className="p117-review-panel__error">
+                  <span>REVIEW CANNOT RUN IN THIS TAB</span>
+                  <p>
+                    Groundline prepared the reasoning workspace, but this browser tab does not expose a WebMCP agent. No semantic result will appear here by repeatedly clicking the page.
+                  </p>
+                  <p>
+                    Open this workspace in a WebMCP-capable agent session, then ask the agent to review the current Groundline workspace.
+                  </p>
+                  <small>
+                    Current packet: {currentRequest.targetItemIds.length} semantic targets · {currentRequest.unlinkedItemIds.length} unlinked
+                  </small>
                 </div>
               ) : currentRequest ? (
                 <div className="p117-review-panel__fallback">
-                  <span>WAITING FOR WEBMCP AGENT</span>
+                  <span>AGENT HANDOFF READY</span>
                   <p>
-                    Groundline prepared a current review packet. No model runs inside the page and no CRITICAL label is fabricated locally.
+                    Groundline has registered the WebMCP review packet. This page does not start an AI agent by itself.
                   </p>
                   <p>
-                    In ChatGPT's in-app browser, ask your agent:
+                    Continue from the WebMCP-capable agent session that opened this workspace. The panel will update when the agent calls Groundline tools.
                   </p>
                   <p>
                     <code>
                       Review this Groundline workspace. Propose defensible connections for any UNLINKED cards, wait for my approval, then evaluate every current semantic target and triage the fresh graph.
                     </code>
                   </p>
-                  <ol>
-                    <li>
-                      Agent calls <code>inspect_workspace</code> and uses the current review token.
-                    </li>
-                    {unlinkedIds.length > 0 ? (
-                      <li>
-                        Agent may call <code>propose_relations</code>. Proposed lines stay pending until you approve them here.
-                      </li>
-                    ) : null}
-                    <li>
-                      After any approved graph change, the agent calls <code>inspect_workspace</code> again.
-                    </li>
-                    <li>
-                      Agent calls <code>triage_workspace</code> once with exactly one evaluation for every current target.
-                    </li>
-                  </ol>
                   <small>
                     Current packet: {currentRequest.targetItemIds.length} semantic targets · {currentRequest.unlinkedItemIds.length} unlinked · {currentRequest.reviewToken}
                   </small>
-                  <div className="p117-review-panel__actions">
-                    <button type="button" onClick={requestAgentReview}>
-                      Refresh review request
-                    </button>
-                  </div>
+                  <p>
+                    No action is required in this panel while the agent is reviewing.
+                  </p>
                 </div>
               ) : (
                 <div className="p117-review-panel__error">
-                  <span>NO CURRENT REVIEW PACKET</span>
+                  <span>NO CURRENT REVIEW REQUEST</span>
                   <p>
                     {message ??
-                      (hasWebMCP()
-                        ? "Run analysis to create a fresh WebMCP review request for the current workspace."
-                        : "WebMCP is not detected. Open Groundline in ChatGPT's in-app browser or Chrome with WebMCP enabled.")}
+                      (webmcpDetected
+                        ? "Run analysis or Run analysis again from the workspace to prepare the current WebMCP review request."
+                        : "WebMCP is not detected in this tab. Groundline can show the reasoning map here, but semantic agent review must happen in a WebMCP-capable agent session.")}
                   </p>
-                  <button type="button" onClick={requestAgentReview}>
-                    Create current review request
-                  </button>
                 </div>
               )}
 
