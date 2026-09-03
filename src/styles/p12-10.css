@@ -1,0 +1,381 @@
+/* P12.10 Intake simplification + full-bleed review band
+ * Visual-only patch. Keeps all P11/P12 runtime behavior unchanged.
+ */
+
+:root {
+  --p12-shell-gutter: max(28px, calc((100vw - 1440px) / 2));
+}
+
+/* --------------------------------------------------------------------------
+   Review overview: remove the clipped-looking side gutters.
+   Background spans the viewport; content still aligns to the product shell.
+   -------------------------------------------------------------------------- */
+
+.focus-review-overview {
+  width: 100vw !important;
+  max-width: none !important;
+  margin-left: calc(50% - 50vw) !important;
+  margin-right: calc(50% - 50vw) !important;
+  box-sizing: border-box;
+  overflow: clip;
+}
+
+.focus-review-overview .focus-analysis {
+  padding-left: calc(var(--p12-shell-gutter) + 60px) !important;
+  padding-right: 56px !important;
+}
+
+.focus-workspace-summary {
+  padding-left: 56px !important;
+  padding-right: calc(var(--p12-shell-gutter) + 60px) !important;
+}
+
+/* --------------------------------------------------------------------------
+   Intake: turn the wizard card into a quieter editorial worksheet.
+   -------------------------------------------------------------------------- */
+
+.app-shell--intake .intake-shell {
+  position: relative;
+  isolation: isolate;
+  padding: 0 0 68px !important;
+  border: 0 !important;
+  background: transparent !important;
+}
+
+.app-shell--intake .intake-shell::before {
+  content: "";
+  position: absolute;
+  inset: 0 50%;
+  width: 100vw;
+  transform: translateX(-50%);
+  z-index: -1;
+  background:
+    linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--strata-question) 94%, white) 0 22%,
+      color-mix(in srgb, var(--strata-conclusion) 46%, var(--paper)) 42%,
+      color-mix(in srgb, var(--strata-claim) 34%, var(--paper)) 72%,
+      color-mix(in srgb, var(--strata-assumption) 22%, var(--paper)) 100%
+    );
+}
+
+/* Compact utility heading. The page already has a masthead, so avoid a second hero. */
+.app-shell--intake .intake-heading--with-exit {
+  width: min(1080px, 100%);
+  margin: 0 auto;
+  padding: 22px 0 18px;
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  gap: 22px;
+  align-items: center;
+  border-bottom: 1px solid color-mix(in srgb, var(--rule-strong) 72%, transparent);
+}
+
+.app-shell--intake .intake-heading--with-exit > div {
+  min-width: 0;
+}
+
+.app-shell--intake .intake-heading--with-exit .eyebrow {
+  margin: 0;
+  color: var(--gold-deep);
+}
+
+.app-shell--intake .intake-heading--with-exit h2,
+.app-shell--intake .intake-heading--with-exit > div > p:not(.eyebrow) {
+  display: none;
+}
+
+.app-shell--intake .intake-heading--with-exit > button,
+.app-shell--intake .intake-exit-button {
+  margin: 0 !important;
+}
+
+/* Progress becomes a thin editorial rail instead of four boxed SaaS tabs. */
+.app-shell--intake .intake-progress {
+  width: min(1080px, 100%);
+  margin: 0 auto !important;
+  padding: 0 !important;
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0 !important;
+  border: 0 !important;
+  border-bottom: 1px solid var(--rule-strong) !important;
+  background: transparent !important;
+}
+
+.app-shell--intake .intake-progress li,
+.app-shell--intake .intake-progress li:nth-child(n) {
+  position: relative;
+  gap: 8px;
+  padding: 15px 4px 13px !important;
+  border: 0 !important;
+  border-bottom: 2px solid transparent !important;
+  background: transparent !important;
+  color: color-mix(in srgb, var(--ink) 54%, transparent) !important;
+}
+
+.app-shell--intake .intake-progress li + li {
+  padding-left: 18px !important;
+}
+
+.app-shell--intake .intake-progress li > span {
+  width: auto !important;
+  height: auto !important;
+  border: 0 !important;
+  color: inherit;
+  font-family: var(--font-mono);
+  font-size: 0.56rem;
+  letter-spacing: 0.08em;
+}
+
+.app-shell--intake .intake-progress li > span::after {
+  content: " /";
+}
+
+.app-shell--intake .intake-progress li > strong {
+  font-family: var(--font-mono);
+  font-size: 0.58rem;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.app-shell--intake .intake-progress li.is-current {
+  border-bottom-color: var(--ink) !important;
+  color: var(--ink) !important;
+}
+
+.app-shell--intake .intake-progress li.is-complete {
+  color: color-mix(in srgb, var(--ink) 72%, transparent) !important;
+}
+
+/* Kill the giant bordered card. The form itself becomes the composition. */
+.app-shell--intake .intake-card {
+  width: min(1080px, 100%) !important;
+  margin: 42px auto 0 !important;
+  padding: 0 0 30px !important;
+  border: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+.app-shell--intake .intake-card > .eyebrow {
+  margin: 0 0 12px;
+  color: var(--gold-deep);
+}
+
+.app-shell--intake .intake-card > h3 {
+  max-width: 14ch !important;
+  margin: 0 0 32px !important;
+  font-size: clamp(2.7rem, 4.5vw, 4.8rem) !important;
+  line-height: 0.98 !important;
+  letter-spacing: -0.045em !important;
+  font-weight: 400 !important;
+}
+
+/* Each prompt is a worksheet row: context at left, answer at right. */
+.app-shell--intake .intake-field {
+  display: grid !important;
+  grid-template-columns: minmax(180px, 0.32fr) minmax(0, 1fr);
+  grid-template-rows: auto 1fr;
+  column-gap: clamp(28px, 4vw, 54px);
+  row-gap: 8px;
+  margin: 0 !important;
+  padding: 22px 0 24px;
+  border-top: 1px solid color-mix(in srgb, var(--rule-strong) 62%, transparent);
+}
+
+.app-shell--intake .intake-field:last-of-type {
+  border-bottom: 1px solid color-mix(in srgb, var(--rule-strong) 62%, transparent);
+}
+
+.app-shell--intake .intake-field > span {
+  grid-column: 1;
+  grid-row: 1;
+  color: var(--ink);
+  font-family: var(--font-mono);
+  font-size: 0.6rem !important;
+  font-weight: 600 !important;
+  letter-spacing: 0.08em;
+  line-height: 1.45;
+  text-transform: uppercase;
+}
+
+.app-shell--intake .intake-field > small {
+  grid-column: 1;
+  grid-row: 2;
+  max-width: 230px;
+  color: var(--muted);
+  font-size: 0.7rem;
+  line-height: 1.55;
+}
+
+.app-shell--intake .intake-field textarea,
+.app-shell--intake .intake-field input {
+  grid-column: 2;
+  grid-row: 1 / span 2;
+  width: 100%;
+  min-height: 96px;
+  padding: 2px 0 12px !important;
+  border: 0 !important;
+  border-bottom: 1px solid var(--rule-strong) !important;
+  outline: 0 !important;
+  background: transparent !important;
+  color: var(--ink);
+  font-family: var(--font-sans);
+  font-size: 1rem;
+  line-height: 1.55;
+}
+
+.app-shell--intake .intake-field input {
+  min-height: 48px;
+  align-self: start;
+}
+
+.app-shell--intake .intake-field textarea:focus,
+.app-shell--intake .intake-field input:focus {
+  border-bottom-color: var(--ink) !important;
+  box-shadow: inset 0 -1px 0 var(--ink);
+}
+
+.app-shell--intake .intake-field textarea::placeholder,
+.app-shell--intake .intake-field input::placeholder {
+  color: color-mix(in srgb, var(--muted) 72%, transparent);
+}
+
+.app-shell--intake .intake-field em {
+  display: block;
+  margin-top: 4px;
+  color: var(--muted);
+  font-family: var(--font-sans);
+  font-size: 0.66rem;
+  font-style: normal;
+  font-weight: 400;
+  letter-spacing: 0;
+  text-transform: none;
+}
+
+/* Review step reads like an audit worksheet, not a card grid. */
+.app-shell--intake .intake-review-list {
+  display: grid;
+  grid-template-columns: 1fr !important;
+  gap: 0 !important;
+  margin-top: 8px;
+  border-top: 1px solid var(--rule-strong);
+  background: transparent !important;
+}
+
+.app-shell--intake .intake-review-list article {
+  min-height: 0 !important;
+  display: grid;
+  grid-template-columns: minmax(190px, 0.32fr) minmax(0, 1fr);
+  gap: clamp(24px, 4vw, 52px);
+  padding: 16px 0 !important;
+  border-bottom: 1px solid var(--rule);
+  background: transparent !important;
+}
+
+.app-shell--intake .intake-review-list span {
+  color: var(--gold-deep);
+  font-family: var(--font-mono);
+}
+
+.app-shell--intake .intake-review-list p {
+  margin: 0 !important;
+  font-family: var(--font-sans) !important;
+  font-size: 0.86rem;
+  line-height: 1.55;
+}
+
+.app-shell--intake .intake-review-note {
+  max-width: 690px;
+  margin-top: 20px;
+}
+
+.app-shell--intake .intake-error {
+  max-width: 720px;
+  margin-top: 20px;
+}
+
+.app-shell--intake .intake-actions {
+  margin-top: 0 !important;
+  padding-top: 24px !important;
+  border-top: 0 !important;
+}
+
+.app-shell--intake .intake-actions .focus-primary-action {
+  min-width: 172px !important;
+  display: inline-flex !important;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+}
+
+@media (max-width: 900px) {
+  :root {
+    --p12-shell-gutter: 24px;
+  }
+
+  .focus-review-overview .focus-analysis,
+  .focus-workspace-summary {
+    padding-left: max(28px, var(--p12-shell-gutter)) !important;
+    padding-right: max(28px, var(--p12-shell-gutter)) !important;
+  }
+
+  .app-shell--intake .intake-heading--with-exit {
+    grid-template-columns: auto 1fr auto;
+  }
+}
+
+@media (max-width: 680px) {
+  .app-shell--intake .intake-heading--with-exit {
+    width: 100%;
+    grid-template-columns: 1fr auto;
+    gap: 14px;
+  }
+
+  .app-shell--intake .intake-heading--with-exit > div {
+    display: none;
+  }
+
+  .app-shell--intake .intake-progress li {
+    justify-content: center;
+    padding-inline: 4px !important;
+  }
+
+  .app-shell--intake .intake-progress li > strong {
+    display: none;
+  }
+
+  .app-shell--intake .intake-card {
+    margin-top: 30px !important;
+  }
+
+  .app-shell--intake .intake-card > h3 {
+    font-size: clamp(2.35rem, 11vw, 3.5rem) !important;
+  }
+
+  .app-shell--intake .intake-field {
+    grid-template-columns: 1fr;
+    grid-template-rows: auto;
+    gap: 8px;
+    padding: 18px 0 20px;
+  }
+
+  .app-shell--intake .intake-field > span,
+  .app-shell--intake .intake-field > small,
+  .app-shell--intake .intake-field textarea,
+  .app-shell--intake .intake-field input {
+    grid-column: 1;
+    grid-row: auto;
+  }
+
+  .app-shell--intake .intake-field > small {
+    max-width: none;
+  }
+
+  .app-shell--intake .intake-review-list article {
+    grid-template-columns: 1fr;
+    gap: 7px;
+  }
+}
