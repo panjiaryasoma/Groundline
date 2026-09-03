@@ -30,6 +30,10 @@ import {
   type P114AddReasoningItemInput,
 } from "../../state/p114AddReasoningItem";
 import {
+  deleteSelectedReasoningItem,
+  getDeleteSelectedItemBlockReason,
+} from "../../state/deleteReasoningItem";
+import {
   useWorkspaceStore,
   type GraphSelectionRequest,
 } from "../../state/workspaceStore";
@@ -91,24 +95,19 @@ function getLayeredPosition(
   index: number,
 ): { x: number; y: number } {
   const layer = TYPE_LAYER[item.type];
-
   const baseX =
     item.type === "QUESTION"
       ? 220
       : item.type === "CONCLUSION"
         ? 350
         : 120;
-
   const horizontalGap =
     item.type === "SOURCE" || item.type === "EVIDENCE"
       ? 300
       : 330;
 
   return {
-    x:
-      baseX +
-      index * horizontalGap +
-      (layer % 2 === 0 ? 0 : 90),
+    x: baseX + index * horizontalGap + (layer % 2 === 0 ? 0 : 90),
     y: 32 + layer * 170,
   };
 }
@@ -125,45 +124,29 @@ function buildNodes(
     const index = countsByLayer.get(layer) ?? 0;
     countsByLayer.set(layer, index + 1);
 
-    const triage = getTriageRecord(
-      workspace.triage_records,
-      item.id,
-    );
-
+    const triage = getTriageRecord(workspace.triage_records, item.id);
     const focused = focusedItemIds.includes(item.id);
     const faulted = triage?.state === "CRITICAL";
-    const unlinked = isP114ReasoningItemUnlinked(
-      workspace,
-      item.id,
-    );
+    const unlinked = isP114ReasoningItemUnlinked(workspace, item.id);
 
     return {
       id: item.id,
       position: getLayeredPosition(item, index),
       data: {
         label: (
-          <div
-            className="reasoning-node__inner"
-            data-item-id={item.id}
-          >
+          <div className="reasoning-node__inner" data-item-id={item.id}>
             <div className="reasoning-node__meta">
               <span>{TYPE_LABEL[item.type]}</span>
               <span>{item.id}</span>
             </div>
 
-            <div className="reasoning-node__text">
-              {item.text}
-            </div>
+            <div className="reasoning-node__text">{item.text}</div>
 
             <div className="reasoning-node__footer">
-              <span className="knowledge-state">
-                {item.state}
-              </span>
+              <span className="knowledge-state">{item.state}</span>
 
               {unlinked ? (
-                <span className="p115-unlinked-badge">
-                  UNLINKED
-                </span>
+                <span className="p115-unlinked-badge">UNLINKED</span>
               ) : null}
 
               {triage ? (
@@ -187,12 +170,8 @@ function buildNodes(
         faulted ? "reasoning-node--faulted" : "",
         unlinked ? "reasoning-node--unlinked" : "",
         focused ? "reasoning-node--focused" : "",
-        item.id === selectedItemId
-          ? "reasoning-node--app-selected"
-          : "",
-        item.state === "SUPERSEDED"
-          ? "reasoning-node--superseded"
-          : "",
+        item.id === selectedItemId ? "reasoning-node--app-selected" : "",
+        item.state === "SUPERSEDED" ? "reasoning-node--superseded" : "",
       ]
         .filter(Boolean)
         .join(" "),
@@ -232,26 +211,18 @@ export function ReasoningGraph({
   const experienceMode = useWorkspaceStore(
     (state) => state.experienceMode,
   );
-  const [addComposerOpen, setAddComposerOpen] =
-    useState(false);
+  const [addComposerOpen, setAddComposerOpen] = useState(false);
   const [addType, setAddType] = useState<
     P114AddReasoningItemInput["type"]
   >("CLAIM");
   const [addText, setAddText] = useState("");
 
   const structuralNodes = useMemo(
-    () =>
-      buildNodes(
-        workspace,
-        focusedItemIds,
-        selectedItemId,
-      ),
+    () => buildNodes(workspace, focusedItemIds, selectedItemId),
     [workspace, focusedItemIds, selectedItemId],
   );
 
-  const [nodes, setNodes] = useState<Node[]>(
-    structuralNodes,
-  );
+  const [nodes, setNodes] = useState<Node[]>(structuralNodes);
 
   const hasPendingRevision = workspace.revisions.some(
     (revision) => revision.state === "PROPOSED",
@@ -286,34 +257,29 @@ export function ReasoningGraph({
     effectiveGraphSelectionRequest.itemId,
   ]);
 
-  const edges = useMemo(
-    () => buildEdges(workspace),
-    [workspace],
-  );
+  const edges = useMemo(() => buildEdges(workspace), [workspace]);
 
   const handleNodesChange = useCallback(
     (changes: NodeChange<Node>[]) => {
-      setNodes((current) =>
-        applyGraphNodeChanges(current, changes),
-      );
+      setNodes((current) => applyGraphNodeChanges(current, changes));
     },
     [],
   );
 
-  const selectedNodeCount = nodes.filter(
-    (node) => node.selected,
-  ).length;
+  const selectedNodeCount = nodes.filter((node) => node.selected).length;
+  const deleteBlockReason =
+    experienceMode === "CUSTOM" &&
+    selectedNodeCount === 1 &&
+    selectedItemId
+      ? getDeleteSelectedItemBlockReason(workspace, selectedItemId)
+      : null;
 
   const selectAllNodes = useCallback(() => {
-    setNodes((current) =>
-      setAllGraphNodesSelected(current, true),
-    );
+    setNodes((current) => setAllGraphNodesSelected(current, true));
   }, []);
 
   const clearNodeSelection = useCallback(() => {
-    setNodes((current) =>
-      setAllGraphNodesSelected(current, false),
-    );
+    setNodes((current) => setAllGraphNodesSelected(current, false));
     onSelectItem(null);
   }, [onSelectItem]);
 
@@ -326,10 +292,7 @@ export function ReasoningGraph({
         return;
       }
 
-      if (
-        selectedItemId &&
-        ids.includes(selectedItemId)
-      ) {
+      if (selectedItemId && ids.includes(selectedItemId)) {
         return;
       }
 
@@ -339,9 +302,7 @@ export function ReasoningGraph({
   );
 
   function submitAddedReasoningItem() {
-    if (!addText.trim()) {
-      return;
-    }
+    if (!addText.trim()) return;
 
     addP114ReasoningItem({
       type: addType,
@@ -351,11 +312,35 @@ export function ReasoningGraph({
     setAddText("");
   }
 
+  function handleDeleteSelectedItem() {
+    if (
+      experienceMode !== "CUSTOM" ||
+      selectedNodeCount !== 1 ||
+      !selectedItemId ||
+      deleteBlockReason
+    ) {
+      return;
+    }
+
+    const selectedItem = workspace.items.find(
+      (item) => item.id === selectedItemId,
+    );
+    if (!selectedItem) return;
+
+    if (
+      typeof window !== "undefined" &&
+      !window.confirm(
+        `Delete ${selectedItem.type.toLowerCase()} ${selectedItem.id}? This removes only this selected card and its represented connections. Decision history remains auditable.`,
+      )
+    ) {
+      return;
+    }
+
+    deleteSelectedReasoningItem();
+  }
+
   return (
-    <section
-      className="graph-panel"
-      aria-label="Groundline reasoning graph"
-    >
+    <section className="graph-panel" aria-label="Groundline reasoning graph">
       <div className="graph-help">
         <div className="graph-help__copy">
           <span>Drag one card to move only that card.</span>
@@ -381,26 +366,35 @@ export function ReasoningGraph({
             </button>
           ) : null}
 
-          {experienceMode === "CUSTOM" &&
-          unlinkedItemIds.length > 0 ? (
+          {experienceMode === "CUSTOM" && unlinkedItemIds.length > 0 ? (
             <span className="graph-unlinked-status">
               {unlinkedItemIds.length} unlinked
             </span>
           ) : null}
 
-          <button
-            type="button"
-            onClick={selectAllNodes}
-          >
+          <button type="button" onClick={selectAllNodes}>
             Select all
           </button>
 
           {selectedNodeCount > 0 ? (
+            <button type="button" onClick={clearNodeSelection}>
+              Clear selection
+            </button>
+          ) : null}
+
+          {experienceMode === "CUSTOM" &&
+          selectedNodeCount === 1 &&
+          selectedItemId ? (
             <button
               type="button"
-              onClick={clearNodeSelection}
+              onClick={handleDeleteSelectedItem}
+              disabled={Boolean(deleteBlockReason)}
+              title={
+                deleteBlockReason ??
+                "Delete only the currently selected reasoning item."
+              }
             >
-              Clear selection
+              Delete selected item
             </button>
           ) : null}
 
@@ -447,13 +441,11 @@ export function ReasoningGraph({
                   )
                 }
               >
-                {P114_ADDABLE_KNOWLEDGE_TYPES.map(
-                  (type) => (
-                    <option key={type} value={type}>
-                      {ADD_TYPE_LABEL[type]}
-                    </option>
-                  ),
-                )}
+                {P114_ADDABLE_KNOWLEDGE_TYPES.map((type) => (
+                  <option key={type} value={type}>
+                    {ADD_TYPE_LABEL[type]}
+                  </option>
+                ))}
               </select>
             </label>
 
@@ -461,9 +453,7 @@ export function ReasoningGraph({
               <span>Argument / evidence text</span>
               <textarea
                 value={addText}
-                onChange={(event) =>
-                  setAddText(event.target.value)
-                }
+                onChange={(event) => setAddText(event.target.value)}
                 rows={4}
                 placeholder="Add another claim, counterclaim, assumption, or piece of evidence."
               />
@@ -487,10 +477,7 @@ export function ReasoningGraph({
               discarded when the accepted reasoning changes.
             </p>
             <div className="graph-add-composer__actions">
-              <button
-                type="submit"
-                disabled={!addText.trim()}
-              >
+              <button type="submit" disabled={!addText.trim()}>
                 Add card
               </button>
               <button
