@@ -14,7 +14,6 @@ import {
 } from "../../src/state/p114AddReasoningItem";
 import {
   clearP117AgentReviewState,
-  requestP117AgentReview,
   useP117AgentReviewStore,
 } from "../../src/state/p117AgentReview";
 import { applyP117ApprovedRelations } from "../../src/state/p117RelationReview";
@@ -45,6 +44,12 @@ function proposeRelationsTool() {
   )!;
 }
 
+function inspectWorkspaceTool() {
+  return createVerticalSliceTools().find(
+    (tool) => tool.name === "inspect_workspace",
+  )!;
+}
+
 describe("P11.7 WebMCP-native semantic review", () => {
   beforeAll(() => {
     installP111RepairLifecycle();
@@ -67,21 +72,22 @@ describe("P11.7 WebMCP-native semantic review", () => {
     ).toEqual(["propose_relations"]);
   });
 
-  it("creates a current human review request without running or bundling a page-local AI model", () => {
+  it("derives the current review token and targets directly from canonical workspace state", async () => {
     addP114ReasoningItem({
       type: "COUNTERCLAIM",
       text: "The pilot excluded escalations and complex account recovery.",
     });
 
-    const request = requestP117AgentReview();
+    const workspace = useWorkspaceStore.getState().workspace;
+    const result = (await inspectWorkspaceTool().execute({})) as any;
 
-    expect(request.reviewToken).toBe(
-      buildSemanticReviewToken(
-        useWorkspaceStore.getState().workspace,
-      ),
+    expect(result.semantic_review.review_token).toBe(
+      buildSemanticReviewToken(workspace),
     );
-    expect(request.unlinkedItemIds).toContain("CC-USER-001");
-    expect(request.targetItemIds).toContain("CC-USER-001");
+    expect(result.semantic_review.target_item_ids).toContain("CC-USER-001");
+    expect(result.agent_review.unlinked_item_ids).toContain("CC-USER-001");
+    expect(result.agent_review).not.toHaveProperty("requested");
+    expect(result.agent_review).not.toHaveProperty("requested_at");
     expect(useP117AgentReviewStore.getState().proposalBatch).toBeNull();
   });
 
