@@ -351,25 +351,6 @@ export function ReasoningGraph({
     setAddText("");
   }
 
-  function recheckStructure() {
-    setAddComposerOpen(false);
-
-    window.requestAnimationFrame(() => {
-      const structureButton = document.querySelector<HTMLButtonElement>(
-        ".custom-analysis-action .focus-primary-action",
-      );
-
-      if (!structureButton) return;
-
-      structureButton.click();
-      structureButton.focus();
-      structureButton.scrollIntoView({
-        behavior: "smooth",
-        block: "center",
-      });
-    });
-  }
-
   return (
     <section
       className="graph-panel"
@@ -402,14 +383,9 @@ export function ReasoningGraph({
 
           {experienceMode === "CUSTOM" &&
           unlinkedItemIds.length > 0 ? (
-            <button
-              type="button"
-              className="graph-analysis-again"
-              onClick={recheckStructure}
-              title="Re-check the current reasoning structure. UNLINKED cards remain explicit until an AI agent proposes semantic connections for human approval."
-            >
-              Re-check structure · {unlinkedItemIds.length} unlinked
-            </button>
+            <span className="graph-unlinked-status">
+              {unlinkedItemIds.length} unlinked
+            </span>
           ) : null}
 
           <button
@@ -505,10 +481,10 @@ export function ReasoningGraph({
 
           <div className="graph-add-composer__footer">
             <p>
-              New cards are selected immediately for inspection. Re-check the
-              structure when you are done. Semantic connections are proposed only
-              during AI agent review and still require your approval before any
-              line becomes part of the graph.
+              New cards are selected immediately for inspection. They remain
+              explicit UNLINKED reasoning until an AI agent proposes defensible
+              relationships and you approve them. Any previous semantic triage is
+              discarded when the accepted reasoning changes.
             </p>
             <div className="graph-add-composer__actions">
               <button
@@ -519,10 +495,9 @@ export function ReasoningGraph({
               </button>
               <button
                 type="button"
-                onClick={recheckStructure}
-                disabled={unlinkedItemIds.length === 0}
+                onClick={() => setAddComposerOpen(false)}
               >
-                Done · Re-check structure
+                Done mapping
               </button>
             </div>
           </div>
