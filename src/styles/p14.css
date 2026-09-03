@@ -1,0 +1,155 @@
+/* P14 release polish: keep desktop/laptop navigation compact and useful. */
+
+/* P13's <=1180px fallback moved status into a full-width second row.
+ * Keep the header on one row until the tablet breakpoint actually starts.
+ */
+@media (min-width: 981px) and (max-width: 1180px) {
+  .site-header {
+    grid-template-columns: minmax(220px, 0.92fr) auto minmax(176px, 0.72fr) !important;
+    column-gap: clamp(16px, 2.2vw, 30px) !important;
+    min-height: 84px !important;
+  }
+
+  .site-header__nav,
+  .site-header__journey {
+    gap: clamp(14px, 2vw, 24px) !important;
+    white-space: nowrap;
+  }
+
+  .site-header__nav a {
+    padding-inline: 0;
+  }
+
+  .site-header__status {
+    grid-column: auto !important;
+    justify-self: end !important;
+    align-self: center !important;
+    width: auto !important;
+    display: grid !important;
+    justify-items: end !important;
+    justify-content: normal !important;
+    gap: 4px !important;
+  }
+}
+
+/* Tablet remains intentionally stacked; remove the desktop row assumptions. */
+@media (max-width: 980px) {
+  .site-header__status {
+    width: 100%;
+  }
+}
+
+/* --------------------------------------------------------------------------
+   Intake strata depth
+   Keep the editorial worksheet, but let each reasoning stage carry its own
+   material cue instead of reading as one uninterrupted beige sheet.
+   -------------------------------------------------------------------------- */
+
+.app-shell--intake .intake-shell::before {
+  background:
+    radial-gradient(circle at 84% 18%, rgba(127, 128, 105, 0.10), transparent 26%),
+    radial-gradient(circle at 14% 72%, rgba(201, 157, 125, 0.10), transparent 28%),
+    linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--strata-question) 96%, white) 0 24%,
+      color-mix(in srgb, var(--strata-conclusion) 56%, var(--paper)) 45%,
+      color-mix(in srgb, var(--strata-claim) 42%, var(--paper)) 72%,
+      color-mix(in srgb, var(--strata-evidence) 24%, var(--paper)) 100%
+    ) !important;
+}
+
+/* Four stages use the same Groundline material palette as the map. */
+.app-shell--intake .intake-progress li:nth-child(1) {
+  background: color-mix(in srgb, var(--strata-question) 78%, transparent) !important;
+}
+
+.app-shell--intake .intake-progress li:nth-child(2) {
+  background: color-mix(in srgb, var(--strata-claim) 22%, transparent) !important;
+}
+
+.app-shell--intake .intake-progress li:nth-child(3) {
+  background: color-mix(in srgb, var(--strata-evidence) 24%, transparent) !important;
+}
+
+.app-shell--intake .intake-progress li:nth-child(4) {
+  background: color-mix(in srgb, var(--strata-source) 18%, transparent) !important;
+}
+
+.app-shell--intake .intake-progress li.is-current:nth-child(1) {
+  background: color-mix(in srgb, var(--strata-conclusion) 40%, var(--paper)) !important;
+  border-bottom-color: var(--gold) !important;
+}
+
+.app-shell--intake .intake-progress li.is-current:nth-child(2) {
+  background: color-mix(in srgb, var(--strata-claim) 54%, var(--paper)) !important;
+  border-bottom-color: var(--clay) !important;
+}
+
+.app-shell--intake .intake-progress li.is-current:nth-child(3) {
+  background: color-mix(in srgb, var(--strata-evidence) 58%, var(--paper)) !important;
+  border-bottom-color: var(--slate) !important;
+}
+
+.app-shell--intake .intake-progress li.is-current:nth-child(4) {
+  background: color-mix(in srgb, var(--strata-source) 42%, var(--paper)) !important;
+  border-bottom-color: var(--olive) !important;
+}
+
+/* The prompt side becomes a faint field-note strip; answers remain quiet paper. */
+.app-shell--intake .intake-field {
+  background:
+    linear-gradient(
+      90deg,
+      color-mix(in srgb, var(--sand) 20%, transparent) 0 32%,
+      transparent 32% 100%
+    );
+}
+
+.app-shell--intake .intake-field textarea,
+.app-shell--intake .intake-field input {
+  padding-inline: 14px 6px !important;
+  background: color-mix(in srgb, var(--paper) 74%, white) !important;
+}
+
+/* Stage-aware editorial accents without changing layout or semantics. */
+.app-shell--intake .intake-shell:has(.intake-progress li:nth-child(1).is-current) .intake-card > .eyebrow,
+.app-shell--intake .intake-shell:has(.intake-progress li:nth-child(1).is-current) .intake-heading--with-exit .eyebrow {
+  color: var(--gold) !important;
+}
+
+.app-shell--intake .intake-shell:has(.intake-progress li:nth-child(2).is-current) .intake-card > .eyebrow,
+.app-shell--intake .intake-shell:has(.intake-progress li:nth-child(2).is-current) .intake-heading--with-exit .eyebrow {
+  color: color-mix(in srgb, var(--clay) 72%, var(--ink)) !important;
+}
+
+.app-shell--intake .intake-shell:has(.intake-progress li:nth-child(3).is-current) .intake-card > .eyebrow,
+.app-shell--intake .intake-shell:has(.intake-progress li:nth-child(3).is-current) .intake-heading--with-exit .eyebrow {
+  color: var(--slate) !important;
+}
+
+.app-shell--intake .intake-shell:has(.intake-progress li:nth-child(4).is-current) .intake-card > .eyebrow,
+.app-shell--intake .intake-shell:has(.intake-progress li:nth-child(4).is-current) .intake-heading--with-exit .eyebrow {
+  color: var(--olive) !important;
+}
+
+.app-shell--intake .intake-actions .focus-primary-action {
+  border-color: var(--ink) !important;
+  background:
+    linear-gradient(90deg, var(--ink) 0 86%, color-mix(in srgb, var(--gold) 72%, var(--ink)) 86% 100%) !important;
+}
+
+@media (max-width: 680px) {
+  .app-shell--intake .intake-field {
+    background:
+      linear-gradient(
+        180deg,
+        color-mix(in srgb, var(--sand) 18%, transparent) 0 34%,
+        transparent 34% 100%
+      );
+  }
+
+  .app-shell--intake .intake-field textarea,
+  .app-shell--intake .intake-field input {
+    padding-inline: 10px 4px !important;
+  }
+}
