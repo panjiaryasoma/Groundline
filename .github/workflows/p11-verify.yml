@@ -6,6 +6,8 @@ on:
       - P11
   workflow_dispatch:
 
+# This workflow is intentionally touched at the end of the P11.9 consolidation
+# so the verification run proves the current branch head, not an earlier patch.
 jobs:
   verify:
     runs-on: ubuntu-latest
