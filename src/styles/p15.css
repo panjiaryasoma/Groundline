@@ -1,0 +1,102 @@
+/* P15 connection suggestions
+ * Local analysis may suggest attachment points, but never semantic relation meaning.
+ * Dashed edges remain provisional until a human chooses a relation type and approves.
+ */
+
+.reasoning-edge--suggested path {
+  stroke: var(--gold) !important;
+  stroke-width: 1.65 !important;
+  stroke-dasharray: 8 6;
+  opacity: 0.96;
+}
+
+.reasoning-edge--suggested marker path,
+.reasoning-edge--suggested .react-flow__arrowhead polyline {
+  fill: var(--gold) !important;
+  stroke: var(--gold) !important;
+}
+
+.reasoning-edge--suggested .react-flow__edge-text {
+  fill: var(--gold) !important;
+  font-family: var(--font-mono);
+  font-weight: 700;
+}
+
+.reasoning-edge--suggested .react-flow__edge-textbg {
+  fill: color-mix(in srgb, var(--paper) 94%, transparent) !important;
+  fill-opacity: 0.96 !important;
+}
+
+.p15-connection-candidate {
+  display: grid;
+  gap: 10px;
+  padding: 12px;
+  border: 1px solid var(--rule);
+  background: color-mix(in srgb, var(--paper) 92%, var(--sand));
+}
+
+.p15-connection-candidate__toggle {
+  display: grid;
+  grid-template-columns: 20px minmax(0, 1fr);
+  gap: 10px;
+  align-items: start;
+  cursor: pointer;
+}
+
+.p15-connection-candidate__toggle > span {
+  min-width: 0;
+  display: grid;
+  gap: 5px;
+}
+
+.p15-connection-candidate__toggle strong {
+  overflow-wrap: anywhere;
+  font-size: 0.85rem;
+  letter-spacing: 0.02em;
+}
+
+.p15-connection-candidate__toggle small {
+  font-size: 0.78rem;
+}
+
+.p15-connection-candidate__meaning {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(170px, 0.72fr);
+  gap: 12px;
+  align-items: center;
+  margin-left: 30px;
+  padding-top: 10px;
+  border-top: 1px solid color-mix(in srgb, var(--rule) 72%, transparent);
+}
+
+.p15-connection-candidate__meaning > span {
+  color: var(--muted);
+  font-family: var(--font-mono);
+  font-size: 0.58rem;
+  letter-spacing: 0.09em;
+  line-height: 1.45;
+  text-transform: uppercase;
+}
+
+.p15-connection-candidate__meaning select {
+  width: 100%;
+  min-width: 0;
+  border: 1px solid var(--rule-strong);
+  border-radius: 0;
+  background: var(--paper);
+  color: var(--ink);
+  padding: 8px 10px;
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+}
+
+.p15-connection-candidate[data-candidate-source="LOCAL_DETERMINISTIC"] {
+  border-left: 3px solid var(--gold);
+}
+
+@media (max-width: 680px) {
+  .p15-connection-candidate__meaning {
+    grid-template-columns: 1fr;
+    margin-left: 0;
+  }
+}
