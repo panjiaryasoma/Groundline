@@ -1,14 +1,6 @@
 import { create } from "zustand";
 
 import type { Relation } from "../domain/schema";
-import {
-  getP114UnlinkedReasoningItemIds,
-} from "./p114AddReasoningItem";
-import { useWorkspaceStore } from "./workspaceStore";
-import {
-  buildSemanticReviewToken,
-  getSemanticReviewTargetIds,
-} from "../webmcp/semanticReviewContract";
 
 export type P117RelationProposalType = Extract<
   Relation["type"],
@@ -22,13 +14,6 @@ export interface P117ConnectionProposal {
   rationale: string;
 }
 
-export interface P117AgentReviewRequest {
-  reviewToken: string;
-  requestedAt: string;
-  targetItemIds: string[];
-  unlinkedItemIds: string[];
-}
-
 export interface P117RelationProposalBatch {
   reviewToken: string;
   proposedAt: string;
@@ -36,48 +21,12 @@ export interface P117RelationProposalBatch {
 }
 
 interface P117AgentReviewState {
-  request: P117AgentReviewRequest | null;
   proposalBatch: P117RelationProposalBatch | null;
 }
 
 export const useP117AgentReviewStore = create<P117AgentReviewState>(() => ({
-  request: null,
   proposalBatch: null,
 }));
-
-export function requestP117AgentReview(): P117AgentReviewRequest {
-  const state = useWorkspaceStore.getState();
-
-  if (state.experienceMode !== "CUSTOM") {
-    throw new Error(
-      "Agent semantic review may only be requested from a custom Groundline workspace.",
-    );
-  }
-
-  if (
-    state.workspace.revisions.some(
-      (revision) => revision.state === "PROPOSED",
-    )
-  ) {
-    throw new Error(
-      "Finish the current human revision review before requesting another semantic review.",
-    );
-  }
-
-  const request: P117AgentReviewRequest = {
-    reviewToken: buildSemanticReviewToken(state.workspace),
-    requestedAt: new Date().toISOString(),
-    targetItemIds: getSemanticReviewTargetIds(state.workspace),
-    unlinkedItemIds: getP114UnlinkedReasoningItemIds(state.workspace),
-  };
-
-  useP117AgentReviewStore.setState({
-    request,
-    proposalBatch: null,
-  });
-
-  return request;
-}
 
 export function setP117RelationProposalBatch(
   batch: P117RelationProposalBatch,
@@ -90,8 +39,5 @@ export function clearP117RelationProposalBatch(): void {
 }
 
 export function clearP117AgentReviewState(): void {
-  useP117AgentReviewStore.setState({
-    request: null,
-    proposalBatch: null,
-  });
+  useP117AgentReviewStore.setState({ proposalBatch: null });
 }
