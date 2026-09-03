@@ -86,12 +86,12 @@ describe("P11.6 versioned custom semantic review", () => {
     expect(result.semantic_review.requires_full_batch).toBe(true);
   });
 
-  it("rejects custom triage without the inspect handshake instead of silently accepting a partial review", async () => {
-    await expect(
+  it("rejects custom triage without the inspect handshake instead of silently accepting a partial review", () => {
+    expect(() =>
       tool("triage_workspace").execute({
         evaluations: [semanticEvaluation("C-USER-001")],
       }),
-    ).rejects.toThrow(/review_token/i);
+    ).toThrow(/review_token/i);
 
     expect(
       useWorkspaceStore.getState().workspace.triage_records,
@@ -112,14 +112,14 @@ describe("P11.6 versioned custom semantic review", () => {
     expect(current.semantic_review.review_token).not.toBe(staleToken);
     expect(current.semantic_review.target_item_ids).toContain("CC-USER-001");
 
-    await expect(
+    expect(() =>
       tool("triage_workspace").execute({
         review_token: staleToken,
         evaluations: current.semantic_review.target_item_ids.map(
           semanticEvaluation,
         ),
       }),
-    ).rejects.toThrow(/stale/i);
+    ).toThrow(/stale/i);
 
     expect(
       useWorkspaceStore.getState().workspace.triage_records,
@@ -130,12 +130,12 @@ describe("P11.6 versioned custom semantic review", () => {
     const inspected = (await tool("inspect_workspace").execute({})) as any;
     const targets = inspected.semantic_review.target_item_ids as string[];
 
-    await expect(
+    expect(() =>
       tool("triage_workspace").execute({
         review_token: inspected.semantic_review.review_token,
         evaluations: targets.slice(0, -1).map(semanticEvaluation),
       }),
-    ).rejects.toThrow(/exactly one evaluation for every current semantic review target/i);
+    ).toThrow(/exactly one evaluation for every current semantic review target/i);
 
     expect(
       useWorkspaceStore.getState().workspace.triage_records,
