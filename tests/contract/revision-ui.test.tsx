@@ -4,20 +4,23 @@ import {
   screen,
 } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
+
 import { RevisionPanel } from "../../src/components/revision";
-import { integration001 } from "../../src/fixtures/integration001";
 import { proposeRevision } from "../../src/domain/revisions";
+import { integration001 } from "../../src/fixtures/integration001";
 
 function proposedWorkspace() {
   return proposeRevision({
     workspace: integration001,
     revisionId: "REV-UI-TEST",
     targetItemId: "CONC-001",
-    proposedText: "A narrower proposed conclusion.",
+    proposedText:
+      "A narrower proposed conclusion.",
     reasonCodes: ["OVERGENERALIZATION"],
     affectedItemIds: ["CONC-001"],
     createdBy: "AGENT",
-    createdAt: "2026-09-02T00:00:00+07:00",
+    createdAt:
+      "2026-09-02T00:00:00+07:00",
     auditEventId: "AUD-UI-TEST",
   });
 }
@@ -35,14 +38,19 @@ describe("P-06 revision panel", () => {
     );
 
     expect(
-      screen.getByText(/Deploy face recognition as the sole/i),
+      screen.getByText(
+        /Deploy face recognition as the sole/i,
+      ),
     ).toBeInTheDocument();
     expect(
-      screen.getAllByText("A narrower proposed conclusion.")
-        .length,
+      screen.getAllByText(
+        "A narrower proposed conclusion.",
+      ).length,
     ).toBeGreaterThan(0);
     expect(
-      screen.getByText(/Agent proposes. Human decides/i),
+      screen.getByText(
+        /Agent proposes. Human decides/i,
+      ),
     ).toBeInTheDocument();
   });
 
@@ -67,10 +75,14 @@ describe("P-06 revision panel", () => {
       }),
     );
     fireEvent.click(
-      screen.getByRole("button", { name: "Reject" }),
+      screen.getByRole("button", {
+        name: "Reject",
+      }),
     );
     fireEvent.click(
-      screen.getByRole("button", { name: "Defer" }),
+      screen.getByRole("button", {
+        name: "Defer",
+      }),
     );
 
     expect(onAccept).toHaveBeenCalledTimes(1);
@@ -97,7 +109,8 @@ describe("P-06 revision panel", () => {
 
     fireEvent.change(textarea, {
       target: {
-        value: "Human-edited accepted conclusion.",
+        value:
+          "Human-edited accepted conclusion.",
       },
     });
 
@@ -112,7 +125,7 @@ describe("P-06 revision panel", () => {
     );
   });
 
-  it("shows a waiting state after repair is prepared but before the agent proposal exists", () => {
+  it("shows an honest prepared-target state before an external agent proposal exists", () => {
     const workspace = structuredClone(
       integration001,
     );
@@ -150,7 +163,7 @@ describe("P-06 revision panel", () => {
 
     expect(
       screen.getByText(
-        "Ready for WebMCP agent",
+        "Repair target prepared",
       ),
     ).toBeInTheDocument();
 
@@ -159,38 +172,41 @@ describe("P-06 revision panel", () => {
     ).toBeGreaterThan(0);
 
     expect(
-      screen.getAllByText("CONC-001").length,
+      screen.getAllByText("CONC-001")
+        .length,
     ).toBeGreaterThan(0);
-  });
 
+    expect(
+      screen.queryByText(
+        /call propose_revision/i,
+      ),
+    ).not.toBeInTheDocument();
+  });
 
   it("labels the immediate custom draft as a local deterministic agent proposal", () => {
     const base = structuredClone(
       integration001,
     );
 
-    const workspace =
-      proposeRevision({
-        workspace: base,
-        revisionId:
-          "REV-LOCAL-001",
-        targetItemId:
-          "CONC-001",
-        proposedText:
-          "Keep the conclusion provisional until the focused reasoning issue is resolved.",
-        reasonCodes: [
-          "STRUCTURAL_REVIEW_TARGET",
-        ],
-        affectedItemIds: [
-          "A-001",
-          "CONC-001",
-        ],
-        createdBy: "AGENT",
-        createdAt:
-          "2026-09-02T12:00:00+07:00",
-        auditEventId:
-          "AUD-LOCAL-001",
-      });
+    const workspace = proposeRevision({
+      workspace: base,
+      revisionId: "REV-LOCAL-001",
+      targetItemId: "CONC-001",
+      proposedText:
+        "Keep the conclusion provisional until the focused reasoning issue is resolved.",
+      reasonCodes: [
+        "STRUCTURAL_REVIEW_TARGET",
+      ],
+      affectedItemIds: [
+        "A-001",
+        "CONC-001",
+      ],
+      createdBy: "AGENT",
+      createdAt:
+        "2026-09-02T12:00:00+07:00",
+      auditEventId:
+        "AUD-LOCAL-001",
+    });
 
     const event =
       workspace.audit_events.at(-1);
@@ -232,5 +248,4 @@ describe("P-06 revision panel", () => {
       ).toBeEnabled();
     }
   });
-
 });

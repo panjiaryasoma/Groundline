@@ -1,5 +1,4 @@
 import {
-  fireEvent,
   render,
   screen,
 } from "@testing-library/react";
@@ -17,6 +16,8 @@ const handlers = {
   onDefer: vi.fn(),
   onExit: vi.fn(),
   onEditInput: vi.fn(),
+  onFocusPrimaryRisk: vi.fn(),
+  onPrepareRepairTarget: vi.fn(),
 };
 
 function renderWorkspace(
@@ -24,8 +25,10 @@ function renderWorkspace(
     question: "Should we change our release process?",
     conclusion: "We should change it.",
     reason: "Releases fail too often.",
-    assumption: "The current handoff causes the failures.",
-    evidence: "Three recent releases failed at the same handoff.",
+    assumption:
+      "The current handoff causes the failures.",
+    evidence:
+      "Three recent releases failed at the same handoff.",
   }),
 ) {
   return render(
@@ -33,18 +36,25 @@ function renderWorkspace(
       workspace={workspace}
       selectedItemId={null}
       focusedItemIds={[]}
-      graphSelectionRequest={{ itemId: null, version: 0 }}
+      graphSelectionRequest={{
+        itemId: null,
+        version: 0,
+      }}
       {...handlers}
     />,
   );
 }
 
-describe("custom workspace unified product journey", () => {
-  it("starts in the mapped workspace without promoting structural validation into a user step", () => {
+describe("custom workspace live reasoning journey", () => {
+  it("opens directly into the live reasoning workspace without a fake local analysis step", () => {
     renderWorkspace();
 
-    expect(screen.getByText("Your decision")).toBeInTheDocument();
-    expect(screen.getByText("Not reviewed yet")).toBeInTheDocument();
+    expect(
+      screen.getByText("Your decision"),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText("Not reviewed yet"),
+    ).toBeInTheDocument();
     expect(
       screen.getByText(
         "Your reasoning is mapped and ready for agent review.",
@@ -52,40 +62,52 @@ describe("custom workspace unified product journey", () => {
     ).toBeInTheDocument();
 
     expect(
+      screen.getByLabelText(
+        "Live reasoning workspace",
+      ),
+    ).toBeInTheDocument();
+
+    expect(
       screen.queryByRole("button", {
-        name: /Run analysis|Check reasoning structure|Focus primary risk|Propose repair/i,
+        name: /Check reasoning structure|Inspect full reasoning map/i,
+      }),
+    ).not.toBeInTheDocument();
+
+    expect(
+      screen.queryByRole("button", {
+        name: /Run analysis/i,
       }),
     ).not.toBeInTheDocument();
   });
 
-  it("keeps the full graph behind an explicit inspection action", async () => {
+  it("keeps graph, Inspector, Revision Proposal, and Decision History in the same visible workspace", () => {
     renderWorkspace();
 
     expect(
-      screen.queryByLabelText("Live reasoning workspace"),
-    ).not.toBeInTheDocument();
-
-    fireEvent.click(
-      screen.getByRole("button", {
-        name: "Inspect full reasoning map",
-      }),
-    );
-
+      screen.getByLabelText(
+        "Groundline reasoning graph",
+      ),
+    ).toBeInTheDocument();
     expect(
-      await screen.findByLabelText(
-        "Live reasoning workspace",
-        {},
-        { timeout: 5000 },
+      screen.getByLabelText(
+        "Revision proposal",
+      ),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText(
+        /Selection, inspector, revision proposal, and decision history share the same state/i,
       ),
     ).toBeInTheDocument();
   });
 
-  it("shows human decision controls only when a real agent proposal exists", () => {
+  it("shows human decision controls in the same workspace when a real proposal exists", () => {
     const base = buildCustomWorkspace({
-      question: "Should we change our release process?",
+      question:
+        "Should we change our release process?",
       conclusion: "We should change it.",
       reason: "Releases fail too often.",
     });
+
     const workspace = proposeRevision({
       workspace: base,
       revisionId: "REV-AGENT-UI-001",
@@ -93,19 +115,30 @@ describe("custom workspace unified product journey", () => {
       proposedText:
         "Pilot the changed release process before replacing the current process.",
       reasonCodes: ["SCOPE_MISMATCH"],
-      affectedItemIds: ["C-USER-001", "CONC-USER-001"],
+      affectedItemIds: [
+        "C-USER-001",
+        "CONC-USER-001",
+      ],
       createdBy: "AGENT",
-      createdAt: "2026-09-03T16:00:00+07:00",
-      auditEventId: "AUD-PROP-AGENT-UI-001",
+      createdAt:
+        "2026-09-03T16:00:00+07:00",
+      auditEventId:
+        "AUD-PROP-AGENT-UI-001",
     });
 
     renderWorkspace(workspace);
 
     expect(
-      screen.getByText("Human decision required"),
+      screen.getByText(
+        "Human decision required",
+      ),
     ).toBeInTheDocument();
-    expect(screen.getByText("Accepted now")).toBeInTheDocument();
-    expect(screen.getByText("Proposed revision")).toBeInTheDocument();
+    expect(
+      screen.getByText("Accepted now"),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText("Proposed revision"),
+    ).toBeInTheDocument();
 
     for (const name of [
       "Accept proposal",
@@ -113,7 +146,9 @@ describe("custom workspace unified product journey", () => {
       "Reject",
       "Defer",
     ]) {
-      expect(screen.getByRole("button", { name })).toBeEnabled();
+      expect(
+        screen.getByRole("button", { name }),
+      ).toBeEnabled();
     }
   });
 });

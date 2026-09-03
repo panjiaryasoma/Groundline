@@ -21,6 +21,10 @@ const handlers = {
   onReject: vi.fn(),
   onDefer: vi.fn(),
   onExit: vi.fn(),
+  onFocusPrimaryRisk: vi.fn(),
+  onPrepareRepairTarget: vi.fn(),
+  onRunAnalysis: vi.fn(),
+  onProposeRepair: vi.fn(),
 };
 
 function analyzedExample() {
@@ -33,14 +37,17 @@ function analyzedExample() {
   );
 }
 
-describe("P11.9 unified review workspace", () => {
-  it("maps custom reasoning directly without exposing a fake analysis step", () => {
+describe("P11 live unified review workspace", () => {
+  it("maps custom reasoning directly into the visible graph without exposing a fake page-side analysis step", () => {
     const workspace = buildCustomWorkspace({
-      question: "Should we change our release process?",
+      question:
+        "Should we change our release process?",
       conclusion: "We should change it.",
       reason: "Releases fail too often.",
-      assumption: "The handoff causes the failures.",
-      evidence: "Three recent releases failed at the same handoff.",
+      assumption:
+        "The handoff causes the failures.",
+      evidence:
+        "Three recent releases failed at the same handoff.",
     });
 
     render(
@@ -49,25 +56,36 @@ describe("P11.9 unified review workspace", () => {
         workspace={workspace}
         selectedItemId={null}
         focusedItemIds={[]}
-        graphSelectionRequest={{ itemId: null, version: 0 }}
+        graphSelectionRequest={{
+          itemId: null,
+          version: 0,
+        }}
         {...handlers}
       />,
     );
 
-    expect(screen.getByText("Not reviewed yet")).toBeInTheDocument();
+    expect(
+      screen.getByText("Not reviewed yet"),
+    ).toBeInTheDocument();
     expect(
       screen.getByText(
         "Your reasoning is mapped and ready for agent review.",
       ),
     ).toBeInTheDocument();
     expect(
+      screen.getByLabelText(
+        "Live reasoning workspace",
+      ),
+    ).toBeInTheDocument();
+
+    expect(
       screen.queryByRole("button", {
-        name: /Run analysis|Check reasoning structure|Focus primary risk|Propose repair/i,
+        name: /Run analysis|Check reasoning structure/i,
       }),
     ).not.toBeInTheDocument();
   });
 
-  it("uses the same UNDERSTAND surface for reviewed demo and custom workspaces", () => {
+  it("uses the same live graph-and-Inspector surface for reviewed demo and custom workspaces", () => {
     const workspace = analyzedExample();
 
     const first = render(
@@ -76,16 +94,28 @@ describe("P11.9 unified review workspace", () => {
         workspace={workspace}
         selectedItemId="A-001"
         focusedItemIds={[]}
-        graphSelectionRequest={{ itemId: null, version: 0 }}
+        graphSelectionRequest={{
+          itemId: null,
+          version: 0,
+        }}
         {...handlers}
       />,
     );
 
     expect(
-      screen.getByText("Start with the weakest high-impact point."),
+      screen.getByLabelText(
+        "Live reasoning workspace",
+      ),
     ).toBeInTheDocument();
     expect(
-      screen.getByText(/Weakest point · ASSUMPTION · A-001/i),
+      screen.getByText(
+        /A-001 is the current primary risk/i,
+      ),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", {
+        name: "Focus primary risk",
+      }),
     ).toBeInTheDocument();
 
     first.unmount();
@@ -96,22 +126,37 @@ describe("P11.9 unified review workspace", () => {
         workspace={workspace}
         selectedItemId="A-001"
         focusedItemIds={[]}
-        graphSelectionRequest={{ itemId: null, version: 0 }}
+        graphSelectionRequest={{
+          itemId: null,
+          version: 0,
+        }}
         {...handlers}
       />,
     );
 
     expect(
-      screen.getByText("Start with the weakest high-impact point."),
+      screen.getByLabelText(
+        "Live reasoning workspace",
+      ),
     ).toBeInTheDocument();
     expect(
-      screen.queryByRole("button", {
-        name: /Focus primary risk|Propose repair/i,
+      screen.getByText(
+        /A-001 is the current primary risk/i,
+      ),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", {
+        name: "Focus primary risk",
       }),
-    ).not.toBeInTheDocument();
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", {
+        name: "Prepare repair",
+      }),
+    ).toBeInTheDocument();
   });
 
-  it("moves to DECIDE only when a real agent proposal exists", () => {
+  it("keeps DECIDE inside the same workspace when a real agent proposal exists", () => {
     const analyzed = analyzedExample();
     const workspace = proposeRevision({
       workspace: analyzed,
@@ -120,9 +165,14 @@ describe("P11.9 unified review workspace", () => {
       proposedText:
         "Use face recognition only with evaluated deployment conditions and an alternative review path.",
       reasonCodes: ["OVERGENERALIZATION"],
-      affectedItemIds: ["A-001", "C-001", "CONC-001"],
+      affectedItemIds: [
+        "A-001",
+        "C-001",
+        "CONC-001",
+      ],
       createdBy: "AGENT",
-      createdAt: "2026-09-03T16:00:00+07:00",
+      createdAt:
+        "2026-09-03T16:00:00+07:00",
       auditEventId: "AUD-UNIFIED-001",
     });
 
@@ -131,17 +181,35 @@ describe("P11.9 unified review workspace", () => {
         mode="CUSTOM"
         workspace={workspace}
         selectedItemId="CONC-001"
-        focusedItemIds={["A-001", "C-001", "CONC-001"]}
-        graphSelectionRequest={{ itemId: null, version: 0 }}
+        focusedItemIds={[
+          "A-001",
+          "C-001",
+          "CONC-001",
+        ]}
+        graphSelectionRequest={{
+          itemId: null,
+          version: 0,
+        }}
         {...handlers}
       />,
     );
 
     expect(
-      screen.getByText("Human decision required"),
+      screen.getByText(
+        "Human decision required",
+      ),
     ).toBeInTheDocument();
-    expect(screen.getByText("Accepted now")).toBeInTheDocument();
-    expect(screen.getByText("Proposed revision")).toBeInTheDocument();
+    expect(
+      screen.getByText("Accepted now"),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText("Proposed revision"),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByLabelText(
+        "Live reasoning workspace",
+      ),
+    ).toBeInTheDocument();
 
     for (const name of [
       "Accept proposal",

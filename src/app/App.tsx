@@ -1,5 +1,3 @@
-import { useEffect } from "react";
-
 import { P117CustomWorkspaceHome } from "../components/custom/P117CustomWorkspaceHome";
 import { DecisionIntake } from "../components/intake";
 import { UnifiedReviewWorkspace } from "../components/review/UnifiedReviewWorkspace";
@@ -47,12 +45,24 @@ export function App() {
   const selectItem = useWorkspaceStore(
     (state) => state.selectItem,
   );
+
   const runSeededAnalysis = useWorkspaceStore(
     (state) => state.runSeededAnalysis,
+  );
+  const focusPrimaryRisk = useWorkspaceStore(
+    (state) => state.focusPrimaryRisk,
   );
   const proposeSeededRevision = useWorkspaceStore(
     (state) => state.proposeSeededRevision,
   );
+
+  const focusCustomPrimaryRisk = useWorkspaceStore(
+    (state) => state.focusCustomPrimaryRisk,
+  );
+  const prepareCustomRepairTarget = useWorkspaceStore(
+    (state) => state.prepareCustomRepairTarget,
+  );
+
   const acceptLatestRevision = useWorkspaceStore(
     (state) => state.acceptLatestRevision,
   );
@@ -66,26 +76,11 @@ export function App() {
     (state) => state.deferLatestRevision,
   );
 
-  useEffect(() => {
-    if (
-      experienceMode === "DEMO" &&
-      workspace.triage_records.length === 0 &&
-      workspace.revisions.length === 0
-    ) {
-      runSeededAnalysis();
-    }
-  }, [
-    experienceMode,
-    workspace.workspace_id,
-    workspace.triage_records.length,
-    workspace.revisions.length,
-    runSeededAnalysis,
-  ]);
-
-  const graphSelectionRequest = ui.graphSelectionRequest ?? {
-    itemId: null,
-    version: 0,
-  };
+  const graphSelectionRequest =
+    ui.graphSelectionRequest ?? {
+      itemId: null,
+      version: 0,
+    };
 
   return (
     <main className="app-shell app-shell--unified">
@@ -139,15 +134,21 @@ export function App() {
           workspace={workspace}
           selectedItemId={ui.selectedItemId}
           focusedItemIds={ui.focusedItemIds}
-          graphSelectionRequest={graphSelectionRequest}
+          graphSelectionRequest={
+            graphSelectionRequest
+          }
           onSelectItem={selectItem}
+          onRunAnalysis={runSeededAnalysis}
+          onFocusPrimaryRisk={focusPrimaryRisk}
+          onProposeRepair={proposeSeededRevision}
           onAccept={acceptLatestRevision}
-          onEditAndAccept={editAndAcceptLatestRevision}
+          onEditAndAccept={
+            editAndAcceptLatestRevision
+          }
           onReject={rejectLatestRevision}
           onDefer={deferLatestRevision}
           onExit={backToStart}
           onResetDemo={resetDemo}
-          onShowExampleRevision={proposeSeededRevision}
         />
       ) : null}
 
@@ -156,10 +157,20 @@ export function App() {
           workspace={workspace}
           selectedItemId={ui.selectedItemId}
           focusedItemIds={ui.focusedItemIds}
-          graphSelectionRequest={graphSelectionRequest}
+          graphSelectionRequest={
+            graphSelectionRequest
+          }
           onSelectItem={selectItem}
+          onFocusPrimaryRisk={
+            focusCustomPrimaryRisk
+          }
+          onPrepareRepairTarget={
+            prepareCustomRepairTarget
+          }
           onAccept={acceptLatestRevision}
-          onEditAndAccept={editAndAcceptLatestRevision}
+          onEditAndAccept={
+            editAndAcceptLatestRevision
+          }
           onReject={rejectLatestRevision}
           onDefer={deferLatestRevision}
           onExit={backToStart}

@@ -1,10 +1,4 @@
-import {
-  lazy,
-  Suspense,
-  useEffect,
-  useMemo,
-  useState,
-} from "react";
+import { useEffect, useMemo, useRef } from "react";
 
 import { getDownstreamDependencies } from "../../domain/dependencies";
 import type {
@@ -14,11 +8,7 @@ import type {
 } from "../../domain/schema";
 import { rankTriageRecords } from "../../domain/workspaceAnalysis";
 import type { GraphSelectionRequest } from "../../state/workspaceStore";
-
-const ExpandedReasoningMap = lazy(async () => {
-  const module = await import("../focus/ExpandedReasoningMap");
-  return { default: module.ExpandedReasoningMap };
-});
+import { ExpandedReasoningMap } from "../focus/ExpandedReasoningMap";
 
 export type UnifiedReviewMode = "DEMO" | "CUSTOM";
 
@@ -36,31 +26,11 @@ export interface UnifiedReviewWorkspaceProps {
   onExit: () => void;
   onEditInput?: () => void;
   onResetDemo?: () => void;
-  onShowExampleRevision?: () => void;
+  onRunAnalysis?: () => void;
+  onFocusPrimaryRisk?: () => unknown;
+  onProposeRepair?: () => unknown;
+  onPrepareRepairTarget?: () => unknown;
 }
-
-const REASON_LABELS: Record<string, string> = {
-  WEAK_SUPPORT:
-    "The represented support is too weak for the role this item plays in the reasoning.",
-  MISSING_DIRECT_EVIDENCE:
-    "No direct represented evidence currently supports this item.",
-  SOURCE_QUALITY_UNCLEAR:
-    "The represented source quality is unclear for this use.",
-  SOURCE_CONFLICT:
-    "The represented sources conflict in a way that matters to this item.",
-  UNSUPPORTED_ASSUMPTION:
-    "This assumption is not sufficiently supported by the represented evidence.",
-  OVERGENERALIZATION:
-    "This reasoning reaches beyond what the represented evidence safely establishes.",
-  CONTRADICTED:
-    "Represented counter-evidence conflicts with this reasoning item.",
-  STALE_EVIDENCE:
-    "The represented evidence may be too stale for the current decision context.",
-  SCOPE_MISMATCH:
-    "The evidence and this reasoning item do not fully match in scope.",
-  DEPENDENCY_ON_UNASSESSED_NODE:
-    "This item depends on reasoning that still needs review.",
-};
 
 function itemById(
   workspace: Workspace,
@@ -85,11 +55,13 @@ function semanticReviewIsFresh(workspace: Workspace): boolean {
     (event) => event.event_type,
   );
   const lastTriageIndex = eventTypes.lastIndexOf("TRIAGE");
-  const lastAcceptedRevisionIndex = eventTypes.lastIndexOf(
-    "ACCEPT_REVISION",
-  );
+  const lastAcceptedRevisionIndex =
+    eventTypes.lastIndexOf("ACCEPT_REVISION");
 
-  return lastTriageIndex >= 0 && lastTriageIndex > lastAcceptedRevisionIndex;
+  return (
+    lastTriageIndex >= 0 &&
+    lastTriageIndex > lastAcceptedRevisionIndex
+  );
 }
 
 function reviewedRiskIds(workspace: Workspace): Set<string> {
@@ -103,7 +75,8 @@ function reviewedRiskIds(workspace: Workspace): Set<string> {
         event.event_type === "PROPOSE_REVISION" &&
         event.entity_ids.includes(revision.revision_id),
     );
-    const primaryRiskId = proposalEvent?.metadata?.primary_risk_id;
+    const primaryRiskId =
+      proposalEvent?.metadata?.primary_risk_id;
 
     if (typeof primaryRiskId === "string") {
       reviewed.add(primaryRiskId);
@@ -115,43 +88,66 @@ function reviewedRiskIds(workspace: Workspace): Set<string> {
   return reviewed;
 }
 
-function nextReviewTargetId(workspace: Workspace): string | null {
+function nextReviewTargetId(
+  workspace: Workspace,
+): string | null {
   const reviewed = reviewedRiskIds(workspace);
 
   return (
     rankTriageRecords(workspace.triage_records)
       .filter(
         (record) =>
-          record.state === "CRITICAL" || record.state === "REVIEW",
+          record.state === "CRITICAL" ||
+          record.state === "REVIEW",
       )
       .find((record) => {
         if (reviewed.has(record.item_id)) return false;
 
         return workspace.items.some(
           (item) =>
-            item.id === record.item_id && item.state === "ACCEPTED",
+            item.id === record.item_id &&
+            item.state === "ACCEPTED",
         );
       })?.item_id ?? null
   );
 }
 
-function relationContext(
-  workspace: Workspace,
-  targetId: string | null,
-  relationType: "SUPPORTS" | "CHALLENGES",
-): KnowledgeItem[] {
-  if (!targetId) return [];
+function latestTriageEventId(workspace: Workspace): string {
+  return (
+    [...workspace.audit_events]
+      .reverse()
+      .find((event) => event.event_type === "TRIAGE")
+      ?.event_id ?? "NO-TRIAGE"
+  );
+}
 
-  return workspace.relations
-    .filter(
-      (relation) =>
-        relation.type === relationType && relation.to_id === targetId,
+function hasPreparedRepair(workspace: Workspace): boolean {
+  const events = workspace.audit_events;
+  const lastRepairIndex = events
+    .map((event) =>
+      event.event_type === "FOCUS" &&
+      event.metadata?.requested_action === "PROPOSE_REPAIR"
+        ? 1
+        : 0,
     )
-    .map((relation) => itemById(workspace, relation.from_id))
-    .filter(
-      (item): item is KnowledgeItem =>
-        Boolean(item) && item?.state === "ACCEPTED",
-    );
+    .lastIndexOf(1);
+
+  if (lastRepairIndex < 0) return false;
+
+  const lifecycleTypes = new Set([
+    "PROPOSE_REVISION",
+    "ACCEPT_REVISION",
+    "REJECT_REVISION",
+  ]);
+
+  let lastLifecycleIndex = -1;
+  events.forEach((event, index) => {
+    if (lifecycleTypes.has(event.event_type)) {
+      lastLifecycleIndex = index;
+    }
+  });
+
+  return lastRepairIndex > lastLifecycleIndex;
 }
 
 export function UnifiedReviewWorkspace({
@@ -168,33 +164,20 @@ export function UnifiedReviewWorkspace({
   onExit,
   onEditInput,
   onResetDemo,
-  onShowExampleRevision,
+  onRunAnalysis,
+  onFocusPrimaryRisk,
+  onProposeRepair,
+  onPrepareRepairTarget,
 }: UnifiedReviewWorkspaceProps) {
-  const [mapExpanded, setMapExpanded] = useState(false);
   const proposed = latestProposedRevision(workspace);
-  const [editedText, setEditedText] = useState(
-    proposed?.proposed_text ?? "",
-  );
-
-  useEffect(() => {
-    setEditedText(proposed?.proposed_text ?? "");
-  }, [proposed?.revision_id, proposed?.proposed_text]);
-
   const reviewFresh = semanticReviewIsFresh(workspace);
   const nextTargetId = reviewFresh
     ? nextReviewTargetId(workspace)
     : null;
   const nextTarget = itemById(workspace, nextTargetId);
-  const nextTriage = workspace.triage_records.find(
-    (record) => record.item_id === nextTargetId,
-  );
   const acceptedConclusion = itemById(
     workspace,
     workspace.accepted_conclusion_id,
-  );
-  const proposalTarget = itemById(
-    workspace,
-    proposed?.target_item_id,
   );
 
   const criticalCount = workspace.triage_records.filter(
@@ -206,60 +189,109 @@ export function UnifiedReviewWorkspace({
   const stableCount = workspace.triage_records.filter(
     (record) => record.state === "STABLE",
   ).length;
-
-  const supportingItems = useMemo(
-    () => relationContext(workspace, nextTargetId, "SUPPORTS"),
-    [workspace, nextTargetId],
-  );
-  const challengingItems = useMemo(
-    () => relationContext(workspace, nextTargetId, "CHALLENGES"),
-    [workspace, nextTargetId],
-  );
-
-  const affectedDownstream = useMemo(() => {
-    if (!nextTargetId) return [];
-
-    const representedIds =
-      nextTriage?.downstream_accepted_ids?.length
-        ? nextTriage.downstream_accepted_ids
-        : getDownstreamDependencies(workspace, nextTargetId).node_ids;
-
-    return representedIds
-      .map((id) => itemById(workspace, id))
-      .filter(
-        (item): item is KnowledgeItem =>
-          Boolean(item) && item?.state === "ACCEPTED",
-      );
-  }, [workspace, nextTargetId, nextTriage]);
-
-  const focusedForMap = useMemo(() => {
-    if (focusedItemIds.length > 0) return focusedItemIds;
-    if (!nextTargetId) return [];
-
-    return [
-      nextTargetId,
-      ...affectedDownstream.map((item) => item.id),
-    ].filter((id, index, values) => values.indexOf(id) === index);
-  }, [focusedItemIds, nextTargetId, affectedDownstream]);
-
-  const hasReviewedOutcome = workspace.revisions.some(
-    (revision) => revision.state !== "PROPOSED",
-  );
   const unlinkedCount = workspace.items.filter((item) =>
     item.tags?.includes("unlinked"),
   ).length;
 
+  const repairPrepared = hasPreparedRepair(workspace);
+  const autoFocusKey =
+    reviewFresh && nextTargetId
+      ? `${latestTriageEventId(workspace)}:${nextTargetId}`
+      : null;
+  const lastAutoFocusKey = useRef<string | null>(null);
+
+  useEffect(() => {
+    if (
+      !autoFocusKey ||
+      !onFocusPrimaryRisk ||
+      proposed ||
+      lastAutoFocusKey.current === autoFocusKey
+    ) {
+      return;
+    }
+
+    lastAutoFocusKey.current = autoFocusKey;
+    onFocusPrimaryRisk();
+  }, [
+    autoFocusKey,
+    onFocusPrimaryRisk,
+    proposed,
+  ]);
+
+  const focusedForMap = useMemo(() => {
+    if (focusedItemIds.length > 0) {
+      return focusedItemIds;
+    }
+
+    if (!nextTargetId) {
+      return [];
+    }
+
+    const trace = getDownstreamDependencies(
+      workspace,
+      nextTargetId,
+    );
+
+    return [nextTargetId, ...trace.node_ids].filter(
+      (id, index, values) =>
+        values.indexOf(id) === index,
+    );
+  }, [focusedItemIds, nextTargetId, workspace]);
+
+  const effectiveSelectedItemId =
+    selectedItemId ??
+    nextTargetId ??
+    workspace.question_id;
+
+  const showRunAnalysis =
+    mode === "DEMO" &&
+    !reviewFresh &&
+    !proposed &&
+    Boolean(onRunAnalysis);
+
+  const showFocus =
+    reviewFresh &&
+    Boolean(nextTarget) &&
+    !proposed &&
+    Boolean(onFocusPrimaryRisk);
+
+  const showDemoRepair =
+    mode === "DEMO" &&
+    reviewFresh &&
+    Boolean(nextTarget) &&
+    !proposed &&
+    Boolean(onProposeRepair);
+
+  const showCustomRepairPrep =
+    mode === "CUSTOM" &&
+    reviewFresh &&
+    Boolean(nextTarget) &&
+    !proposed &&
+    !repairPrepared &&
+    Boolean(onPrepareRepairTarget);
+
   const understandComplete = Boolean(proposed);
-  const decideComplete = !proposed && hasReviewedOutcome;
+  const decideComplete =
+    !proposed &&
+    workspace.revisions.some(
+      (revision) => revision.state !== "PROPOSED",
+    );
 
   return (
     <>
-      <nav className="focus-journey" aria-label="Groundline review steps">
+      <nav
+        className="focus-journey"
+        aria-label="Groundline review steps"
+      >
         <div className="focus-journey__intro">
-          <span>{mode === "DEMO" ? "Seeded example" : "Your decision"}</span>
+          <span>
+            {mode === "DEMO"
+              ? "Seeded example"
+              : "Your decision"}
+          </span>
           <strong>
-            One reasoning workspace. Agent reviews are visible; human decisions
-            remain authoritative.
+            Map the reasoning, inspect exact cards, and
+            review agent proposals in one live workspace.
           </strong>
         </div>
 
@@ -268,7 +300,13 @@ export function UnifiedReviewWorkspace({
             <span>1</span>
             <strong>Check</strong>
           </li>
-          <li className={understandComplete ? "is-complete" : "is-current"}>
+          <li
+            className={
+              understandComplete
+                ? "is-complete"
+                : "is-current"
+            }
+          >
             <span>2</span>
             <strong>Understand</strong>
           </li>
@@ -287,29 +325,68 @@ export function UnifiedReviewWorkspace({
         </ol>
       </nav>
 
-      <section className="workspace-toolbar workspace-toolbar--demo">
+      <section
+        className="workspace-toolbar workspace-toolbar--demo"
+        aria-label={
+          mode === "DEMO"
+            ? "Example controls"
+            : "Workspace controls"
+        }
+      >
         <div className="workspace-toolbar__group">
           <span className="workspace-toolbar__label">
-            {mode === "DEMO" ? "Example controls" : "Workspace"}
+            {mode === "DEMO"
+              ? "Example controls"
+              : "Workspace"}
           </span>
 
-          <button type="button" onClick={() => setMapExpanded((value) => !value)}>
-            {mapExpanded ? "Hide full reasoning map" : "Inspect full reasoning map"}
-          </button>
+          {showRunAnalysis ? (
+            <button
+              type="button"
+              onClick={() => onRunAnalysis?.()}
+            >
+              Run analysis
+            </button>
+          ) : null}
+
+          {showFocus ? (
+            <button
+              type="button"
+              onClick={() => onFocusPrimaryRisk?.()}
+            >
+              Focus primary risk
+            </button>
+          ) : null}
+
+          {showDemoRepair ? (
+            <button
+              type="button"
+              onClick={() => onProposeRepair?.()}
+            >
+              Propose repair
+            </button>
+          ) : null}
+
+          {showCustomRepairPrep ? (
+            <button
+              type="button"
+              onClick={() => onPrepareRepairTarget?.()}
+            >
+              Prepare repair
+            </button>
+          ) : null}
+
+          {mode === "CUSTOM" &&
+          repairPrepared &&
+          !proposed ? (
+            <span className="focus-muted">
+              Repair target prepared for the agent.
+            </span>
+          ) : null}
 
           {mode === "CUSTOM" && onEditInput ? (
             <button type="button" onClick={onEditInput}>
               Edit inputs
-            </button>
-          ) : null}
-
-          {mode === "DEMO" &&
-          reviewFresh &&
-          nextTarget &&
-          !proposed &&
-          onShowExampleRevision ? (
-            <button type="button" onClick={onShowExampleRevision}>
-              Show example revision
             </button>
           ) : null}
 
@@ -320,255 +397,126 @@ export function UnifiedReviewWorkspace({
           ) : null}
         </div>
 
-        <button type="button" className="secondary-button" onClick={onExit}>
-          {mode === "DEMO" ? "Exit example" : "Exit workspace"}
+        <button
+          type="button"
+          className="secondary-button"
+          onClick={onExit}
+        >
+          {mode === "DEMO"
+            ? "Exit example"
+            : "Exit workspace"}
         </button>
       </section>
 
       <section className="focus-decision-strip">
         <div>
           <p className="eyebrow">
-            {mode === "DEMO" ? "Example decision" : "Decision"}
+            {mode === "DEMO"
+              ? "Example decision"
+              : "Decision"}
           </p>
           <h2>{workspace.title}</h2>
           <p className="focus-question">
-            {itemById(workspace, workspace.question_id)?.text}
+            {itemById(
+              workspace,
+              workspace.question_id,
+            )?.text}
           </p>
         </div>
 
         <article className="focus-current-conclusion">
           <span>Current accepted conclusion</span>
           <strong>
-            {acceptedConclusion?.text ?? "No accepted conclusion."}
+            {acceptedConclusion?.text ??
+              "No accepted conclusion."}
           </strong>
-          <code>{workspace.accepted_conclusion_id ?? "NONE"}</code>
+          <code>
+            {workspace.accepted_conclusion_id ?? "NONE"}
+          </code>
         </article>
       </section>
 
-      {!reviewFresh && !proposed ? (
-        <section className="focus-start">
-          <div className="focus-start__copy">
+      <section
+        className="focus-analysis"
+        aria-label="Current review status"
+      >
+        <div className="focus-analysis__heading">
+          <div>
             <p className="eyebrow">
-              {workspace.triage_records.length > 0
-                ? "Review needs refresh"
-                : "Not reviewed yet"}
+              {proposed
+                ? "Agent proposal"
+                : reviewFresh
+                  ? `${criticalCount} CRITICAL · ${reviewCount} REVIEW · ${stableCount} STABLE`
+                  : workspace.triage_records.length > 0
+                    ? "Review needs refresh"
+                    : "Not reviewed yet"}
             </p>
+
             <h3>
-              {workspace.triage_records.length > 0
-                ? "The reasoning changed after the last semantic review."
-                : "Your reasoning is mapped and ready for agent review."}
+              {proposed
+                ? "Review the proposal without leaving the reasoning workspace."
+                : reviewFresh && nextTarget
+                  ? `${nextTarget.id} is the current primary risk.`
+                  : reviewFresh
+                    ? "No unresolved CRITICAL or REVIEW item remains."
+                    : workspace.triage_records.length > 0
+                      ? "The reasoning changed after the last semantic review."
+                      : mode === "DEMO"
+                        ? "Run the seeded analysis, then inspect the selected risk in the graph."
+                        : "Your reasoning is mapped and ready for agent review."}
             </h3>
-            <p>
-              {workspace.triage_records.length > 0
-                ? "Groundline will not reuse stale semantic labels after accepted reasoning changes. The next WebMCP review will populate the current graph again."
-                : "There is no fake analysis step here. A WebMCP agent can inspect this same workspace, evaluate the represented reasoning, and write a fresh triage back into Groundline."}
-            </p>
-            {unlinkedCount > 0 ? (
-              <p className="focus-muted">
-                {unlinkedCount} human-authored card{unlinkedCount === 1 ? " is" : "s are"}{" "}
-                still UNLINKED. An agent may suggest defensible connections, but
-                nothing becomes part of the graph until you approve it.
-              </p>
-            ) : null}
           </div>
 
-          <button
-            type="button"
-            className="focus-primary-action"
-            onClick={() => setMapExpanded(true)}
-          >
-            Inspect the reasoning map
-            <small>Optional power-user view</small>
-          </button>
-        </section>
-      ) : null}
-
-      {reviewFresh && nextTarget && !proposed ? (
-        <section className="focus-analysis">
-          <div className="focus-analysis__heading">
-            <div>
-              <p className="eyebrow">
-                {criticalCount} CRITICAL · {reviewCount} REVIEW · {stableCount}{" "}
-                STABLE
-              </p>
-              <h3>Start with the weakest high-impact point.</h3>
-            </div>
+          {proposed ? (
             <span className="focus-status">
-              {nextTriage?.state ?? "REVIEW"}
+              Human decision required
             </span>
-          </div>
+          ) : reviewFresh && nextTarget ? (
+            <span className="focus-status">
+              {workspace.triage_records.find(
+                (record) =>
+                  record.item_id === nextTarget.id,
+              )?.state ?? "REVIEW"}
+            </span>
+          ) : null}
+        </div>
 
-          <div className="focus-analysis-grid">
-            <div className="focus-chain">
-              <article className="focus-chain-card focus-chain-card--risk">
-                <span>
-                  Weakest point · {nextTarget.type} · {nextTarget.id}
-                </span>
-                <strong>{nextTarget.text}</strong>
-                <small>
-                  {nextTriage?.priority_score_internal != null
-                    ? `Review priority ${nextTriage.priority_score_internal}`
-                    : "Semantic review target"}
-                </small>
-              </article>
+        <p className="focus-muted">
+          {proposed
+            ? "The graph, Inspector, Revision Proposal, and Decision History below are still the same shared state. Accept, edit, reject, or defer from the proposal panel."
+            : reviewFresh && nextTarget
+              ? "Groundline keeps the current risk and its downstream reasoning highlighted. Click any other card to inspect it; Focus primary risk returns to this exact item."
+              : workspace.triage_records.length > 0
+                ? "Old semantic labels are not reused after accepted reasoning changes. The current graph stays visible while a fresh WebMCP review is obtained."
+                : mode === "CUSTOM"
+                  ? "Keep mapping, add reasoning cards, and inspect any card now. A WebMCP agent can review this same canonical workspace; when fresh triage arrives, Groundline focuses the highest-priority unresolved risk here automatically."
+                  : "The example uses deterministic seeded results so you can see the full interaction loop without an external agent."}
+        </p>
 
-              {affectedDownstream.map((item) => (
-                <div key={item.id}>
-                  <div className="focus-chain-link">
-                    <span>affects</span>
-                  </div>
-                  <article className="focus-chain-card">
-                    <span>
-                      {item.type} · {item.id}
-                    </span>
-                    <strong>{item.text}</strong>
-                  </article>
-                </div>
-              ))}
-            </div>
-
-            <aside className="focus-context">
-              <section>
-                <p className="eyebrow">Why this matters</p>
-                <ul className="focus-reasons">
-                  {(nextTriage?.reason_codes ?? []).map((code) => (
-                    <li key={code}>
-                      {REASON_LABELS[code] ??
-                        code.toLowerCase().replaceAll("_", " ")}
-                    </li>
-                  ))}
-                </ul>
-              </section>
-
-              {supportingItems.length > 0 ? (
-                <section>
-                  <p className="eyebrow">Supports</p>
-                  {supportingItems.map((item) => (
-                    <p className="focus-muted" key={item.id}>
-                      {item.id} · {item.text}
-                    </p>
-                  ))}
-                </section>
-              ) : null}
-
-              {challengingItems.length > 0 ? (
-                <section>
-                  <p className="eyebrow">Challenges</p>
-                  {challengingItems.map((item) => (
-                    <p className="focus-muted" key={item.id}>
-                      {item.id} · {item.text}
-                    </p>
-                  ))}
-                </section>
-              ) : null}
-
-              <section>
-                <p className="eyebrow">What happens next</p>
-                <p className="focus-muted">
-                  If the agent proposes a revision, Groundline will move to the
-                  decision view automatically. There is no disabled repair button
-                  and no page-side attempt to start an AI model.
-                </p>
-              </section>
-            </aside>
-          </div>
-        </section>
-      ) : null}
-
-      {reviewFresh && !nextTarget && !proposed ? (
-        <section className="focus-complete">
-          <div className="focus-complete__status">
-            <p className="eyebrow">Current review complete</p>
-            <h3>No unresolved CRITICAL or REVIEW item remains in this triage.</h3>
-          </div>
+        {mode === "CUSTOM" &&
+        unlinkedCount > 0 ? (
           <p className="focus-muted">
-            This is an operational review state, not a declaration that the
-            conclusion is true.
+            {unlinkedCount} human-authored card
+            {unlinkedCount === 1 ? " is" : "s are"}{" "}
+            UNLINKED. An agent may suggest semantic
+            connections, but nothing is committed until
+            you approve the proposal.
           </p>
-        </section>
-      ) : null}
+        ) : null}
+      </section>
 
-      {proposed ? (
-        <section className="focus-revision" aria-label="Human revision decision">
-          <div className="focus-analysis__heading">
-            <div>
-              <p className="eyebrow">Agent proposal</p>
-              <h3>Compare the accepted reasoning with the proposed revision.</h3>
-            </div>
-            <span className="focus-status">Human decision required</span>
-          </div>
-
-          <div className="focus-revision-compare">
-            <article>
-              <span>Accepted now</span>
-              <p>{proposalTarget?.text ?? "Target unavailable."}</p>
-            </article>
-            <div className="focus-revision-arrow">→</div>
-            <article className="focus-revision-compare__suggested">
-              <span>Proposed revision</span>
-              <p>{proposed.proposed_text}</p>
-            </article>
-          </div>
-
-          <label className="revision-editor">
-            <span>Edit before accepting</span>
-            <textarea
-              rows={5}
-              value={editedText}
-              onChange={(event) => setEditedText(event.target.value)}
-            />
-          </label>
-
-          <div className="focus-action-row focus-action-row--primary">
-            <button type="button" onClick={onAccept}>
-              Accept proposal
-            </button>
-            <button
-              type="button"
-              onClick={() => onEditAndAccept(editedText)}
-              disabled={!editedText.trim()}
-            >
-              Accept edited
-            </button>
-            <button type="button" onClick={onReject}>
-              Reject
-            </button>
-            <button type="button" onClick={onDefer}>
-              Defer
-            </button>
-          </div>
-
-          <p className="focus-muted">
-            Agent proposes. Human decides. Accepted knowledge changes only after
-            one of the human acceptance actions above.
-          </p>
-        </section>
-      ) : null}
-
-      {mapExpanded ? (
-        <Suspense
-          fallback={
-            <section className="focus-map-loading">
-              Loading reasoning map…
-            </section>
-          }
-        >
-          <ExpandedReasoningMap
-            workspace={workspace}
-            selectedItemId={selectedItemId ?? nextTargetId}
-            focusedItemIds={focusedForMap}
-            graphSelectionRequest={graphSelectionRequest}
-            onSelectItem={onSelectItem}
-            onCollapse={() => setMapExpanded(false)}
-            onAccept={onAccept}
-            onEditAndAccept={onEditAndAccept}
-            onReject={onReject}
-            onDefer={onDefer}
-            heading="Inspect the full reasoning map."
-            showCollapse
-          />
-        </Suspense>
-      ) : null}
+      <ExpandedReasoningMap
+        workspace={workspace}
+        selectedItemId={effectiveSelectedItemId}
+        focusedItemIds={focusedForMap}
+        graphSelectionRequest={graphSelectionRequest}
+        onSelectItem={onSelectItem}
+        onAccept={onAccept}
+        onEditAndAccept={onEditAndAccept}
+        onReject={onReject}
+        onDefer={onDefer}
+        heading="Work directly with the reasoning map."
+      />
     </>
   );
 }

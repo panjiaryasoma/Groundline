@@ -2,143 +2,205 @@
 
 Status: **AUTHORITATIVE PRODUCT CONTRACT**
 
-This document supersedes P11 interaction decisions that treated Groundline as a page that starts an AI analysis by itself.
+This document defines the current Groundline interaction model. It supersedes earlier P11 decisions that either treated the page as a self-contained AI analyzer or hid the reasoning graph behind a report-style summary.
 
 ## Product model
 
-Groundline is a **shared human-agent reasoning workspace**.
+Groundline is a **live human-agent reasoning workspace**.
 
-The website owns the canonical reasoning state, deterministic validation and triage mechanics, audit history, human approval surfaces, and WebMCP tools. A WebMCP-capable external agent inspects and acts on that shared workspace.
+The website owns:
+- canonical reasoning state;
+- deterministic validation and triage mechanics;
+- the reasoning graph;
+- Inspector state;
+- revision and human-approval surfaces;
+- audit history;
+- WebMCP tools.
 
-Groundline does **not** embed a hidden page-local model and does **not** pretend that an ordinary page button can start an external AI agent.
+A WebMCP-capable external agent can inspect the same canonical workspace, evaluate represented reasoning, focus items, trace dependencies, propose semantic relations, and propose revisions.
 
-The authoritative product loop is:
+The authority boundary remains:
+
+> **Agent proposes. Human decides.**
+
+Groundline must not pretend that an ordinary page button can start an external AI model.
+
+## Entry
+
+The normal human entry remains plain-language decision intake.
+
+Users describe:
+- what they are deciding;
+- what they currently think;
+- their main reason;
+- optional assumptions;
+- optional evidence;
+- optional source context.
+
+Groundline maps those answers into reasoning objects internally. Users are not required to author ontology labels or manually wire a graph before they can begin.
+
+## Live workspace is the primary surface
+
+After a custom workspace is created, the live reasoning workspace is visible immediately.
+
+The primary composition is:
 
 ```text
-MAP -> REVIEW -> REVISE
-       |
-       +-- CHECK -> UNDERSTAND -> DECIDE
+REASONING GRAPH  <->  INSPECTOR
+        |
+        +-> REVISION PROPOSAL
+        |
+        +-> DECISION HISTORY / AUDIT
 ```
 
-`Agent proposes. Human decides.` remains the authority boundary.
+Graph, Inspector, Revision Proposal, and Decision History share the same state.
 
-## One workspace experience
+The graph is not an optional power-user report hidden behind `Inspect full reasoning map`. It is the place where the represented reasoning lives.
 
-DEMO and CUSTOM use the same review surface after semantic results exist.
+Plain-language guidance may sit above the workspace, but it must not replace the workspace with a static AI report.
 
-- **DEMO** receives deterministic seeded semantic results for the frozen example.
-- **CUSTOM** receives semantic results from a WebMCP agent.
-- Once results exist, both experiences present the same UNDERSTAND and DECIDE interaction model.
+## Selection contract
 
-The semantic result source may differ. The human review experience must not become two different products again.
+Clicking one reasoning card:
+- selects that exact item;
+- updates the Inspector immediately;
+- does not silently change accepted knowledge.
 
-## CHECK
+Programmatic focus must behave the same way.
 
-For CUSTOM, intake submission creates the reasoning workspace immediately.
+When a fresh semantic triage identifies the highest-priority unresolved CRITICAL or REVIEW item:
+- Groundline focuses that exact risk;
+- its downstream reasoning remains highlighted;
+- the selected item and Inspector stay synchronized.
 
-Structural validation is an intake/domain concern, not a user-facing analysis stage. The primary workspace must not require a `Run analysis`, `Check reasoning structure`, `Request agent review`, or equivalent ritual before the user can see the mapped reasoning.
+The user may inspect another card manually.
 
-Before an agent review exists, the primary state is intentionally simple:
+`Focus primary risk` returns selection to the exact current review target.
+
+This interaction is the baseline established by the P08.8 state-machine fixes and must not regress into label-only focus.
+
+## Review status
+
+CUSTOM does not fabricate semantic risk from structural completeness.
+
+Before agent triage exists:
 
 > **Not reviewed yet**  
 > Your reasoning is mapped and ready for agent review.
 
-This state must not expose internal review tokens, target IDs, handshake protocol, or disabled semantic-action buttons as normal product UX.
+The graph is still fully usable:
+- cards can be inspected;
+- new reasoning items can be added;
+- human-authored state remains visible.
 
-## UNDERSTAND
+Internal review tokens, handshake IDs, and tool-call instructions are protocol state, not normal product UI.
 
-When a fresh semantic triage is committed, Groundline moves directly to the highest-priority unresolved CRITICAL or REVIEW item.
+DEMO may use deterministic seeded analysis to demonstrate the same workspace interaction.
 
-The primary surface should explain:
+## Understanding a risk
 
-1. the weakest/high-impact reasoning item;
-2. why it was prioritized;
-3. what accepted reasoning depends on or is affected by it;
-4. represented support and challenges where available.
+Groundline may summarize why a risk matters, but explanation stays attached to the selected reasoning object rather than replacing the graph.
 
-The user should not need to press `Focus primary risk` after the agent has already produced a primary risk. The focused weak-point view is the product response to fresh triage.
+The product response to fresh triage is:
+1. exact risk card selected;
+2. Inspector updated;
+3. affected reasoning highlighted;
+4. triage state visible on the card and Inspector;
+5. audit state updated by the actual review actions.
 
-Triage states remain operational review priorities, never truth, confidence, or factuality scores.
+Priority scores are review mechanics, never truth, confidence, or factuality scores.
 
-## DECIDE
+## Repair preparation and proposal
 
-DECIDE appears only when there is a real pending agent revision proposal.
+For DEMO, a seeded repair proposal may be produced directly.
 
-The surface must compare:
+For CUSTOM, the page cannot invoke an external WebMCP agent. Groundline may prepare a repair target by:
+- keeping the primary risk focused;
+- selecting the accepted item that would be revised;
+- recording the prepared target in canonical workspace/audit state.
+
+The UI must describe this honestly as preparation, not pretend that an agent is running in the background.
+
+When a real agent revision arrives, the Revision Proposal panel in the same live workspace displays:
 
 - Accepted now
 - Proposed revision
-
-Human controls remain:
-
+- editable draft
 - Accept proposal
 - Accept edited
 - Reject
 - Defer
 
-Accepted knowledge changes only through human review actions.
+There is no separate report page for the proposal.
 
-No semantic relation is inherited automatically when a revision is accepted. SUPERSEDES lineage is preserved, while semantic relationships require explicit re-analysis or re-linking.
+## Accepted revision behavior
 
-## Full reasoning map
+When a human accepts a revision:
+- the old accepted item remains traceable as `SUPERSEDED`;
+- the replacement becomes the new accepted item;
+- the replacement is selected;
+- Inspector follows the new item;
+- graph and audit update together;
+- the replacement remains unassessed until fresh review.
 
-The full graph, Inspector, Revision history, and Audit trail are an **inspection layer**, not the required first screen.
+Semantic relations are not inherited automatically from the superseded item.
 
-The primary journey may expose an action such as:
+## Multi-risk review
 
-`Inspect full reasoning map`
+A triage may contain multiple CRITICAL or REVIEW items.
 
-This preserves auditability and power-user access without forcing a normal user to understand Groundline's internal graph machinery before Groundline explains the reasoning problem.
+Groundline reviews them sequentially rather than hiding all but one permanently.
+
+After a proposal receives a human outcome, the next unresolved review target can become primary.
+
+Accepted reasoning changes invalidate stale semantic review where required.
 
 ## Additional reasoning cards
 
-Humans may add multiple CLAIM, COUNTERCLAIM, ASSUMPTION, or EVIDENCE cards.
+Humans may add multiple:
+- CLAIM;
+- COUNTERCLAIM;
+- ASSUMPTION;
+- EVIDENCE cards.
 
-A newly added card remains explicitly UNLINKED until a represented semantic relationship exists.
+A new card remains explicitly `UNLINKED` until a represented semantic relation exists.
 
-Groundline must not infer or silently commit SUPPORTS, CHALLENGES, DEPENDS_ON, or QUALIFIES relations merely because a card was added.
+Groundline must not silently invent SUPPORTS, CHALLENGES, DEPENDS_ON, or QUALIFIES relations.
 
-There is no fake `Run analysis again` button. Adding accepted reasoning invalidates stale semantic evaluation/triage. A WebMCP agent can later inspect the changed canonical workspace and review the current graph.
+An agent may propose defensible semantic relations. Canonical relations change only after human approval.
 
-## Relation proposals
+## Relation review
 
-When an agent proposes semantic relations for UNLINKED cards, Groundline may show a dedicated human-approval surface.
+Real agent relation proposals may open a dedicated human-approval panel.
 
-This surface is actionable because a real proposal exists.
-
-Until the human accepts a proposal:
-
+Until approval:
 - canonical relations do not change;
 - accepted knowledge does not change;
-- semantic inference is not committed.
+- proposed semantic inference is not treated as committed graph state.
 
-After an accepted relation changes the graph, stale semantic analysis is invalidated and the agent must inspect/review the current workspace again.
-
-## WebMCP review state
-
-`inspect_workspace` derives the current semantic review token, target set, and UNLINKED state directly from the canonical workspace.
-
-Therefore Groundline does not maintain a separate fake `agent review requested` handshake state.
-
-The semantic review token remains a protocol integrity mechanism for stale-review rejection. It is not normal user-facing product state.
+If approved relations change the graph, stale semantic review is invalidated and the agent must inspect the current canonical workspace again.
 
 ## Runtime authority
 
-The authoritative runtime review surface is:
+The authoritative review surface is:
 
 `src/components/review/UnifiedReviewWorkspace.tsx`
 
-CUSTOM reaches it through:
+It must keep the live workspace visible rather than demoting it to an optional expansion.
+
+CUSTOM reaches this surface through:
 
 `src/components/custom/P117CustomWorkspaceHome.tsx`
 
-DEMO reaches the same component directly from `src/app/App.tsx`.
+P117 remains responsible only for real relation-proposal approval overlays and then delegates to the same live workspace.
 
-Earlier P11 components may remain temporarily for regression compatibility, but they are not product authority and must not be used to reintroduce a parallel CUSTOM or DEMO journey.
+DEMO reaches the same review surface directly from `src/app/App.tsx`.
+
+Earlier components may remain for regression compatibility but are not product authority.
 
 ## Verification gate
 
-P11 is considered verified only when the current branch HEAD passes `.github/workflows/p11-verify.yml`:
+P11 is verified only when the current branch HEAD passes:
 
 ```text
 npm ci
@@ -147,4 +209,6 @@ npm run build
 npm test
 ```
 
-A previous green run is not evidence for a newer unverified HEAD.
+via `.github/workflows/p11-verify.yml`.
+
+A green run for an older commit is not evidence for a newer HEAD.
