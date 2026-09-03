@@ -7,18 +7,20 @@ import {
 } from "react";
 import { createPortal } from "react-dom";
 
+import { UnifiedReviewWorkspace } from "../review/UnifiedReviewWorkspace";
 import {
   clearP117AgentReviewState,
   clearP117RelationProposalBatch,
-  requestP117AgentReview,
   useP117AgentReviewStore,
 } from "../../state/p117AgentReview";
 import { applyP117ApprovedRelations } from "../../state/p117RelationReview";
 import { semanticReviewContract } from "../../webmcp/semanticReviewContract";
-import { P112CustomWorkspaceHome } from "./P112CustomWorkspaceHome";
 import "../../styles/p11-7.css";
 
-type Props = ComponentProps<typeof P112CustomWorkspaceHome>;
+type Props = Omit<
+  ComponentProps<typeof UnifiedReviewWorkspace>,
+  "mode"
+>;
 
 function proposalKey(proposal: {
   from_id: string;
@@ -29,7 +31,6 @@ function proposalKey(proposal: {
 }
 
 export function P117CustomWorkspaceHome(props: Props) {
-  const request = useP117AgentReviewStore((state) => state.request);
   const proposalBatch = useP117AgentReviewStore(
     (state) => state.proposalBatch,
   );
@@ -37,11 +38,10 @@ export function P117CustomWorkspaceHome(props: Props) {
   const [selectedProposalKeys, setSelectedProposalKeys] =
     useState<Set<string>>(new Set());
 
-  const semanticReview = useMemo(
-    () => semanticReviewContract(props.workspace),
+  const currentToken = useMemo(
+    () => semanticReviewContract(props.workspace).review_token,
     [props.workspace],
   );
-  const currentToken = semanticReview.review_token;
 
   const currentProposalBatch =
     proposalBatch?.reviewToken === currentToken
@@ -49,14 +49,10 @@ export function P117CustomWorkspaceHome(props: Props) {
       : null;
 
   useEffect(() => {
-    const staleRequest = request && request.reviewToken !== currentToken;
-    const staleBatch =
-      proposalBatch && proposalBatch.reviewToken !== currentToken;
-
-    if (staleRequest || staleBatch) {
+    if (proposalBatch && proposalBatch.reviewToken !== currentToken) {
       clearP117AgentReviewState();
     }
-  }, [currentToken, proposalBatch, request]);
+  }, [currentToken, proposalBatch]);
 
   useEffect(() => {
     if (!currentProposalBatch) return;
@@ -66,37 +62,6 @@ export function P117CustomWorkspaceHome(props: Props) {
     );
     setMessage(null);
   }, [currentProposalBatch]);
-
-  const prepareAgentReview = useCallback(() => {
-    try {
-      requestP117AgentReview();
-      setMessage(null);
-    } catch (error) {
-      setMessage(
-        error instanceof Error
-          ? error.message
-          : "Groundline could not prepare the current semantic review state.",
-      );
-    }
-  }, []);
-
-  useEffect(() => {
-    const handleStructureCheck = (event: MouseEvent) => {
-      const target = event.target;
-      if (!(target instanceof Element)) return;
-
-      const button = target.closest(
-        ".custom-analysis-action .focus-primary-action",
-      );
-      if (!button) return;
-
-      prepareAgentReview();
-    };
-
-    document.addEventListener("click", handleStructureCheck);
-    return () =>
-      document.removeEventListener("click", handleStructureCheck);
-  }, [prepareAgentReview]);
 
   const acceptSelectedRelations = useCallback(() => {
     if (!currentProposalBatch) return;
@@ -118,7 +83,6 @@ export function P117CustomWorkspaceHome(props: Props) {
         currentProposalBatch.reviewToken,
       );
       clearP117RelationProposalBatch();
-      requestP117AgentReview();
       setSelectedProposalKeys(new Set());
       setMessage(null);
     } catch (error) {
@@ -138,7 +102,7 @@ export function P117CustomWorkspaceHome(props: Props) {
 
   return (
     <>
-      <P112CustomWorkspaceHome {...props} />
+      <UnifiedReviewWorkspace {...props} mode="CUSTOM" />
 
       {currentProposalBatch && typeof document !== "undefined"
         ? createPortal(
@@ -206,7 +170,7 @@ export function P117CustomWorkspaceHome(props: Props) {
                 <small>
                   Agent proposes. Human decides. Approved lines become part of
                   the graph, invalidate stale semantic triage, and require a
-                  fresh review of the changed reasoning.
+                  fresh agent review of the changed reasoning.
                 </small>
 
                 {message ? (
