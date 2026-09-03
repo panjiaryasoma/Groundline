@@ -6,12 +6,14 @@ import { hasWebMCP } from "../webmcp/modelContext";
 import { useGroundlineWebMCP } from "../webmcp/useGroundlineWebMCP";
 import { installP111RepairLifecycle } from "../state/p111RepairLifecycle";
 import { installP112CustomSemanticGate } from "../state/p112CustomSemanticGate";
+import { installP113StructuralCycleGuard } from "../state/p113StructuralCycleGuard";
 import { useWorkspaceStore } from "../state/workspaceStore";
 import "../styles/app.css";
 import "../styles/p11.css";
 
 installP111RepairLifecycle();
 installP112CustomSemanticGate();
+installP113StructuralCycleGuard();
 
 export function App() {
   useGroundlineWebMCP();

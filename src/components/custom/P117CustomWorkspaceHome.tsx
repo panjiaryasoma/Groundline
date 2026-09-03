@@ -14,6 +14,7 @@ import {
   useP117AgentReviewStore,
 } from "../../state/p117AgentReview";
 import { applyP117ApprovedRelations } from "../../state/p117RelationReview";
+import { hasP113StructuralCycleCandidate } from "../../state/p113StructuralCycleGuard";
 import { semanticReviewContract } from "../../webmcp/semanticReviewContract";
 import "../../styles/p11-7.css";
 
@@ -47,6 +48,11 @@ export function P117CustomWorkspaceHome(props: Props) {
     proposalBatch?.reviewToken === currentToken
       ? proposalBatch
       : null;
+
+  const effectiveRunAnalysis =
+    props.onRunAnalysis && hasP113StructuralCycleCandidate(props.workspace)
+      ? props.onRunAnalysis
+      : undefined;
 
   useEffect(() => {
     if (proposalBatch && proposalBatch.reviewToken !== currentToken) {
@@ -102,7 +108,11 @@ export function P117CustomWorkspaceHome(props: Props) {
 
   return (
     <>
-      <UnifiedReviewWorkspace {...props} mode="CUSTOM" />
+      <UnifiedReviewWorkspace
+        {...props}
+        onRunAnalysis={effectiveRunAnalysis}
+        mode="CUSTOM"
+      />
 
       {currentProposalBatch && typeof document !== "undefined"
         ? createPortal(
