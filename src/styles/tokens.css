@@ -27,7 +27,8 @@
   --bedrock: #343b3e;
   --bedrock-ink: #f0eadf;
   --fault: #9f523d;
-  --gold: #aa8243;
+  --gold: #745624;
+  --gold-deep: #745624;
   --gold-soft: #c6a873;
 
   --strata-question: #f3efe6;
@@ -38,7 +39,7 @@
   --strata-source: #80806b;
 
   --critical: #9f523d;
-  --review: #98743d;
+  --review: #745624;
   --stable: #66705b;
   --unassessed: #716c65;
 

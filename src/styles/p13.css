@@ -1,0 +1,458 @@
+/* P13 responsive + accessibility + resilience hardening
+ * No reasoning, authority, WebMCP, or revision semantics change here.
+ */
+
+html,
+body,
+#root {
+  max-width: 100%;
+  overflow-x: clip;
+}
+
+:where(
+  .site-header,
+  .focus-journey,
+  .workspace-toolbar,
+  .focus-decision-strip,
+  .focus-review-overview,
+  .focus-map-expansion,
+  .live-review-grid,
+  .revision-panel,
+  .audit-panel,
+  .inspector-panel,
+  .intake-shell,
+  .intake-card
+) {
+  min-width: 0;
+}
+
+/* Keyboard focus must remain visible on the earthy palette. */
+:where(
+  button,
+  a[href],
+  input,
+  textarea,
+  select,
+  [role="button"],
+  [tabindex]:not([tabindex="-1"])
+):focus-visible {
+  outline: 3px solid var(--ink) !important;
+  outline-offset: 3px !important;
+  box-shadow: 0 0 0 2px var(--paper) !important;
+}
+
+button,
+input,
+select {
+  min-height: 40px;
+}
+
+button {
+  line-height: 1.25;
+}
+
+button:disabled,
+[aria-disabled="true"] {
+  opacity: 0.48;
+}
+
+/* Long user/agent text should wrap instead of widening the interface. */
+:where(
+  .reasoning-node__text,
+  .reasoning-node__meta,
+  .reasoning-node__footer,
+  .focus-question,
+  .focus-current-conclusion strong,
+  .focus-analysis h3,
+  .focus-muted,
+  .focus-workspace-summary h3,
+  .focus-workspace-summary p,
+  .inspector-panel p,
+  .inspector-panel dd,
+  .revision-panel p,
+  .revision-panel dd,
+  .revision-panel h2,
+  .audit-panel p,
+  .audit-panel code,
+  .p117-review-panel strong,
+  .p117-review-panel small,
+  .p117-review-panel p,
+  .intake-review-list p
+) {
+  overflow-wrap: anywhere;
+  word-break: normal;
+}
+
+code,
+pre,
+.reasoning-node__meta,
+.audit-panel code {
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+.reasoning-node__inner {
+  min-width: 0;
+  max-width: 100%;
+}
+
+.reasoning-node__text {
+  max-height: 12rem;
+  overflow: auto;
+  scrollbar-width: thin;
+}
+
+/* Revision resilience: preserve all text, but stop extreme prose from exploding the page. */
+.revision-compare,
+.focus-revision-compare {
+  min-width: 0;
+}
+
+.revision-compare article,
+.focus-revision-compare article {
+  min-width: 0;
+}
+
+.revision-compare article > p:last-child,
+.focus-revision-compare article > p:last-child {
+  max-height: 18rem;
+  overflow: auto;
+  padding-right: 6px;
+  scrollbar-width: thin;
+}
+
+.edit-field textarea,
+.focus-editor textarea {
+  min-height: 150px;
+  max-height: 55vh;
+  resize: vertical;
+  overflow: auto;
+}
+
+.revision-actions,
+.p117-review-panel__actions,
+.workspace-toolbar__group {
+  min-width: 0;
+}
+
+.revision-actions button,
+.p117-review-panel__actions button,
+.workspace-toolbar button {
+  white-space: normal;
+}
+
+/* Relation approval behaves as a proper foreground dialog at all sizes. */
+.p117-review-panel {
+  width: min(560px, calc(100vw - 48px)) !important;
+  min-width: 0 !important;
+  max-width: min(760px, calc(100vw - 32px)) !important;
+  max-height: min(82vh, 780px) !important;
+  overscroll-behavior: contain;
+}
+
+.p117-connection-review__list {
+  max-height: min(42vh, 390px) !important;
+  overscroll-behavior: contain;
+}
+
+.p117-connection-review__list label {
+  min-width: 0;
+}
+
+.p117-connection-review__list input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  min-height: 0;
+  accent-color: var(--ink);
+}
+
+.p117-review-panel[role="dialog"] {
+  outline: 0;
+}
+
+/* Lazy graph fallback keeps layout stable while the graph chunk arrives. */
+.p13-graph-loading {
+  min-height: clamp(420px, 58vh, 700px);
+  display: grid;
+  place-content: center;
+  justify-items: center;
+  gap: 10px;
+  border: 1px solid var(--ink);
+  background: color-mix(in srgb, var(--strata-evidence) 46%, var(--paper));
+  color: var(--muted);
+  text-align: center;
+}
+
+.p13-graph-loading strong {
+  color: var(--ink);
+  font-family: var(--font-serif);
+  font-weight: 400;
+  font-size: 1.1rem;
+}
+
+/* Explicit state treatment: empty / not-reviewed / reviewed / revision. */
+.focus-review-overview[data-review-state="empty"] .focus-analysis,
+.focus-review-overview[data-review-state="not-reviewed"] .focus-analysis {
+  background-color: color-mix(in srgb, var(--strata-claim) 42%, var(--paper));
+}
+
+.focus-review-overview[data-review-state="reviewed"] .focus-analysis {
+  background-color: color-mix(in srgb, var(--strata-evidence) 52%, var(--paper));
+}
+
+.focus-review-overview[data-review-state="revision"] .focus-analysis {
+  box-shadow: inset 0 4px 0 var(--review);
+}
+
+/* 1366/1440 desktop: keep the P12 composition but reduce brittle fixed space. */
+@media (max-width: 1440px) {
+  .app-shell--unified {
+    width: min(100% - 40px, 1440px) !important;
+  }
+
+  .site-header {
+    column-gap: clamp(20px, 3vw, 46px) !important;
+  }
+
+  .focus-review-overview .focus-analysis {
+    padding-left: calc(max(20px, (100vw - 1440px) / 2) + 42px) !important;
+    padding-right: 42px !important;
+  }
+
+  .focus-workspace-summary {
+    padding-left: 42px !important;
+    padding-right: calc(max(20px, (100vw - 1440px) / 2) + 42px) !important;
+  }
+}
+
+/* Smaller laptops: preserve hierarchy without forcing 320px side columns. */
+@media (max-width: 1180px) {
+  .app-shell--unified {
+    width: min(100% - 32px, 1440px) !important;
+  }
+
+  .site-header {
+    grid-template-columns: minmax(0, 1fr) auto !important;
+  }
+
+  .site-header__status {
+    grid-column: 1 / -1;
+    justify-self: stretch;
+    display: flex;
+    justify-content: space-between;
+    gap: 16px;
+  }
+
+  .focus-journey {
+    grid-template-columns: 1fr !important;
+    align-items: start !important;
+  }
+
+  .focus-journey ol {
+    justify-self: start !important;
+  }
+
+  .live-review-grid {
+    grid-template-columns: minmax(0, 1.55fr) minmax(280px, 0.75fr) !important;
+  }
+
+  .workspace-toolbar {
+    align-items: flex-start !important;
+  }
+}
+
+/* Tablet: graph and detail surfaces stack predictably. */
+@media (max-width: 980px) {
+  .site-header {
+    position: relative !important;
+    grid-template-columns: 1fr !important;
+    align-items: start !important;
+  }
+
+  .site-header__nav,
+  .site-header__journey,
+  .site-header__status {
+    grid-column: 1 !important;
+    justify-self: start !important;
+  }
+
+  .focus-review-overview {
+    grid-template-columns: 1fr !important;
+  }
+
+  .focus-review-overview .focus-analysis,
+  .focus-workspace-summary {
+    padding: 34px max(28px, calc((100vw - 900px) / 2 + 28px)) 38px !important;
+  }
+
+  .focus-review-overview .focus-analysis {
+    border-right: 0 !important;
+    border-bottom: 1px solid var(--rule-strong) !important;
+  }
+
+  .live-review-grid {
+    grid-template-columns: 1fr !important;
+    grid-template-areas:
+      "graph"
+      "inspector"
+      "revision"
+      "audit" !important;
+  }
+
+  .live-review-grid__graph,
+  .live-review-grid__inspector,
+  .live-review-grid__revision,
+  .live-review-grid__audit {
+    border-right: 0 !important;
+  }
+
+  .live-review-grid__graph,
+  .live-review-grid__inspector,
+  .live-review-grid__revision {
+    border-bottom: 1px solid var(--ink) !important;
+  }
+
+  .revision-compare,
+  .focus-revision-compare {
+    grid-template-columns: 1fr !important;
+  }
+
+  .focus-revision-arrow {
+    min-height: 44px;
+    border-left: 0 !important;
+    border-right: 0 !important;
+    border-top: 1px solid var(--rule) !important;
+    border-bottom: 1px solid var(--rule) !important;
+    transform: rotate(90deg);
+  }
+
+  .p117-review-panel {
+    right: 16px !important;
+    bottom: 16px !important;
+    width: calc(100vw - 32px) !important;
+    max-width: calc(100vw - 32px) !important;
+    resize: vertical !important;
+  }
+}
+
+/* Mobile is a reasonable fallback, not a miniature desktop. */
+@media (max-width: 680px) {
+  .app-shell--unified {
+    width: min(100% - 20px, 1440px) !important;
+  }
+
+  .site-header__brand {
+    min-width: 0;
+  }
+
+  .site-header__brand-copy h1 {
+    font-size: clamp(1.55rem, 9vw, 2.2rem) !important;
+    overflow-wrap: anywhere;
+  }
+
+  .site-header__nav,
+  .site-header__journey,
+  .site-header__status,
+  .focus-journey__intro,
+  .focus-journey ol,
+  .workspace-toolbar,
+  .workspace-toolbar__group,
+  .revision-actions,
+  .p117-review-panel__actions {
+    width: 100%;
+  }
+
+  .site-header__nav,
+  .site-header__journey,
+  .workspace-toolbar__group,
+  .revision-actions,
+  .p117-review-panel__actions {
+    display: grid !important;
+    grid-template-columns: 1fr !important;
+  }
+
+  .site-header__status {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .workspace-toolbar {
+    flex-direction: column !important;
+    align-items: stretch !important;
+  }
+
+  .workspace-toolbar button,
+  .revision-actions button,
+  .p117-review-panel__actions button {
+    width: 100%;
+    min-height: 44px;
+  }
+
+  .focus-decision-strip {
+    padding-inline: 0 !important;
+  }
+
+  .focus-review-overview .focus-analysis,
+  .focus-workspace-summary {
+    padding: 28px 20px 32px !important;
+  }
+
+  .focus-review-overview .focus-analysis__heading h3,
+  .focus-workspace-summary h3 {
+    max-width: none !important;
+    font-size: clamp(2rem, 10vw, 3rem) !important;
+  }
+
+  .focus-map-legend {
+    grid-template-columns: 1fr 1fr !important;
+  }
+
+  .focus-map-expansion .graph-panel,
+  .p13-graph-loading {
+    height: 560px !important;
+    min-height: 560px !important;
+  }
+
+  .graph-help {
+    position: static !important;
+    max-width: none !important;
+    border-left: 0 !important;
+    border-right: 0 !important;
+  }
+
+  .graph-help__actions,
+  .graph-help__copy {
+    width: 100%;
+    flex-wrap: wrap;
+  }
+
+  .revision-panel,
+  .audit-panel,
+  .inspector-panel {
+    padding: 20px !important;
+  }
+
+  .p117-review-panel {
+    inset: auto 8px 8px 8px !important;
+    width: auto !important;
+    max-width: none !important;
+    max-height: 84vh !important;
+  }
+
+  .p117-review-panel__heading,
+  .p117-connection-review {
+    padding: 16px !important;
+  }
+
+  .p117-connection-review__list {
+    max-height: 44vh !important;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+  }
+}

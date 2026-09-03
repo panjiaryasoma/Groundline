@@ -81,11 +81,11 @@ describe("custom workspace live reasoning journey", () => {
     ).not.toBeInTheDocument();
   });
 
-  it("keeps graph, Inspector, Revision Proposal, and Decision History in the same visible workspace", () => {
+  it("keeps graph, Inspector, Revision Proposal, and Decision History in the same visible workspace", async () => {
     renderWorkspace();
 
     expect(
-      screen.getByLabelText(
+      await screen.findByLabelText(
         "Groundline reasoning graph",
       ),
     ).toBeInTheDocument();

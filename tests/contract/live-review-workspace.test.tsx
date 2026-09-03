@@ -18,7 +18,7 @@ import {
 } from "../../src/domain/workspaceAnalysis";
 
 describe("P-08.3 live review workspace", () => {
-  it("keeps graph, inspector, revision proposal and audit visible together", () => {
+  it("keeps graph, inspector, revision proposal and audit visible together", async () => {
     const analyzed =
       attachWorkspaceAnalysis(
         integration001,
@@ -40,6 +40,10 @@ describe("P-08.3 live review workspace", () => {
         onSelectItem={vi.fn()}
       />,
     );
+
+    expect(
+      await screen.findByLabelText("Groundline reasoning graph"),
+    ).toBeInTheDocument();
 
     expect(
       screen.getAllByText("A-001").length,
