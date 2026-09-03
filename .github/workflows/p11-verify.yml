@@ -6,8 +6,8 @@ on:
       - P11
   workflow_dispatch:
 
-# This workflow is intentionally touched at the end of the P11.9 consolidation
-# so the verification run proves the current branch head, not an earlier patch.
+# Final P11 consolidation gate. A green run must correspond to the current
+# product-journey contract and implementation, not an earlier P11 patch.
 jobs:
   verify:
     runs-on: ubuntu-latest
