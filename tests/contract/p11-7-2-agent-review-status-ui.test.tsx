@@ -97,7 +97,7 @@ describe("P11 consolidated custom semantic-review UX", () => {
     const workspace = useWorkspaceStore.getState().workspace;
     const reviewToken = semanticReviewContract(workspace).review_token;
 
-    act(() => {
+    await act(async () => {
       setP117RelationProposalBatch({
         reviewToken,
         proposedAt: "2026-09-03T12:00:00+07:00",
@@ -111,6 +111,7 @@ describe("P11 consolidated custom semantic-review UX", () => {
           },
         ],
       });
+      await Promise.resolve();
     });
 
     expect(
