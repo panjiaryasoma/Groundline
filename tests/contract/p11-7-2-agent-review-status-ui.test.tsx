@@ -4,7 +4,6 @@ import {
   screen,
 } from "@testing-library/react";
 import {
-  afterEach,
   beforeEach,
   describe,
   expect,
@@ -53,10 +52,6 @@ describe("P11 consolidated custom semantic-review UX", () => {
   beforeEach(() => {
     clearP117AgentReviewState();
     useWorkspaceStore.getState().createCustomWorkspace(customInput);
-  });
-
-  afterEach(() => {
-    clearP117AgentReviewState();
   });
 
   it("enters the mapped workspace directly without a fake structure or request step", () => {
@@ -111,7 +106,6 @@ describe("P11 consolidated custom semantic-review UX", () => {
           },
         ],
       });
-      await Promise.resolve();
     });
 
     expect(
