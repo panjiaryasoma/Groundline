@@ -95,7 +95,7 @@
   border-bottom-color: var(--olive) !important;
 }
 
-/* The prompt side becomes a faint field-note strip; answers remain quiet paper. */
+/* The prompt side becomes a faint field-note strip; answers inherit the worksheet surface. */
 .app-shell--intake .intake-field {
   background:
     linear-gradient(
@@ -108,7 +108,7 @@
 .app-shell--intake .intake-field textarea,
 .app-shell--intake .intake-field input {
   padding-inline: 14px 6px !important;
-  background: color-mix(in srgb, var(--paper) 74%, white) !important;
+  background: transparent !important;
 }
 
 /* Stage-aware editorial accents without changing layout or semantics. */
