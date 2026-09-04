@@ -240,7 +240,7 @@ export function createEvaluateItemTool(): WebMCPToolDefinition {
     name: "evaluate_item",
     title: "Evaluate Groundline item",
     description:
-      "Write one agent-supplied structured evaluation for an existing reasoning item. This tool does not change accepted knowledge and does not recompute triage; call triage_workspace after evaluation when prioritization is needed.",
+      "Write one agent-supplied structured evaluation for an existing reasoning item. This tool does not change accepted knowledge and does not recompute triage; call triage_workspace after evaluation when prioritization is needed. Calibrate downstream_impact independently from structural directness: HIGH means the weakness would materially threaten a high-consequence or hard-to-reverse decision if true. For bounded, reversible, read-only, shadow-mode, or human-controlled pilots, representativeness/source-detail gaps are normally LOW or MODERATE impact unless they defeat a represented safety boundary. Do not use HIGH merely because the item connects directly to the conclusion, and do not manufacture CRITICAL severity to appear useful.",
     inputSchema: {
       type: "object",
       properties: {
