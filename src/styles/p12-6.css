@@ -132,6 +132,16 @@
   border-top-color: transparent !important;
 }
 
+/* P12.2 disables the sticky entry copy once the entry scene collapses to one
+ * column. This later seam layer makes scene children positioned again, so the
+ * desktop top offset must also be cleared or the copy is visually shifted into
+ * the choice cards on tablet/mobile layouts. */
+@media (max-width: 1080px) {
+  .start-entry__copy {
+    top: auto;
+  }
+}
+
 @media (max-width: 780px) {
   .start-scene--hero::after,
   .start-scene--method::after,
