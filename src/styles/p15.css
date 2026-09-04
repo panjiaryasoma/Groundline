@@ -100,3 +100,81 @@
     margin-left: 0;
   }
 }
+
+/* Final responsive QA: tablet chrome should remain readable without
+ * inheriting the desktop's tiny metadata treatment. Mobile keeps its own
+ * <=780px composition from the earlier art-direction pass. */
+@media (min-width: 781px) and (max-width: 1080px) {
+  .site-header {
+    min-height: 76px !important;
+    grid-template-columns: minmax(0, 1fr) auto !important;
+    gap: 20px !important;
+  }
+
+  .site-header__brand {
+    gap: 11px;
+  }
+
+  .site-header__brand img {
+    width: 34px;
+    height: 34px;
+  }
+
+  .site-header__brand h1 {
+    font-size: 1rem !important;
+    letter-spacing: 0.13em !important;
+  }
+
+  .site-header__brand span {
+    font-size: 0.58rem;
+    line-height: 1.35;
+    letter-spacing: 0.1em;
+  }
+
+  .site-header__status {
+    max-width: 190px;
+    gap: 3px;
+  }
+
+  .site-header__status span {
+    font-size: 0.6rem;
+    line-height: 1.35;
+    letter-spacing: 0.09em;
+  }
+
+  .product-footnote {
+    display: grid !important;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    min-height: 0 !important;
+    align-items: start !important;
+    gap: 12px 24px !important;
+    padding: 24px 0 28px !important;
+    color: color-mix(in srgb, var(--bedrock-ink) 92%, transparent) !important;
+    font-size: 0.62rem !important;
+    line-height: 1.55;
+  }
+
+  .product-footnote::before {
+    grid-column: 1 / -1;
+    margin-bottom: 2px;
+    font-size: 0.62rem !important;
+    line-height: 1.4;
+  }
+
+  .product-footnote span {
+    min-width: 0;
+    overflow-wrap: anywhere;
+  }
+
+  .product-footnote span:first-of-type {
+    text-align: left;
+  }
+
+  .product-footnote span:nth-of-type(2) {
+    text-align: center;
+  }
+
+  .product-footnote span:last-of-type {
+    text-align: right;
+  }
+}
