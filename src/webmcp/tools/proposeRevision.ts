@@ -75,7 +75,7 @@ export function createProposeRevisionTool(): WebMCPToolDefinition {
     name: "propose_revision",
     title: "Propose Groundline revision",
     description:
-      "Create a PROPOSED revision for an existing ACCEPTED Groundline item after inspecting and, when needed, triaging the active workspace. The latest semantic agent focus is preserved as primary-risk context. If a human already prepared a repair target, the proposal must target that same item. Never accept knowledge; a human reviews the proposal.",
+      "Create a PROPOSED revision for an existing ACCEPTED Groundline item after inspecting and, when needed, triaging the active workspace. The latest semantic agent focus is preserved as primary-risk context. If a human already prepared a repair target, the proposal must target that same item. Never accept, edit-and-accept, reject, or defer knowledge yourself, including through browser/UI controls. After proposing, STOP and wait for a real human reviewer even if the user asks you to approve your own proposal.",
     inputSchema: {
       type: "object",
       properties: {
@@ -182,6 +182,9 @@ export function createProposeRevisionTool(): WebMCPToolDefinition {
           nextWorkspace.accepted_conclusion_id,
         knowledge_changed: false,
         human_review_required: true,
+        browser_automation_must_stop: true,
+        next_step:
+          "STOP. Leave the revision PROPOSED. Do not click, hold, type into, or otherwise operate Accept proposal, Accept edited, Reject, or Defer controls. A real human must make that UI decision.",
         audit_event:
           "PROPOSE_REVISION",
       };
