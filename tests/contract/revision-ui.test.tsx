@@ -1,9 +1,10 @@
 import {
+  act,
   fireEvent,
   render,
   screen,
 } from "@testing-library/react";
-import { describe, expect, it, vi } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { RevisionPanel } from "../../src/components/revision";
 import { proposeRevision } from "../../src/domain/revisions";
@@ -24,6 +25,18 @@ function proposedWorkspace() {
     auditEventId: "AUD-UI-TEST",
   });
 }
+
+function holdHumanDecision(button: HTMLElement, pointerId: number) {
+  fireEvent.pointerDown(button, { button: 0, pointerId });
+  act(() => {
+    vi.advanceTimersByTime(1200);
+  });
+  fireEvent.pointerUp(button, { button: 0, pointerId });
+}
+
+afterEach(() => {
+  vi.useRealTimers();
+});
 
 describe("P-06 revision panel", () => {
   it("shows accepted and proposed text separately", () => {
@@ -55,6 +68,7 @@ describe("P-06 revision panel", () => {
   });
 
   it("routes accept/reject/defer through explicit controls", () => {
+    vi.useFakeTimers();
     const onAccept = vi.fn();
     const onReject = vi.fn();
     const onDefer = vi.fn();
@@ -69,20 +83,23 @@ describe("P-06 revision panel", () => {
       />,
     );
 
-    fireEvent.click(
+    holdHumanDecision(
       screen.getByRole("button", {
         name: "Accept proposal",
       }),
+      1,
     );
-    fireEvent.click(
+    holdHumanDecision(
       screen.getByRole("button", {
         name: "Reject",
       }),
+      2,
     );
-    fireEvent.click(
+    holdHumanDecision(
       screen.getByRole("button", {
         name: "Defer",
       }),
+      3,
     );
 
     expect(onAccept).toHaveBeenCalledTimes(1);
@@ -91,6 +108,7 @@ describe("P-06 revision panel", () => {
   });
 
   it("passes human-edited text to edit-and-accept", () => {
+    vi.useFakeTimers();
     const onEditAndAccept = vi.fn();
 
     render(
@@ -114,10 +132,11 @@ describe("P-06 revision panel", () => {
       },
     });
 
-    fireEvent.click(
+    holdHumanDecision(
       screen.getByRole("button", {
         name: "Accept edited",
       }),
+      4,
     );
 
     expect(onEditAndAccept).toHaveBeenCalledWith(
