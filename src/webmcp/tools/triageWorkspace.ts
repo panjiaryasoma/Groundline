@@ -147,7 +147,7 @@ export function createTriageWorkspaceTool(): WebMCPToolDefinition {
     name: "triage_workspace",
     title: "Triage Groundline workspace",
     description:
-      "Commit one fresh semantic review batch and let Groundline deterministically compute review priority. For CUSTOM workspaces, first call inspect_workspace, inspect every semantic_review.target_item_id, then call this tool once with semantic_review.review_token and exactly one evaluation per target. A stale or partial custom review is rejected. Scores are review mechanics, never truth or confidence.",
+      "Commit one fresh semantic review batch and let Groundline deterministically compute review priority. For CUSTOM workspaces, first call inspect_workspace, inspect every semantic_review.target_item_id, then call this tool once with semantic_review.review_token and exactly one evaluation per target. A stale or partial custom review is rejected. Scores are review mechanics, never truth or confidence. Calibrate downstream_impact separately from graph directness: a bounded, reversible, read-only, shadow-mode, or human-controlled pilot should not become CRITICAL merely because a directly connected item has weak source detail or limited representativeness. HIGH impact is reserved for weaknesses that materially threaten a high-consequence or hard-to-reverse decision or defeat a represented safety boundary.",
     inputSchema: {
       type: "object",
       properties: {
