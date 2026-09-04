@@ -82,19 +82,17 @@ export function deriveTriageState(
   const weakness = calculateWeaknessScore(evaluation);
   const impact = calculateImpactScore(evaluation);
   const priority = calculatePriorityScore(weakness, impact);
-  const direct = context.directToAcceptedConclusion ?? false;
   const unassessedDimensions = getUnassessedDimensions(evaluation);
-
-  // Contract: weakness=3 with direct accepted-conclusion dependency is
-  // CRITICAL even if the normal priority threshold is not what triggers it.
-  if (weakness === 3 && direct) {
-    return "CRITICAL";
-  }
 
   if (evaluation.status === "UNASSESSED" || weakness === null) {
     return "UNASSESSED";
   }
 
+  // Scoring contract: high weakness is CRITICAL only when downstream impact
+  // is also high enough to produce priority >= 7. Structural directness is
+  // recorded for explanation, but it does not override impact calibration.
+  // This preserves the suite invariant that high weakness without high impact
+  // remains REVIEW rather than manufacturing a crisis.
   if (priority !== null && priority >= 7) {
     return "CRITICAL";
   }
