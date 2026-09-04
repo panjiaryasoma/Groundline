@@ -110,7 +110,7 @@ export function createProposeRelationsTool(): WebMCPToolDefinition {
     name: "propose_relations",
     title: "Propose Groundline semantic relations",
     description:
-      "Propose bounded SUPPORTS, CHALLENGES, DEPENDS_ON, or QUALIFIES links for currently UNLINKED human-authored cards. This never changes the canonical graph. Human approval is required before any line is created. Use the latest inspect_workspace semantic_review.review_token; stale proposals are rejected.",
+      "Propose bounded SUPPORTS, CHALLENGES, DEPENDS_ON, or QUALIFIES links for currently UNLINKED human-authored cards. This never changes the canonical graph. Human approval is required before any line is created. Use the latest inspect_workspace semantic_review.review_token; stale proposals are rejected. After proposing, STOP. Never operate Accept selected connections or Reject all through browser automation, even when the user asks you to connect cards automatically.",
     inputSchema: {
       type: "object",
       properties: {
@@ -238,9 +238,10 @@ export function createProposeRelationsTool(): WebMCPToolDefinition {
         canonical_relations_changed: false,
         accepted_knowledge_changed: false,
         human_approval_required: true,
+        browser_automation_must_stop: true,
         semantic_inference_committed: false,
         next_step:
-          "Wait for the human to accept or reject the visible relation proposals. If the human accepts any relation, call inspect_workspace again because the review token changes before fresh triage.",
+          "STOP. Leave the visible relation proposals pending. Do not click, hold, or otherwise operate Accept selected connections or Reject all. A real human must make the UI decision. If the human accepts any relation, call inspect_workspace again because the review token changes before fresh triage.",
       };
     },
   };
