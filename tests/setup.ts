@@ -1,6 +1,5 @@
 import "@testing-library/jest-dom/vitest";
 
-
 class ResizeObserverMock {
   observe() {}
   unobserve() {}
@@ -11,6 +10,49 @@ Object.defineProperty(globalThis, "ResizeObserver", {
   writable: true,
   configurable: true,
   value: ResizeObserverMock,
+});
+
+class IntersectionObserverMock {
+  readonly root = null;
+  readonly rootMargin = "0px";
+  readonly thresholds = [0];
+
+  private readonly callback: IntersectionObserverCallback;
+
+  constructor(callback: IntersectionObserverCallback) {
+    this.callback = callback;
+  }
+
+  observe(target: Element) {
+    const rect = target.getBoundingClientRect();
+
+    this.callback(
+      [
+        {
+          time: 0,
+          target,
+          rootBounds: null,
+          boundingClientRect: rect,
+          intersectionRect: rect,
+          isIntersecting: true,
+          intersectionRatio: 1,
+        } as IntersectionObserverEntry,
+      ],
+      this as unknown as IntersectionObserver,
+    );
+  }
+
+  unobserve() {}
+  disconnect() {}
+  takeRecords() {
+    return [];
+  }
+}
+
+Object.defineProperty(globalThis, "IntersectionObserver", {
+  writable: true,
+  configurable: true,
+  value: IntersectionObserverMock,
 });
 
 Object.defineProperty(HTMLElement.prototype, "offsetHeight", {
