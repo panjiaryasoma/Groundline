@@ -1,9 +1,11 @@
 import {
+  act,
   fireEvent,
   render,
   screen,
 } from "@testing-library/react";
 import {
+  afterEach,
   beforeEach,
   describe,
   expect,
@@ -65,6 +67,10 @@ function renderWorkspace() {
   );
 }
 
+afterEach(() => {
+  vi.useRealTimers();
+});
+
 describe("P15 local connection candidates", () => {
   beforeEach(() => {
     clearP117AgentReviewState();
@@ -121,7 +127,13 @@ describe("P15 local connection candidates", () => {
     }
 
     expect(acceptButton).toBeEnabled();
-    fireEvent.click(acceptButton);
+
+    vi.useFakeTimers();
+    fireEvent.pointerDown(acceptButton, { button: 0, pointerId: 11 });
+    act(() => {
+      vi.advanceTimersByTime(1200);
+    });
+    fireEvent.pointerUp(acceptButton, { button: 0, pointerId: 11 });
 
     const updated = useWorkspaceStore.getState().workspace;
     expect(
