@@ -70,6 +70,88 @@ Groundline does not use a hidden page-local LLM. Semantic intelligence comes fro
 
 ---
 
+## What it does
+
+- Turn plain-language decisions into structured reasoning workspaces.
+- Represent claims, assumptions, evidence, sources, counterclaims, and conclusions explicitly.
+- Expose the active reasoning state to WebMCP-aware agents through structured tools.
+- Trace downstream dependencies from weak assumptions or evidence gaps.
+- Detect represented contradictions without collapsing scope differences.
+- Distinguish missing evidence from contradiction and falsity.
+- Record semantic review over evidence strength, source quality, assumption burden, generalization risk, contradiction, and impact.
+- Produce deterministic review-priority states: `CRITICAL`, `REVIEW`, and `STABLE`.
+- Let agents propose revisions without silently replacing accepted knowledge.
+- Let agents propose `SUPPORTS`, `CHALLENGES`, `DEPENDS_ON`, and `QUALIFIES` relations for human review.
+- Preserve revision lineage through `SUPERSEDES`.
+- Invalidate stale semantic review after canonical state changes.
+- Keep an auditable history of evaluation, triage, proposals, and human decisions.
+
+---
+
+## Quick Start
+
+Requires **Node.js 22.12+** and npm.
+
+```bash
+git clone https://github.com/panjiaryasoma/Groundline.git
+cd Groundline
+npm install
+npm run dev
+```
+
+Open the local Vite URL shown in the terminal.
+
+Verification:
+
+```bash
+npm run typecheck
+npm run build
+npm test
+```
+
+For actual WebMCP agent behavior, use the HTTPS deployment in a WebMCP-aware host:
+
+> https://groundline-dun.vercel.app/
+
+---
+
+## Core Reasoning Flow
+
+![Groundline end-to-end reasoning flow](docs/ARCHITECTURE/E2E-DIAGRAM.png)
+
+The end-to-end flow starts with human-authored reasoning, constructs typed reasoning objects, stores canonical workspace state, performs deterministic structural analysis, exposes that state through WebMCP for semantic review, and routes any proposed repair through a human decision boundary. Approved changes invalidate stale review and begin a fresh reasoning cycle.
+
+![Groundline operational flowchart](docs/ARCHITECTURE/FLOWCHART.png)
+
+The operational flowchart shows the runtime decision path from intake and validation through WebMCP inspection, semantic evaluation, triage, repair proposals, explicit human approval, canonical state transition, audit logging, and fresh review when reasoning changes.
+
+---
+
+## Architecture
+
+![Groundline system architecture](docs/ARCHITECTURE/ARCHITECTURE.png)
+
+Groundline separates four responsibilities that are easy to blur in agentic systems:
+
+1. **Human input and authority** define the decision and approve canonical changes.
+2. **Groundline's deterministic domain layer** validates state, maintains the reasoning graph, computes review priority, and invalidates stale review.
+3. **The WebMCP tool surface** exposes structured reasoning operations to an external agent.
+4. **The external agent** supplies semantic analysis, contradiction reasoning, evidence review, and repair proposals.
+
+The page does not contain a hidden semantic model. Groundline owns the state machine; the connected agent owns semantic interpretation; the human owns canonical acceptance.
+
+Core implementation stack:
+
+- React 19
+- TypeScript
+- Vite
+- Zustand for workspace state
+- Zod for runtime contracts
+- `@xyflow/react` for the reasoning graph
+- deterministic triage mechanics for review priority
+
+---
+
 ## Human-agent interaction model
 
 ```text
@@ -99,32 +181,6 @@ Agent must re-inspect the changed workspace
 **Human-controlled:** accepting/rejecting canonical semantic relations and revision decisions.
 
 Human decision controls use a deliberate press-and-hold interaction and explicitly tell AI/browser agents to stop at the review boundary.
-
----
-
-## How to run
-
-Requirements:
-
-- Node.js 22.12+
-- npm
-
-```bash
-npm install
-npm run dev
-```
-
-Verification:
-
-```bash
-npm run typecheck
-npm run build
-npm test
-```
-
-For actual WebMCP agent behavior, use an HTTPS deployment in a WebMCP-aware host. The live deployment used during evaluation is:
-
-> https://groundline-dun.vercel.app/
 
 ---
 
@@ -199,50 +255,45 @@ SOURCE and EVIDENCE text are treated as untrusted content, not instructions to t
 
 ---
 
-## Architecture
+## Review-priority model
 
-Groundline is a client-side TypeScript application built around a canonical reasoning workspace.
+Groundline does not use `CRITICAL`, `REVIEW`, and `STABLE` as truth labels.
+
+They indicate **review priority**.
+
+The deterministic priority contract is:
 
 ```text
-WebMCP-aware external agent
-          │
-          │ structured website tools
-          ▼
-WebMCP tool layer
-          │
-          ├── inspection / dependency / gap tools
-          ├── semantic review handshake
-          ├── relation proposals
-          └── revision proposals
-          │
-          ▼
-Canonical workspace state
-          │
-          ├── reasoning items
-          ├── relations
-          ├── evaluations
-          ├── triage records
-          ├── revisions
-          └── audit events
-          │
-          ▼
-React UI / reasoning graph / Inspector / review panels
-          │
-          ▼
-Human authority boundary
+priority = weakness × downstream impact
+
+priority >= 7  -> CRITICAL
+priority 3..6  -> REVIEW
+priority <= 2  -> STABLE
 ```
 
-Core implementation stack:
+A low-impact weakness does not become `CRITICAL` merely because it directly supports a conclusion. This calibration rule was tightened after the S07 live evaluation exposed an overly aggressive shortcut.
 
-- React 19
-- TypeScript
-- Vite
-- Zustand for workspace state
-- Zod for runtime contracts
-- `@xyflow/react` for the reasoning graph
-- deterministic triage mechanics for review priority
+---
 
-The product deliberately separates semantic reasoning from deterministic state mechanics. The external agent supplies semantic assessment; Groundline validates the review contract, stores canonical state, computes review priority, and controls state transitions.
+## Revision model
+
+Accepted revisions preserve history instead of overwriting it.
+
+```text
+old accepted item
+        ↓
+SUPERSEDED
+
+new replacement item
+        ↓
+ACCEPTED
+        ↓
+UNASSESSED until fresh semantic review
+```
+
+Previous semantic evaluations and triage are not silently inherited by the replacement.
+
+Semantic relations are also not automatically copied merely because an item was revised. Meaning must be reviewed against the current represented reasoning.
 
 ---
 
@@ -275,7 +326,7 @@ When a revision is accepted:
 
 ---
 
-## Live evaluation result
+## Live WebMCP evaluation
 
 P16 tested eight judge-style scenarios against the production app.
 
@@ -290,6 +341,8 @@ P16 tested eight judge-style scenarios against the production app.
 | S07 Calibration / restraint | PASS after fixes and controlled retest |
 | S08 Human-authority stress test | PASS after authority hardening and controlled retest |
 
+**Final controlled score: 8 / 8.**
+
 The failures are intentionally documented:
 
 - S02 first run leaked prior-chat context, leading to the fresh-chat evaluation rule;
@@ -300,6 +353,71 @@ The failures are intentionally documented:
 Full record:
 
 [`docs/05_IMPLEMENTATION_HANDOFF/P16_LIVE_WEBMCP_EVALUATION.md`](./docs/05_IMPLEMENTATION_HANDOFF/P16_LIVE_WEBMCP_EVALUATION.md)
+
+---
+
+## Tech stack
+
+| Layer | Technology |
+| --- | --- |
+| Frontend | React 19 + TypeScript |
+| Build tooling | Vite |
+| Workspace state | Zustand |
+| Runtime contracts | Zod |
+| Reasoning graph | `@xyflow/react` |
+| Agent integration | WebMCP |
+| Semantic reasoning | External WebMCP-aware agent |
+| Review priority | Deterministic Groundline triage mechanics |
+| Testing | Vitest + Testing Library + jsdom |
+| Deployment | Vercel |
+
+---
+
+## Testing
+
+Run the full repository verification interface with:
+
+```bash
+npm run typecheck
+npm run build
+npm test
+```
+
+The suite covers domain contracts, reasoning graph behavior, revision authority, semantic review state, WebMCP integration, custom workspace actions, security boundaries, UI behavior, and regression cases introduced during live P16 testing.
+
+Groundline's live WebMCP evaluation is separate from unit/integration tests. A green test suite proves repository contracts; P16 proves that a real external agent can discover and operate the deployed reasoning surface while preserving the human authority model.
+
+---
+
+## Project structure
+
+```text
+Groundline/
+├── src/
+│   ├── app/                  # application shell and routing
+│   ├── components/           # intake, graph, inspector, review, audit UI
+│   ├── domain/               # reasoning contracts and deterministic mechanics
+│   ├── fixtures/             # seeded demo/evaluation fixtures
+│   ├── state/                # canonical workspace and interaction state
+│   ├── styles/               # production UI styling
+│   └── webmcp/               # WebMCP registration and tool contracts
+├── tests/
+│   ├── contract/             # domain and UI contract tests
+│   ├── integration/          # end-to-end application integration tests
+│   ├── security/             # authority and untrusted-content regression tests
+│   ├── triage/               # deterministic review-priority tests
+│   └── webmcp/               # WebMCP tool-surface tests
+├── docs/
+│   ├── ARCHITECTURE/         # E2E, flowchart, and architecture diagrams
+│   └── 05_IMPLEMENTATION_HANDOFF/
+│       └── P16_LIVE_WEBMCP_EVALUATION.md
+├── public/
+├── JUDGE_GUIDE.md
+├── README.md
+├── package.json
+├── vite.config.ts
+└── LICENSE
+```
 
 ---
 
@@ -334,11 +452,16 @@ For a judge, the fastest verification path is the live app plus [`JUDGE_GUIDE.md
 
 ---
 
-## Engineering contracts
+## Documentation
 
-Consolidated product journey:
+Key judge-facing and engineering records:
 
-[`docs/05_IMPLEMENTATION_HANDOFF/P11_PRODUCT_JOURNEY_CONSOLIDATION.md`](./docs/05_IMPLEMENTATION_HANDOFF/P11_PRODUCT_JOURNEY_CONSOLIDATION.md)
+- [`JUDGE_GUIDE.md`](./JUDGE_GUIDE.md) — literal judge walkthrough: open this, choose this, ask this, observe this.
+- [`docs/ARCHITECTURE/E2E-DIAGRAM.png`](./docs/ARCHITECTURE/E2E-DIAGRAM.png) — end-to-end reasoning lifecycle.
+- [`docs/ARCHITECTURE/FLOWCHART.png`](./docs/ARCHITECTURE/FLOWCHART.png) — operational decision flow.
+- [`docs/ARCHITECTURE/ARCHITECTURE.png`](./docs/ARCHITECTURE/ARCHITECTURE.png) — system architecture.
+- [`docs/05_IMPLEMENTATION_HANDOFF/P16_LIVE_WEBMCP_EVALUATION.md`](./docs/05_IMPLEMENTATION_HANDOFF/P16_LIVE_WEBMCP_EVALUATION.md) — S01-S08 live WebMCP evaluation, including failed runs, fixes, recoveries, and final pass state.
+- [`docs/05_IMPLEMENTATION_HANDOFF/P11_PRODUCT_JOURNEY_CONSOLIDATION.md`](./docs/05_IMPLEMENTATION_HANDOFF/P11_PRODUCT_JOURNEY_CONSOLIDATION.md) — consolidated product journey and interaction contract.
 
 Active preproduction contracts remain under:
 
