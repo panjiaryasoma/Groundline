@@ -88,11 +88,25 @@ describe("P-03 deterministic evaluation and triage contract", () => {
     expect(calculatePriorityScore(null, 3)).toBeNull();
   });
 
-  it("allows weakness=3 + direct accepted-conclusion dependency to trigger CRITICAL", () => {
+  it("keeps direct low-impact weakness at REVIEW instead of manufacturing CRITICAL", () => {
     const record = evaluation({
       ...baseRatings,
       evidence_strength: "LOW",
       downstream_impact: "LOW",
+    });
+
+    expect(
+      deriveTriageState(record, {
+        directToAcceptedConclusion: true,
+      }),
+    ).toBe("REVIEW");
+  });
+
+  it("marks high-weakness high-impact direct reasoning as CRITICAL", () => {
+    const record = evaluation({
+      ...baseRatings,
+      evidence_strength: "LOW",
+      downstream_impact: "HIGH",
     });
 
     expect(
